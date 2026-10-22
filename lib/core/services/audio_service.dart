@@ -1,41 +1,71 @@
-import 'package:flutter/services.dart';
 import 'package:audioplayers/audioplayers.dart';
-import 'package:record/record.dart';
+import 'package:flutter/services.dart';
 
+/// Chimes, ambient sanctuary loops and haptics.
 class AudioService {
   static final AudioService _instance = AudioService._internal();
   factory AudioService() => _instance;
   AudioService._internal();
 
-  final AudioPlayer _audioPlayer = AudioPlayer();
-  final AudioRecorder _audioRecorder = AudioRecorder();
+  final AudioPlayer _sfx = AudioPlayer(playerId: 'sfx');
+  final AudioPlayer _ambient = AudioPlayer(playerId: 'ambient');
+  String? _ambientAsset;
 
-  /// Play amen chime on successful recitation
+  /// Maps a Scripture Drop ambient preset to its bundled loop.
+  static String ambientAssetFor(String preset) => switch (preset) {
+        'sanctuary_dune' => 'audio/ambient_sanctuary_dune.wav',
+        _ => 'audio/ambient_sanctuary_dawn.wav',
+      };
+
+  Future<void> _playSfx(String asset) async {
+    try {
+      await _sfx.stop();
+      await _sfx.play(AssetSource(asset), volume: 0.9);
+    } catch (_) {
+      // Audio is non-critical; haptics still fire.
+    }
+  }
+
+  /// Played when a recitation passes the 80% threshold.
   Future<void> playAmenChime() async {
-    try {
-      HapticFeedback.mediumImpact();
-      // Falls back silently if sound asset is being streamed or mocked in tests
-      await _audioPlayer.play(AssetSource('audio/amen_chime.wav'));
-    } catch (_) {
-      // Graceful fallback: trigger haptic only
-      HapticFeedback.mediumImpact();
-    }
+    HapticFeedback.mediumImpact();
+    await _playSfx('audio/amen_chime.wav');
   }
 
-  /// Play sanctuary reminder / ambient chime
   Future<void> playSanctuaryChime() async {
+    HapticFeedback.lightImpact();
+    await _playSfx('audio/sanctuary_chime.wav');
+  }
+
+  bool get isAmbientPlaying => _ambient.state == PlayerState.playing;
+
+  Future<void> startAmbient(String preset) async {
     try {
-      HapticFeedback.lightImpact();
-      await _audioPlayer.play(AssetSource('audio/sanctuary_chime.wav'));
-    } catch (_) {
-      HapticFeedback.lightImpact();
-    }
+      final asset = ambientAssetFor(preset);
+      if (_ambientAsset != asset) {
+        await _ambient.setReleaseMode(ReleaseMode.loop);
+        await _ambient.setSource(AssetSource(asset));
+        _ambientAsset = asset;
+      }
+      await _ambient.setVolume(0.7);
+      await _ambient.resume();
+    } catch (_) {}
   }
 
-  /// Fire heavy impact haptic on The Exchange collision
-  void triggerExchangeHaptic() {
-    HapticFeedback.heavyImpact();
+  Future<void> pauseAmbient() async {
+    try {
+      await _ambient.pause();
+    } catch (_) {}
   }
 
-  AudioRecorder get recorder => _audioRecorder;
+  Future<void> stopAmbient() async {
+    try {
+      await _ambient.stop();
+    } catch (_) {}
+  }
+
+  /// Heavy impact when the Word meets the burden in The Exchange.
+  void triggerExchangeHaptic() => HapticFeedback.heavyImpact();
+
+  void selectionTick() => HapticFeedback.selectionClick();
 }

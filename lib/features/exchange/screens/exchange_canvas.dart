@@ -1,17 +1,59 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:share_plus/share_plus.dart';
+import '../../../core/services/audio_service.dart';
 import '../../../core/theme/logos_theme.dart';
 import '../../../core/theme/logos_typography.dart';
-import '../../../core/services/audio_service.dart';
+
+class Particle {
+  double x;
+  double y;
+  double vx;
+  double vy;
+  double size;
+  double opacity;
+  Color color;
+
+  Particle({
+    required this.x,
+    required this.y,
+    required this.vx,
+    required this.vy,
+    required this.size,
+    required this.opacity,
+    required this.color,
+  });
+}
+
+class ParticlePainter extends CustomPainter {
+  final List<Particle> particles;
+  ParticlePainter(this.particles);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    for (final p in particles) {
+      final paint = Paint()
+        ..color = p.color.withValues(alpha: p.opacity)
+        ..style = PaintingStyle.fill;
+      canvas.drawCircle(Offset(p.x, p.y), p.size, paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant ParticlePainter oldDelegate) => true;
+}
 
 class ExchangeCanvas extends StatefulWidget {
   final String verseText;
   final String reference;
+  final int weekNumber;
   final VoidCallback onExchangeCompleted;
 
   const ExchangeCanvas({
     super.key,
     required this.verseText,
     required this.reference,
+    this.weekNumber = 1,
     required this.onExchangeCompleted,
   });
 
@@ -29,19 +71,16 @@ class _ExchangeCanvasState extends State<ExchangeCanvas>
   bool _isDraggingOver = false;
 
   late AnimationController _dissolveController;
-  late Animation<double> _fadeAnimation;
+  final List<Particle> _particles = [];
+  final Random _rand = Random();
 
   @override
   void initState() {
     super.initState();
     _dissolveController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1400),
-    );
-
-    _fadeAnimation = Tween<double>(begin: 1.0, end: 0.0).animate(
-      CurvedAnimation(parent: _dissolveController, curve: Curves.easeInOut),
-    );
+      duration: const Duration(milliseconds: 1800),
+    )..addListener(_updateParticles);
   }
 
   @override
@@ -51,8 +90,44 @@ class _ExchangeCanvasState extends State<ExchangeCanvas>
     super.dispose();
   }
 
-  void _triggerExchangeDissolution() {
+  void _spawnParticles(Size zoneSize) {
+    _particles.clear();
+    const count = 120;
+    final colors = [
+      LogosColors.coral,
+      const Color(0xFFFFD1A9),
+      const Color(0xFFE89070),
+      Colors.white,
+    ];
+
+    for (int i = 0; i < count; i++) {
+      _particles.add(Particle(
+        x: _rand.nextDouble() * zoneSize.width,
+        y: _rand.nextDouble() * zoneSize.height,
+        vx: (_rand.nextDouble() - 0.5) * 4.0,
+        vy: -(_rand.nextDouble() * 3.5 + 1.5), // drift upwards
+        size: _rand.nextDouble() * 3.5 + 1.5,
+        opacity: 0.9,
+        color: colors[_rand.nextInt(colors.length)],
+      ));
+    }
+  }
+
+  void _updateParticles() {
+    final progress = _dissolveController.value;
+    for (final p in _particles) {
+      p.x += p.vx;
+      p.y += p.vy;
+      p.opacity = ((1.0 - progress) * 0.9).clamp(0.0, 1.0);
+      p.size = (p.size * 0.99).clamp(0.5, 5.0);
+    }
+    setState(() {});
+  }
+
+  void _triggerExchangeDissolution(Size zoneSize) {
     AudioService().triggerExchangeHaptic();
+    _spawnParticles(zoneSize);
+
     _dissolveController.forward().then((_) {
       setState(() {
         _isDissolved = true;
@@ -61,25 +136,51 @@ class _ExchangeCanvasState extends State<ExchangeCanvas>
     });
   }
 
+  void _shareTearSheet() {
+    final dateStr = '${DateTime.now().day}/${DateTime.now().month}/${DateTime.now().year}';
+    final shareText = '''
+✝ THE EXCHANGE · WEEK ${widget.weekNumber}
+"${widget.verseText}"
+— ${widget.reference}
+
+A burden was laid down here.
+$dateStr
+LOGOS IN ME
+''';
+    SharePlus.instance.share(ShareParams(text: shareText, subject: 'The Exchange — ${widget.reference}'));
+  }
+
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final ink = isDark ? LogosColors.examenInk : LogosColors.ink;
-    final surface = isDark ? LogosColors.examenSurface : LogosColors.surface;
+    const Color ink = LogosColors.examenInk;
+    const Color surface = LogosColors.examenSurface;
 
     return Scaffold(
+      backgroundColor: LogosColors.examenBg,
       appBar: AppBar(
         title: Text(
-          'Day 4: The Exchange',
+          'The Exchange',
           style: LogosTypography.label(color: ink),
         ),
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: ink),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        actions: [
+          if (_isDissolved)
+            IconButton(
+              tooltip: 'Share Tear Sheet',
+              icon: const Icon(Icons.share, color: LogosColors.coral),
+              onPressed: _shareTearSheet,
+            ),
+        ],
       ),
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -88,120 +189,123 @@ class _ExchangeCanvasState extends State<ExchangeCanvas>
                 textAlign: TextAlign.center,
                 style: LogosTypography.body(color: ink.withValues(alpha: 0.7)),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 16),
 
-              // Top Zone: The Burden Drop Target
+              // Upper Zone: Burden Target
               Expanded(
-                child: DragTarget<String>(
-                  onWillAcceptWithDetails: (_) {
-                    setState(() => _isDraggingOver = true);
-                    return true;
-                  },
-                  onLeave: (_) {
-                    setState(() => _isDraggingOver = false);
-                  },
-                  onAcceptWithDetails: (_) {
-                    setState(() => _isDraggingOver = false);
-                    _triggerExchangeDissolution();
-                  },
-                  builder: (context, candidateData, rejectedData) {
-                    return AnimatedContainer(
-                      duration: const Duration(milliseconds: 200),
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        color: _isDraggingOver
-                            ? LogosColors.coral.withValues(alpha: 0.15)
-                            : surface,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: _isDraggingOver
-                              ? LogosColors.coral
-                              : LogosColors.taupe,
-                          width: _isDraggingOver ? 2 : 1,
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final zoneSize = Size(constraints.maxWidth, constraints.maxHeight);
+
+                    return Stack(
+                      children: [
+                        DragTarget<String>(
+                          onWillAcceptWithDetails: (_) {
+                            setState(() => _isDraggingOver = true);
+                            return true;
+                          },
+                          onLeave: (_) {
+                            setState(() => _isDraggingOver = false);
+                          },
+                          onAcceptWithDetails: (_) {
+                            setState(() => _isDraggingOver = false);
+                            _triggerExchangeDissolution(zoneSize);
+                          },
+                          builder: (context, candidateData, rejectedData) {
+                            return AnimatedContainer(
+                              duration: const Duration(milliseconds: 200),
+                              padding: const EdgeInsets.all(20),
+                              decoration: BoxDecoration(
+                                color: _isDraggingOver
+                                    ? LogosColors.coral.withValues(alpha: 0.2)
+                                    : surface,
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(
+                                  color: _isDraggingOver
+                                      ? LogosColors.coral
+                                      : const Color(0xFF3E3730),
+                                  width: _isDraggingOver ? 2 : 1,
+                                ),
+                              ),
+                              child: _isDissolved
+                                  ? _buildTearSheetView(surface, ink)
+                                  : Opacity(
+                                      opacity: 1.0 - _dissolveController.value,
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Row(
+                                            children: [
+                                              const Icon(
+                                                Icons.edit_note,
+                                                size: 20,
+                                                color: LogosColors.coral,
+                                              ),
+                                              const SizedBox(width: 8),
+                                              Text(
+                                                'Your Burden:',
+                                                style: LogosTypography.label(
+                                                  color: LogosColors.coral,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                          const SizedBox(height: 8),
+                                          Expanded(
+                                            child: TextField(
+                                              controller: _burdenController,
+                                              maxLines: null,
+                                              expands: true,
+                                              style: LogosTypography.scriptureBody(
+                                                color: ink,
+                                              ),
+                                              decoration: InputDecoration(
+                                                border: InputBorder.none,
+                                                hintText: 'Type your burden here...',
+                                                hintStyle: TextStyle(
+                                                  color: ink.withValues(alpha: 0.4),
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                          Center(
+                                            child: Text(
+                                              '↓ Drop Scripture Here to Dissolve ↓',
+                                              style: LogosTypography.caption(
+                                                color: LogosColors.coral,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                            );
+                          },
                         ),
-                      ),
-                      child: _isDissolved
-                          ? Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                const Icon(
-                                  Icons.check_circle_outline,
-                                  color: LogosColors.coral,
-                                  size: 48,
-                                ),
-                                const SizedBox(height: 12),
-                                Text(
-                                  'Your burden is dissolved in the Word.',
-                                  style: LogosTypography.headline(color: ink),
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  'Tear Sheet rendered and saved to your Prayer Altar.',
-                                  style: LogosTypography.body(
-                                      color: ink.withValues(alpha: 0.6)),
-                                ),
-                              ],
-                            )
-                          : FadeTransition(
-                              opacity: _fadeAnimation,
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    children: [
-                                      const Icon(
-                                        Icons.edit_note,
-                                        size: 20,
-                                        color: LogosColors.coral,
-                                      ),
-                                      const SizedBox(width: 8),
-                                      Text(
-                                        'Your Burden:',
-                                        style: LogosTypography.label(
-                                            color: LogosColors.coral),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Expanded(
-                                    child: TextField(
-                                      controller: _burdenController,
-                                      maxLines: null,
-                                      expands: true,
-                                      style: LogosTypography.scriptureBody(
-                                          color: ink),
-                                      decoration: InputDecoration(
-                                        border: InputBorder.none,
-                                        hintText: 'Type your burden here...',
-                                        hintStyle: TextStyle(
-                                            color: ink.withValues(alpha: 0.4)),
-                                      ),
-                                    ),
-                                  ),
-                                  Center(
-                                    child: Text(
-                                      '↓ Drop Scripture Here ↓',
-                                      style: LogosTypography.caption(
-                                        color: LogosColors.coral,
-                                      ),
-                                    ),
-                                  ),
-                                ],
+
+                        // Dissolution particle overlay
+                        if (_dissolveController.isAnimating)
+                          Positioned.fill(
+                            child: IgnorePointer(
+                              child: CustomPaint(
+                                painter: ParticlePainter(_particles),
                               ),
                             ),
+                          ),
+                      ],
                     );
                   },
                 ),
               ),
 
-              const SizedBox(height: 24),
+              const SizedBox(height: 20),
 
-              // Bottom Zone: Draggable Mastered Scripture Card
+              // Bottom Zone: Draggable Scripture or Action Button
               if (!_isDissolved)
                 Draggable<String>(
                   data: widget.verseText,
                   feedback: Material(
-                    elevation: 8,
+                    elevation: 12,
                     borderRadius: BorderRadius.circular(16),
                     child: Container(
                       width: MediaQuery.of(context).size.width - 48,
@@ -209,22 +313,48 @@ class _ExchangeCanvasState extends State<ExchangeCanvas>
                       decoration: BoxDecoration(
                         gradient: LogosColors.sanctuaryGradient,
                         borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: LogosColors.coral.withValues(alpha: 0.4),
+                            blurRadius: 20,
+                            spreadRadius: 2,
+                          ),
+                        ],
                       ),
                       child: Text(
                         widget.verseText,
-                        style: LogosTypography.scriptureBody(
-                            color: Colors.white),
+                        style: LogosTypography.scriptureBody(color: Colors.white),
                       ),
                     ),
                   ),
                   childWhenDragging: Opacity(
                     opacity: 0.3,
-                    child: _buildVerseCard(surface, ink),
+                    child: _buildDraggableCard(surface, ink),
                   ),
-                  child: _buildVerseCard(surface, ink),
+                  child: _buildDraggableCard(surface, ink),
+                )
+              else
+                SizedBox(
+                  height: 52,
+                  child: ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: LogosColors.coral,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                    icon: const Icon(Icons.share),
+                    label: const Text(
+                      'Share Tear Sheet & Return to Sanctuary',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    onPressed: () {
+                      _shareTearSheet();
+                      Navigator.of(context).pop();
+                    },
+                  ),
                 ),
 
-              const SizedBox(height: 16),
+              const SizedBox(height: 12),
             ],
           ),
         ),
@@ -232,16 +362,16 @@ class _ExchangeCanvasState extends State<ExchangeCanvas>
     );
   }
 
-  Widget _buildVerseCard(Color surface, Color ink) {
+  Widget _buildDraggableCard(Color surface, Color ink) {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: surface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: LogosColors.coral, width: 1.5),
         boxShadow: [
           BoxShadow(
-            color: LogosColors.coral.withValues(alpha: 0.12),
+            color: LogosColors.coral.withValues(alpha: 0.15),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -274,6 +404,87 @@ class _ExchangeCanvasState extends State<ExchangeCanvas>
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildTearSheetView(Color surface, Color ink) {
+    final now = DateTime.now();
+    final dateStr = '${now.day} / ${now.month} / ${now.year}';
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFAF6F0), // Paper-textured card
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: LogosColors.coral.withValues(alpha: 0.4)),
+      ),
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 32,
+              height: 32,
+              decoration: const BoxDecoration(
+                color: LogosColors.coral,
+                shape: BoxShape.circle,
+              ),
+              alignment: Alignment.center,
+              child: const Text('✝', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              'THE EXCHANGE · WEEK ${widget.weekNumber}',
+              style: LogosTypography.caption(color: LogosColors.ink.withValues(alpha: 0.6)).copyWith(
+                letterSpacing: 2.0,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              '"${widget.verseText}"',
+              textAlign: TextAlign.center,
+              style: LogosTypography.scriptureHero(color: LogosColors.ink).copyWith(fontSize: 19),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              '${widget.reference} · ESV',
+              style: LogosTypography.scriptureCitation(color: LogosColors.coral),
+            ),
+            const SizedBox(height: 16),
+            Divider(color: LogosColors.taupe.withValues(alpha: 0.6)),
+            const SizedBox(height: 10),
+            Text(
+              'A burden was laid down here.',
+              style: LogosTypography.body(color: LogosColors.ink.withValues(alpha: 0.7)),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              dateStr,
+              style: LogosTypography.caption(color: LogosColors.ink.withValues(alpha: 0.4)),
+            ),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: const Color(0xFF10B981).withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.check, size: 14, color: Colors.green),
+                  const SizedBox(width: 4),
+                  Text(
+                    'Saved to your Prayer Altar',
+                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Colors.green.shade900),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

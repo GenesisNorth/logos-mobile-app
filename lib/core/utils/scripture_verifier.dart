@@ -38,6 +38,33 @@ class ScriptureVerifier {
     return calculateSimilarity(target, transcribed) >= passingThreshold;
   }
 
+  /// Number of leading target words the speaker has reached so far.
+  ///
+  /// Used for live highlighting while reciting. Greedy alignment that
+  /// tolerates a skipped or misheard word (looks ahead up to 2 words).
+  static int matchedWordCount(String target, String transcribed) {
+    final t = normalize(target).split(' ').where((w) => w.isNotEmpty).toList();
+    final s = normalize(transcribed).split(' ').where((w) => w.isNotEmpty);
+    var p = 0;
+    for (final word in s) {
+      if (p >= t.length) break;
+      for (var look = 0; look <= 2 && p + look < t.length; look++) {
+        if (_wordsClose(t[p + look], word)) {
+          p += look + 1;
+          break;
+        }
+      }
+    }
+    return p;
+  }
+
+  static bool _wordsClose(String a, String b) {
+    if (a == b) return true;
+    final longer = max(a.length, b.length);
+    if (longer <= 3) return false;
+    return computeLevenshteinDistance(a, b) <= (longer >= 7 ? 2 : 1);
+  }
+
   /// Classical dynamic programming Levenshtein distance algorithm.
   static int computeLevenshteinDistance(String s1, String s2) {
     final m = s1.length;
