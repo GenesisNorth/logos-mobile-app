@@ -12,6 +12,8 @@ import 'features/journey/bloc/journey_bloc.dart';
 import 'features/journey/bloc/journey_event.dart';
 import 'features/journey/bloc/journey_state.dart';
 import 'features/journey/models/scripture_drop.dart';
+import 'features/journey/screens/encounter_player_screen.dart';
+import 'features/journey/screens/stillness_sanctuary_screen.dart';
 import 'features/onboarding/screens/covenant_screen.dart';
 import 'features/recitation/screens/recitation_dialog.dart';
 
@@ -193,67 +195,6 @@ class _SanctuaryHomeScreenState extends State<SanctuaryHomeScreen> {
     }
   }
 
-  void _showEncounterSequence(BuildContext context, ScriptureDrop drop) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) => Container(
-        height: MediaQuery.of(context).size.height * 0.8,
-        decoration: const BoxDecoration(
-          gradient: LogosColors.sanctuaryGradient,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-        ),
-        padding: const EdgeInsets.all(28),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Day 1: Encounter Sequence',
-                  style: LogosTypography.label(color: Colors.white),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.close, color: Colors.white),
-                  onPressed: () => Navigator.pop(ctx),
-                ),
-              ],
-            ),
-            const Spacer(),
-            ...drop.encounterLines.map((line) => Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8.0),
-                  child: Text(
-                    line,
-                    textAlign: TextAlign.center,
-                    style: LogosTypography.scriptureHero(color: Colors.white).copyWith(
-                      fontSize: 22,
-                      fontWeight: FontWeight.w400,
-                    ),
-                  ),
-                )),
-            const Spacer(),
-            SizedBox(
-              height: 50,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.white,
-                  foregroundColor: LogosColors.coral,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                ),
-                onPressed: () => Navigator.pop(ctx),
-                child: const Text(
-                  'Encounter Received',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -675,7 +616,13 @@ class _SanctuaryHomeScreenState extends State<SanctuaryHomeScreen> {
                 ),
                 icon: const Icon(Icons.play_circle_outline, size: 20),
                 label: const Text('Watch Encounter Sequence'),
-                onPressed: () => _showEncounterSequence(context, drop),
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => EncounterPlayerScreen(drop: drop),
+                    ),
+                  );
+                },
               ),
               const SizedBox(height: 12),
               ElevatedButton.icon(
@@ -877,21 +824,23 @@ class _SanctuaryHomeScreenState extends State<SanctuaryHomeScreen> {
               const SizedBox(height: 16),
               Row(
                 children: [
-                  ElevatedButton(
+                  ElevatedButton.icon(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.white,
                       foregroundColor: const Color(0xFF2D5A60),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     ),
+                    icon: Icon(isStillnessDone ? Icons.check_circle : Icons.spa, size: 16),
                     onPressed: () {
-                      context.read<JourneyBloc>().add(const CompleteDayStillness(3));
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Day 3 Stillness Contemplation Complete ✓')),
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => StillnessSanctuaryScreen(drop: drop),
+                        ),
                       );
                     },
-                    child: Text(
-                      isStillnessDone ? 'Stillness Sealed ✓' : 'Mark Stillness Complete',
-                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    label: Text(
+                      isStillnessDone ? 'Stillness Sealed ✓' : 'Enter Sanctuary Stillness',
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
                     ),
                   ),
                   const SizedBox(width: 10),
