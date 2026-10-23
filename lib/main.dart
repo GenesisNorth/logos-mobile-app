@@ -1,6 +1,9 @@
 import 'dart:async';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:share_plus/share_plus.dart';
 import 'core/services/audio_service.dart';
 import 'core/theme/logos_theme.dart';
 import 'core/theme/logos_typography.dart';
@@ -72,12 +75,9 @@ class _MainAppShellState extends State<MainAppShell> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final surface = isDark ? LogosColors.examenSurface : LogosColors.surface;
-    final ink = isDark ? LogosColors.examenInk : LogosColors.ink;
 
     return BlocBuilder<JourneyBloc, JourneyState>(
       builder: (context, state) {
-        // If loading initial state
         if (state.isLoading) {
           return Scaffold(
             backgroundColor: isDark ? LogosColors.examenBg : LogosColors.sand,
@@ -87,7 +87,6 @@ class _MainAppShellState extends State<MainAppShell> {
           );
         }
 
-        // If user hasn't signed the covenant yet, present Onboarding & Covenant first
         if (!state.profile.hasSignedCovenant) {
           return CovenantScreen(
             onCompleted: () {
@@ -103,51 +102,120 @@ class _MainAppShellState extends State<MainAppShell> {
         ];
 
         return Scaffold(
+          extendBody: true,
           body: IndexedStack(
             index: _currentTabIndex,
             children: pages,
           ),
-          bottomNavigationBar: Container(
-            decoration: BoxDecoration(
-              color: surface,
-              border: Border(
-                top: BorderSide(color: LogosColors.taupe.withValues(alpha: 0.5)),
+          bottomNavigationBar: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 16.0, left: 24.0, right: 24.0),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(32),
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+                  child: Container(
+                    height: 64,
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: isDark
+                          ? const Color(0xDD1F1B17)
+                          : const Color(0xEEFFFDF9),
+                      borderRadius: BorderRadius.circular(32),
+                      border: Border.all(
+                        color: isDark
+                            ? const Color(0x33FFFFFF)
+                            : const Color(0x40E29578),
+                        width: 1,
+                      ),
+                      boxShadow: LogosColors.floatingDockShadow,
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        _buildFloatingTab(
+                          index: 0,
+                          label: 'Sanctuary',
+                          icon: Icons.spa_outlined,
+                          activeIcon: Icons.spa_rounded,
+                          isDark: isDark,
+                        ),
+                        _buildFloatingTab(
+                          index: 1,
+                          label: 'Community',
+                          icon: Icons.forum_outlined,
+                          activeIcon: Icons.forum_rounded,
+                          isDark: isDark,
+                        ),
+                        _buildFloatingTab(
+                          index: 2,
+                          label: 'Altar',
+                          icon: Icons.shield_outlined,
+                          activeIcon: Icons.shield_rounded,
+                          isDark: isDark,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               ),
-            ),
-            child: BottomNavigationBar(
-              currentIndex: _currentTabIndex,
-              backgroundColor: surface,
-              selectedItemColor: LogosColors.coral,
-              unselectedItemColor: ink.withValues(alpha: 0.5),
-              elevation: 0,
-              type: BottomNavigationBarType.fixed,
-              selectedLabelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
-              unselectedLabelStyle: const TextStyle(fontSize: 12),
-              onTap: (index) {
-                AudioService().selectionTick();
-                setState(() => _currentTabIndex = index);
-              },
-              items: const [
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.home_outlined),
-                  activeIcon: Icon(Icons.home),
-                  label: 'Sanctuary',
-                ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.people_outline),
-                  activeIcon: Icon(Icons.people),
-                  label: 'Community',
-                ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.shield_outlined),
-                  activeIcon: Icon(Icons.shield),
-                  label: 'Altar',
-                ),
-              ],
             ),
           ),
         );
       },
+    );
+  }
+
+  Widget _buildFloatingTab({
+    required int index,
+    required String label,
+    required IconData icon,
+    required IconData activeIcon,
+    required bool isDark,
+  }) {
+    final isSelected = _currentTabIndex == index;
+    final ink = isDark ? LogosColors.examenInk : LogosColors.ink;
+
+    return GestureDetector(
+      onTap: () {
+        AudioService().selectionTick();
+        setState(() => _currentTabIndex = index);
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeOutCubic,
+        padding: EdgeInsets.symmetric(
+          horizontal: isSelected ? 18 : 12,
+          vertical: 8,
+        ),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? LogosColors.coral.withValues(alpha: isDark ? 0.28 : 0.16)
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              isSelected ? activeIcon : icon,
+              size: 20,
+              color: isSelected ? LogosColors.coral : ink.withValues(alpha: 0.5),
+            ),
+            if (isSelected) ...[
+              const SizedBox(width: 8),
+              Text(
+                label,
+                style: GoogleFonts.inter(
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w700,
+                  color: isSelected ? LogosColors.coral : ink,
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
     );
   }
 }
@@ -160,7 +228,8 @@ class SanctuaryHomeScreen extends StatefulWidget {
   State<SanctuaryHomeScreen> createState() => _SanctuaryHomeScreenState();
 }
 
-class _SanctuaryHomeScreenState extends State<SanctuaryHomeScreen> {
+class _SanctuaryHomeScreenState extends State<SanctuaryHomeScreen>
+    with SingleTickerProviderStateMixin {
   int _selectedDay = 1;
 
   // Day 3 Stillness state
@@ -168,10 +237,29 @@ class _SanctuaryHomeScreenState extends State<SanctuaryHomeScreen> {
   int _stillnessSecondsElapsed = 0;
   Timer? _stillnessTimer;
 
+  // Audio preview on plaque
+  bool _isPlayingPlaqueChime = false;
+
   @override
   void dispose() {
     _stillnessTimer?.cancel();
     super.dispose();
+  }
+
+  String _getLiturgicalHour() {
+    final hour = DateTime.now().hour;
+    if (hour >= 5 && hour < 12) return 'Morning Matins · Dawn Light';
+    if (hour >= 12 && hour < 17) return 'Noonday Sext · Midday Rest';
+    if (hour >= 17 && hour < 20) return 'Vespers · Golden Hour';
+    return 'Compline · Sacred Quiet';
+  }
+
+  IconData _getLiturgicalIcon() {
+    final hour = DateTime.now().hour;
+    if (hour >= 5 && hour < 12) return Icons.wb_twilight_rounded;
+    if (hour >= 12 && hour < 17) return Icons.wb_sunny_rounded;
+    if (hour >= 17 && hour < 20) return Icons.wb_shade_rounded;
+    return Icons.nightlight_round;
   }
 
   void _toggleStillnessAudio(String preset) {
@@ -188,13 +276,20 @@ class _SanctuaryHomeScreenState extends State<SanctuaryHomeScreen> {
           _stillnessSecondsElapsed++;
         });
         if (_stillnessSecondsElapsed >= 60) {
-          // 60-second stillness completed
           context.read<JourneyBloc>().add(const CompleteDayStillness(3));
         }
       });
     }
   }
 
+  void _playPlaqueChime() async {
+    setState(() => _isPlayingPlaqueChime = true);
+    await AudioService().playSanctuaryChime();
+    await Future.delayed(const Duration(seconds: 2));
+    if (mounted) {
+      setState(() => _isPlayingPlaqueChime = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -209,20 +304,23 @@ class _SanctuaryHomeScreenState extends State<SanctuaryHomeScreen> {
         return Scaffold(
           backgroundColor: isDark ? LogosColors.examenBg : LogosColors.sand,
           body: CustomScrollView(
+            physics: const BouncingScrollPhysics(),
             slivers: [
               // Liturgical App Bar
               SliverAppBar(
                 floating: true,
                 pinned: true,
-                backgroundColor: surface,
+                backgroundColor: surface.withValues(alpha: 0.95),
                 elevation: 0,
                 title: Row(
                   children: [
                     Container(
-                      width: 28,
-                      height: 28,
+                      width: 32,
+                      height: 32,
                       decoration: const BoxDecoration(
-                        color: LogosColors.coral,
+                        gradient: LinearGradient(
+                          colors: [Color(0xFFE29578), Color(0xFFD4AF37)],
+                        ),
                         shape: BoxShape.circle,
                       ),
                       alignment: Alignment.center,
@@ -236,9 +334,33 @@ class _SanctuaryHomeScreenState extends State<SanctuaryHomeScreen> {
                       ),
                     ),
                     const SizedBox(width: 10),
-                    Text(
-                      'LOGOS IN ME',
-                      style: LogosTypography.label(color: ink),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'LOGOS IN ME',
+                          style: GoogleFonts.inter(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 1.8,
+                            color: ink,
+                          ),
+                        ),
+                        Row(
+                          children: [
+                            Icon(_getLiturgicalIcon(), size: 11, color: LogosColors.coral),
+                            const SizedBox(width: 4),
+                            Text(
+                              _getLiturgicalHour(),
+                              style: GoogleFonts.inter(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w600,
+                                color: LogosColors.coral,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
                   ],
                 ),
@@ -247,11 +369,14 @@ class _SanctuaryHomeScreenState extends State<SanctuaryHomeScreen> {
                     tooltip: 'Toggle Examen Contemplation Mode',
                     icon: Icon(
                       widget.examenController.isExamenMode
-                          ? Icons.wb_sunny_outlined
-                          : Icons.bedtime_outlined,
+                          ? Icons.wb_sunny_rounded
+                          : Icons.bedtime_rounded,
                       color: LogosColors.coral,
                     ),
-                    onPressed: widget.examenController.toggleExamenPreview,
+                    onPressed: () {
+                      AudioService().selectionTick();
+                      widget.examenController.toggleExamenPreview();
+                    },
                   ),
                   const SizedBox(width: 8),
                 ],
@@ -260,17 +385,17 @@ class _SanctuaryHomeScreenState extends State<SanctuaryHomeScreen> {
               // Sanctuary Content
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                  padding: const EdgeInsets.symmetric(horizontal: 22.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 14),
 
-                      // Metrics & Streak Pill Bar
+                      // Metrics & Streak Frosted Pill Bar
                       Row(
                         children: [
                           _buildPill(
-                            icon: Icons.local_fire_department,
+                            icon: Icons.local_fire_department_rounded,
                             iconColor: LogosColors.coral,
                             label: '${state.currentStreak} Day Streak',
                             surface: surface,
@@ -278,7 +403,7 @@ class _SanctuaryHomeScreenState extends State<SanctuaryHomeScreen> {
                           ),
                           const SizedBox(width: 8),
                           _buildPill(
-                            icon: Icons.eco,
+                            icon: Icons.eco_rounded,
                             iconColor: const Color(0xFF10B981),
                             label: '${state.rootsPlanted} Roots',
                             surface: surface,
@@ -286,8 +411,8 @@ class _SanctuaryHomeScreenState extends State<SanctuaryHomeScreen> {
                           ),
                           const Spacer(),
                           _buildPill(
-                            icon: Icons.shield,
-                            iconColor: Colors.amber.shade700,
+                            icon: Icons.shield_rounded,
+                            iconColor: const Color(0xFFD4AF37),
                             label: '${state.graceTokensBalance} Grace',
                             surface: surface,
                             ink: ink,
@@ -295,17 +420,22 @@ class _SanctuaryHomeScreenState extends State<SanctuaryHomeScreen> {
                         ],
                       ),
 
-                      // Examen Evening Card (Surfaced during 8 PM - 5 AM or preview)
+                      // Examen Evening Card
                       if (widget.examenController.isExamenMode) ...[
                         const SizedBox(height: 16),
                         Container(
-                          padding: const EdgeInsets.all(16),
+                          padding: const EdgeInsets.all(20),
                           decoration: BoxDecoration(
-                            color: const Color(0xFF2E2620),
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(
-                              color: LogosColors.coral.withValues(alpha: 0.4),
+                            gradient: const LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: [Color(0xFF2E2620), Color(0xFF1F1B17)],
                             ),
+                            borderRadius: BorderRadius.circular(22),
+                            border: Border.all(
+                              color: LogosColors.coral.withValues(alpha: 0.35),
+                            ),
+                            boxShadow: LogosColors.softShadow,
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -313,7 +443,7 @@ class _SanctuaryHomeScreenState extends State<SanctuaryHomeScreen> {
                               Row(
                                 children: [
                                   const Icon(
-                                    Icons.nights_stay,
+                                    Icons.nightlight_round,
                                     size: 18,
                                     color: LogosColors.coral,
                                   ),
@@ -326,203 +456,315 @@ class _SanctuaryHomeScreenState extends State<SanctuaryHomeScreen> {
                                   ),
                                 ],
                               ),
-                              const SizedBox(height: 8),
-                              Text(
+                              const SizedBox(height: 12),
+                              _buildExamenPrompt(
                                 '1. Where did you sense the presence of Christ today?',
-                                style: LogosTypography.body(
-                                  color: LogosColors.examenInk.withValues(alpha: 0.9),
-                                ),
                               ),
-                              const SizedBox(height: 4),
-                              Text(
+                              _buildExamenPrompt(
                                 '2. What heavy weight can you leave at the cross tonight?',
-                                style: LogosTypography.body(
-                                  color: LogosColors.examenInk.withValues(alpha: 0.9),
-                                ),
                               ),
-                              const SizedBox(height: 4),
-                              Text(
+                              _buildExamenPrompt(
                                 '3. What gratitude fills your heart before sleep?',
-                                style: LogosTypography.body(
-                                  color: LogosColors.examenInk.withValues(alpha: 0.9),
-                                ),
                               ),
                             ],
                           ),
                         ),
                       ],
 
-                      const SizedBox(height: 18),
+                      const SizedBox(height: 20),
 
-                      // Scripture Plaque
+                      // Illuminated Scripture Relic Plaque
                       Container(
-                        padding: const EdgeInsets.all(22),
+                        padding: const EdgeInsets.all(24),
                         decoration: BoxDecoration(
-                          color: surface,
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: LogosColors.taupe),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.03),
-                              blurRadius: 10,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
+                          gradient: isDark
+                              ? LogosColors.examenParchmentGradient
+                              : LogosColors.parchmentGradient,
+                          borderRadius: BorderRadius.circular(26),
+                          border: Border.all(
+                            color: LogosColors.coral.withValues(alpha: 0.35),
+                            width: 1.2,
+                          ),
+                          boxShadow: LogosColors.relicShadow,
                         ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                        child: Stack(
                           children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  'WEEK ${drop.weekNumber} SCRIPTURE',
-                                  style: LogosTypography.caption(
-                                    color: LogosColors.coral,
-                                  ).copyWith(letterSpacing: 1.5, fontWeight: FontWeight.bold),
-                                ),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                                  decoration: BoxDecoration(
-                                    color: ink.withValues(alpha: 0.06),
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: Text(
-                                    drop.translation,
-                                    style: LogosTypography.caption(
-                                      color: ink.withValues(alpha: 0.7),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 14),
-                            Text(
-                              '"${drop.verseText}"',
-                              style: LogosTypography.scriptureHero(color: ink),
-                            ),
-                            const SizedBox(height: 12),
-                            Align(
-                              alignment: Alignment.centerRight,
+                            // Ambient quotation watermark
+                            Positioned(
+                              top: -8,
+                              right: 0,
                               child: Text(
-                                drop.reference,
-                                style: LogosTypography.scriptureCitation(
-                                  color: LogosColors.coral,
+                                '“',
+                                style: GoogleFonts.sourceSerif4(
+                                  fontSize: 84,
+                                  fontWeight: FontWeight.w700,
+                                  color: LogosColors.coral.withValues(alpha: 0.12),
+                                  height: 1,
                                 ),
                               ),
+                            ),
+
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                      decoration: BoxDecoration(
+                                        color: LogosColors.coral.withValues(alpha: 0.15),
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          const Icon(Icons.auto_stories, size: 12, color: LogosColors.coral),
+                                          const SizedBox(width: 6),
+                                          Text(
+                                            'WEEK ${drop.weekNumber} SCRIPTURE',
+                                            style: GoogleFonts.inter(
+                                              fontSize: 10,
+                                              fontWeight: FontWeight.w800,
+                                              letterSpacing: 1.4,
+                                              color: LogosColors.coral,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                      decoration: BoxDecoration(
+                                        color: ink.withValues(alpha: 0.06),
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: Text(
+                                        drop.translation,
+                                        style: GoogleFonts.inter(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w600,
+                                          color: ink.withValues(alpha: 0.7),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 16),
+                                Text(
+                                  '“${drop.verseText}”',
+                                  style: LogosTypography.scriptureHero(color: ink),
+                                ),
+                                const SizedBox(height: 14),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    // Audio chime preview chip
+                                    GestureDetector(
+                                      onTap: _playPlaqueChime,
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                        decoration: BoxDecoration(
+                                          color: LogosColors.coral.withValues(alpha: 0.12),
+                                          borderRadius: BorderRadius.circular(20),
+                                          border: Border.all(
+                                            color: LogosColors.coral.withValues(alpha: 0.3),
+                                          ),
+                                        ),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Icon(
+                                              _isPlayingPlaqueChime ? Icons.graphic_eq : Icons.volume_up_rounded,
+                                              size: 14,
+                                              color: LogosColors.coral,
+                                            ),
+                                            const SizedBox(width: 6),
+                                            Text(
+                                              _isPlayingPlaqueChime ? 'Sanctuary Bell...' : 'Listen Chime',
+                                              style: GoogleFonts.inter(
+                                                fontSize: 11,
+                                                fontWeight: FontWeight.w700,
+                                                color: LogosColors.coral,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                    Row(
+                                      children: [
+                                        Text(
+                                          drop.reference,
+                                          style: LogosTypography.scriptureCitation(
+                                            color: LogosColors.coral,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        IconButton(
+                                          constraints: const BoxConstraints(),
+                                          padding: EdgeInsets.zero,
+                                          icon: Icon(Icons.share_outlined, size: 16, color: ink.withValues(alpha: 0.5)),
+                                          onPressed: () {
+                                            SharePlus.instance.share(
+                                              ShareParams(
+                                                text: '“${drop.verseText}” — ${drop.reference} (LOGOS IN ME)',
+                                                subject: 'Scripture of the Week',
+                                              ),
+                                            );
+                                          },
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ],
                             ),
                           ],
                         ),
                       ),
 
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 26),
 
-                      // 4-Day Journey Step Selector
+                      // 4-Day Sacred Rhythm Section Header
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(
-                            'The 4-Day Sacred Rhythm',
-                            style: LogosTypography.headline(color: ink),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'The 4-Day Sacred Rhythm',
+                                style: LogosTypography.sacredHeader(color: ink),
+                              ),
+                              Text(
+                                'Pace-locked: One divine step per day',
+                                style: GoogleFonts.inter(
+                                  fontSize: 11,
+                                  color: ink.withValues(alpha: 0.6),
+                                ),
+                              ),
+                            ],
                           ),
                           if (state.dayCompletionStatus[4] == true)
                             TextButton.icon(
-                              icon: const Icon(Icons.arrow_forward, size: 14),
-                              label: const Text('Next Week', style: TextStyle(fontSize: 12)),
+                              style: TextButton.styleFrom(
+                                foregroundColor: LogosColors.coral,
+                              ),
+                              icon: const Icon(Icons.arrow_forward_rounded, size: 14),
+                              label: const Text('Next Week', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
                               onPressed: () {
                                 context.read<JourneyBloc>().add(const AdvanceToNextWeek());
                               },
                             ),
                         ],
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 14),
 
-                      Row(
-                        children: List.generate(4, (index) {
-                          final day = index + 1;
-                          final isSelected = _selectedDay == day;
-                          final isCompleted = state.dayCompletionStatus[day] ?? false;
-                          final isUnlocked = state.isDayUnlocked(day);
-                          final durationUntilUnlock = state.timeUntilUnlock(day);
+                      // Connected Rhythm Pathway Dock
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: surface,
+                          borderRadius: BorderRadius.circular(22),
+                          border: Border.all(color: LogosColors.taupe.withValues(alpha: 0.6)),
+                          boxShadow: LogosColors.softShadow,
+                        ),
+                        child: Row(
+                          children: List.generate(4, (index) {
+                            final day = index + 1;
+                            final isSelected = _selectedDay == day;
+                            final isCompleted = state.dayCompletionStatus[day] ?? false;
+                            final isUnlocked = state.isDayUnlocked(day);
+                            final durationUntilUnlock = state.timeUntilUnlock(day);
 
-                          return Expanded(
-                            child: GestureDetector(
-                              onTap: isUnlocked
-                                  ? () {
-                                      AudioService().selectionTick();
-                                      setState(() => _selectedDay = day);
-                                      context.read<JourneyBloc>().add(SelectDay(day));
-                                    }
-                                  : () {
-                                      final hours = durationUntilUnlock != null ? durationUntilUnlock.inHours : 0;
-                                      final mins = durationUntilUnlock != null ? (durationUntilUnlock.inMinutes % 60) : 0;
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        SnackBar(
-                                          content: Text(
-                                            'Pace-locked: Day $day unlocks at midnight ($hours hr $mins min remaining). Rest and meditate on today\'s word.',
+                            return Expanded(
+                              child: GestureDetector(
+                                onTap: isUnlocked
+                                    ? () {
+                                        AudioService().selectionTick();
+                                        setState(() => _selectedDay = day);
+                                        context.read<JourneyBloc>().add(SelectDay(day));
+                                      }
+                                    : () {
+                                        final hours = durationUntilUnlock != null ? durationUntilUnlock.inHours : 0;
+                                        final mins = durationUntilUnlock != null ? (durationUntilUnlock.inMinutes % 60) : 0;
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(
+                                            content: Text(
+                                              'Pace-locked: Day $day unlocks at midnight ($hours hr $mins min remaining). Rest and meditate on today\'s word.',
+                                            ),
                                           ),
-                                        ),
-                                      );
-                                    },
-                              child: Container(
-                                margin: EdgeInsets.only(
-                                  right: day < 4 ? 8 : 0,
-                                ),
-                                padding: const EdgeInsets.symmetric(vertical: 12),
-                                decoration: BoxDecoration(
-                                  color: isSelected
-                                      ? LogosColors.coral
-                                      : (isUnlocked
-                                          ? surface
-                                          : surface.withValues(alpha: 0.4)),
-                                  borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(
+                                        );
+                                      },
+                                child: AnimatedContainer(
+                                  duration: const Duration(milliseconds: 250),
+                                  margin: EdgeInsets.only(right: day < 4 ? 6 : 0),
+                                  padding: const EdgeInsets.symmetric(vertical: 12),
+                                  decoration: BoxDecoration(
+                                    gradient: isSelected
+                                        ? const LinearGradient(
+                                            colors: [Color(0xFFE29578), Color(0xFFD4AF37)],
+                                          )
+                                        : null,
                                     color: isSelected
-                                        ? LogosColors.coral
-                                        : LogosColors.taupe,
-                                  ),
-                                ),
-                                child: Column(
-                                  children: [
-                                    Icon(
-                                      isCompleted
-                                          ? Icons.check_circle
-                                          : (isUnlocked
-                                              ? Icons.circle_outlined
-                                              : Icons.lock_outline),
-                                      size: 16,
+                                        ? null
+                                        : (isUnlocked ? surface : surface.withValues(alpha: 0.35)),
+                                    borderRadius: BorderRadius.circular(16),
+                                    border: Border.all(
                                       color: isSelected
-                                          ? Colors.white
-                                          : (isUnlocked
-                                              ? (isCompleted
-                                                  ? Colors.green
-                                                  : ink)
-                                              : ink.withValues(alpha: 0.3)),
+                                          ? Colors.transparent
+                                          : (isUnlocked ? LogosColors.taupe : LogosColors.taupe.withValues(alpha: 0.4)),
+                                      width: 1,
                                     ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      'Day $day',
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.bold,
+                                    boxShadow: isSelected
+                                        ? [
+                                            BoxShadow(
+                                              color: const Color(0xFFE29578).withValues(alpha: 0.4),
+                                              blurRadius: 10,
+                                              offset: const Offset(0, 3),
+                                            ),
+                                          ]
+                                        : null,
+                                  ),
+                                  child: Column(
+                                    children: [
+                                      Icon(
+                                        isCompleted
+                                            ? Icons.check_circle_rounded
+                                            : (isUnlocked
+                                                ? Icons.radio_button_unchecked_rounded
+                                                : Icons.lock_outline_rounded),
+                                        size: 16,
                                         color: isSelected
                                             ? Colors.white
                                             : (isUnlocked
-                                                ? ink
-                                                : ink.withValues(alpha: 0.4)),
+                                                ? (isCompleted ? const Color(0xFF10B981) : ink)
+                                                : ink.withValues(alpha: 0.3)),
                                       ),
-                                    ),
-                                  ],
+                                      const SizedBox(height: 5),
+                                      Text(
+                                        'Day $day',
+                                        style: GoogleFonts.inter(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w700,
+                                          color: isSelected
+                                              ? Colors.white
+                                              : (isUnlocked ? ink : ink.withValues(alpha: 0.4)),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ),
-                            ),
-                          );
-                        }),
+                            );
+                          }),
+                        ),
                       ),
 
                       const SizedBox(height: 20),
 
-                      // Active Day Card View
+                      // Active Day Detail Card View
                       _buildDayDetailCard(
                         context: context,
                         day: _selectedDay,
@@ -530,9 +772,10 @@ class _SanctuaryHomeScreenState extends State<SanctuaryHomeScreen> {
                         state: state,
                         surface: surface,
                         ink: ink,
+                        isDark: isDark,
                       ),
 
-                      const SizedBox(height: 36),
+                      const SizedBox(height: 100), // clearance for floating dock
                     ],
                   ),
                 ),
@@ -552,26 +795,41 @@ class _SanctuaryHomeScreenState extends State<SanctuaryHomeScreen> {
     required Color ink,
   }) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
       decoration: BoxDecoration(
         color: surface,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: LogosColors.taupe),
+        boxShadow: LogosColors.softShadow,
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, size: 14, color: iconColor),
-          const SizedBox(width: 5),
+          const SizedBox(width: 6),
           Text(
             label,
-            style: TextStyle(
+            style: GoogleFonts.inter(
               fontSize: 11,
-              fontWeight: FontWeight.w600,
+              fontWeight: FontWeight.w700,
               color: ink,
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildExamenPrompt(String text) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6.0),
+      child: Text(
+        text,
+        style: GoogleFonts.inter(
+          fontSize: 13,
+          height: 1.4,
+          color: LogosColors.examenInk.withValues(alpha: 0.9),
+        ),
       ),
     );
   }
@@ -583,84 +841,150 @@ class _SanctuaryHomeScreenState extends State<SanctuaryHomeScreen> {
     required JourneyState state,
     required Color surface,
     required Color ink,
+    required bool isDark,
   }) {
     switch (day) {
       case 1:
         final count = state.dayRecitationCount[1] ?? 0;
         final isPassed = count >= 2;
         return Container(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.all(22),
           decoration: BoxDecoration(
             color: surface,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(24),
             border: Border.all(color: LogosColors.taupe),
+            boxShadow: LogosColors.softShadow,
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'Day 1: Encounter',
-                style: LogosTypography.label(color: LogosColors.coral),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'DAY 1 · ENCOUNTER',
+                    style: GoogleFonts.inter(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 1.4,
+                      color: LogosColors.coral,
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: isPassed
+                          ? const Color(0xFF10B981).withValues(alpha: 0.15)
+                          : LogosColors.coral.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(
+                      isPassed ? 'Completed ✓' : '$count/2 Recitations',
+                      style: GoogleFonts.inter(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: isPassed ? const Color(0xFF10B981) : LogosColors.coral,
+                      ),
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 6),
+              const SizedBox(height: 8),
               Text(
                 'Immerse in the introductory cinematic encounter lines, then complete your first 2 microphone recitation passes.',
                 style: LogosTypography.body(color: ink.withValues(alpha: 0.8)),
               ),
-              const SizedBox(height: 14),
-              OutlinedButton.icon(
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: ink,
-                  side: const BorderSide(color: LogosColors.taupe),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                ),
-                icon: const Icon(Icons.play_circle_outline, size: 20),
-                label: const Text('Watch Encounter Sequence'),
-                onPressed: () {
+              const SizedBox(height: 18),
+              // Cinematic Video Watch Button
+              GestureDetector(
+                onTap: () {
                   Navigator.of(context).push(
                     MaterialPageRoute(
                       builder: (_) => EncounterPlayerScreen(drop: drop),
                     ),
                   );
                 },
-              ),
-              const SizedBox(height: 12),
-              ElevatedButton.icon(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: LogosColors.coral,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: ink.withValues(alpha: 0.04),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: LogosColors.taupe),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 36,
+                        height: 36,
+                        decoration: BoxDecoration(
+                          color: LogosColors.coral.withValues(alpha: 0.2),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(Icons.play_arrow_rounded, color: LogosColors.coral),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Watch Encounter Sequence',
+                              style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w700, color: ink),
+                            ),
+                            Text(
+                              'Cinematic visual & audio immersion',
+                              style: GoogleFonts.inter(fontSize: 11, color: ink.withValues(alpha: 0.55)),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const Icon(Icons.chevron_right, size: 18, color: Colors.grey),
+                    ],
                   ),
                 ),
-                icon: const Icon(Icons.mic),
-                label: Text(
-                  isPassed
-                      ? 'Recitations Complete ($count/2 Passed ✓)'
-                      : 'Begin Recitation Ritual ($count/2)',
-                ),
-                onPressed: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      fullscreenDialog: true,
-                      builder: (_) => RecitationDialog(
-                        verseText: drop.verseText,
-                        reference: drop.reference,
-                        dayNumber: 1,
-                        passNumber: count < 2 ? count + 1 : 2,
-                        totalPasses: 2,
-                        onPassed: (score) {
-                          context.read<JourneyBloc>().add(
-                                CompleteDayRecitation(
-                                  dayNumber: 1,
-                                  score: score,
-                                ),
-                              );
-                        },
+              ),
+              const SizedBox(height: 14),
+              // Recitation CTA
+              SizedBox(
+                width: double.infinity,
+                height: 50,
+                child: ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: isPassed ? const Color(0xFF10B981) : LogosColors.coral,
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  ),
+                  icon: const Icon(Icons.mic_rounded),
+                  label: Text(
+                    isPassed
+                        ? 'Recitations Complete ($count/2 Passed ✓)'
+                        : 'Begin Recitation Ritual ($count/2)',
+                    style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w700),
+                  ),
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        fullscreenDialog: true,
+                        builder: (_) => RecitationDialog(
+                          verseText: drop.verseText,
+                          reference: drop.reference,
+                          dayNumber: 1,
+                          passNumber: count < 2 ? count + 1 : 2,
+                          totalPasses: 2,
+                          onPassed: (score) {
+                            context.read<JourneyBloc>().add(
+                                  CompleteDayRecitation(
+                                    dayNumber: 1,
+                                    score: score,
+                                  ),
+                                );
+                          },
+                        ),
                       ),
-                    ),
-                  );
-                },
+                    );
+                  },
+                ),
               ),
             ],
           ),
@@ -670,45 +994,88 @@ class _SanctuaryHomeScreenState extends State<SanctuaryHomeScreen> {
         final count = state.dayRecitationCount[2] ?? 0;
         final isPassed = count >= 2;
         return Container(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.all(22),
           decoration: BoxDecoration(
             color: surface,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(24),
             border: Border.all(color: LogosColors.taupe),
+            boxShadow: LogosColors.softShadow,
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'Day 2: Context & Exegesis',
-                style: LogosTypography.label(color: LogosColors.coral),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'DAY 2 · CONTEXT & EXEGESIS',
+                    style: GoogleFonts.inter(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 1.4,
+                      color: LogosColors.coral,
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: isPassed
+                          ? const Color(0xFF10B981).withValues(alpha: 0.15)
+                          : LogosColors.coral.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(
+                      isPassed ? 'Completed ✓' : '$count/2 Recitations',
+                      style: GoogleFonts.inter(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: isPassed ? const Color(0xFF10B981) : LogosColors.coral,
+                      ),
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 6),
+              const SizedBox(height: 8),
               Text(
                 'Dwell on the theological and historical background of this Scripture, then complete 2 recitations.',
                 style: LogosTypography.body(color: ink.withValues(alpha: 0.8)),
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: 16),
               ...drop.contextCards.map((card) => Padding(
                     padding: const EdgeInsets.only(bottom: 12.0),
                     child: Container(
-                      padding: const EdgeInsets.all(14),
+                      padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: ink.withValues(alpha: 0.04),
-                        borderRadius: BorderRadius.circular(12),
+                        color: ink.withValues(alpha: 0.03),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: LogosColors.taupe.withValues(alpha: 0.7)),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: LogosColors.coral.withValues(alpha: 0.15),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: Text(
+                                  card.subtitle,
+                                  style: GoogleFonts.inter(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w700,
+                                    color: LogosColors.coral,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 6),
                           Text(
                             card.title,
-                            style: LogosTypography.label(color: ink),
-                          ),
-                          Text(
-                            card.subtitle,
-                            style: LogosTypography.caption(
-                              color: LogosColors.coral,
-                            ),
+                            style: LogosTypography.sacredHeader(color: ink).copyWith(fontSize: 16),
                           ),
                           const SizedBox(height: 6),
                           Text(
@@ -722,40 +1089,46 @@ class _SanctuaryHomeScreenState extends State<SanctuaryHomeScreen> {
                     ),
                   )),
               const SizedBox(height: 8),
-              ElevatedButton.icon(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: LogosColors.coral,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                ),
-                icon: const Icon(Icons.mic),
-                label: Text(
-                  isPassed
-                      ? 'Recitations Complete ($count/2 Passed ✓)'
-                      : 'Day 2 Recitation ($count/2)',
-                ),
-                onPressed: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      fullscreenDialog: true,
-                      builder: (_) => RecitationDialog(
-                        verseText: drop.verseText,
-                        reference: drop.reference,
-                        dayNumber: 2,
-                        passNumber: count < 2 ? count + 1 : 2,
-                        totalPasses: 2,
-                        onPassed: (score) {
-                          context.read<JourneyBloc>().add(
-                                CompleteDayRecitation(
-                                  dayNumber: 2,
-                                  score: score,
-                                ),
-                              );
-                        },
+              SizedBox(
+                width: double.infinity,
+                height: 50,
+                child: ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: isPassed ? const Color(0xFF10B981) : LogosColors.coral,
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  ),
+                  icon: const Icon(Icons.mic_rounded),
+                  label: Text(
+                    isPassed
+                        ? 'Day 2 Complete ($count/2 Passed ✓)'
+                        : 'Begin Day 2 Recitation ($count/2)',
+                    style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w700),
+                  ),
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        fullscreenDialog: true,
+                        builder: (_) => RecitationDialog(
+                          verseText: drop.verseText,
+                          reference: drop.reference,
+                          dayNumber: 2,
+                          passNumber: count < 2 ? count + 1 : 2,
+                          totalPasses: 2,
+                          onPassed: (score) {
+                            context.read<JourneyBloc>().add(
+                                  CompleteDayRecitation(
+                                    dayNumber: 2,
+                                    score: score,
+                                  ),
+                                );
+                          },
+                        ),
                       ),
-                    ),
-                  );
-                },
+                    );
+                  },
+                ),
               ),
             ],
           ),
@@ -766,55 +1139,96 @@ class _SanctuaryHomeScreenState extends State<SanctuaryHomeScreen> {
         final isStillnessDone = state.dayCompletionStatus[3] == true;
 
         return Container(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.all(22),
           decoration: BoxDecoration(
-            gradient: LogosColors.sanctuaryGradient,
-            borderRadius: BorderRadius.circular(16),
+            gradient: const LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [Color(0xFF24484D), Color(0xFF173337)],
+            ),
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: LogosColors.relicShadow,
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                'Day 3: Logos & Stillness',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 18,
-                ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'DAY 3 · LOGOS & STILLNESS',
+                    style: GoogleFonts.inter(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 1.4,
+                      color: const Color(0xFFE29578),
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: isStillnessDone
+                          ? const Color(0xFF10B981).withValues(alpha: 0.25)
+                          : Colors.white.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(
+                      isStillnessDone ? 'Stillness Sealed ✓' : '60s Required',
+                      style: GoogleFonts.inter(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: isStillnessDone ? const Color(0xFF86EFAC) : Colors.white70,
+                      ),
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 8),
-              const Text(
+              Text(
                 'Full-bleed sanctuary contemplation with 432 Hz ambient soundscapes. Rest your thoughts in Christ for at least 60 seconds.',
-                style: TextStyle(color: Colors.white70, fontSize: 13, height: 1.4),
+                style: GoogleFonts.inter(color: Colors.white70, fontSize: 13, height: 1.45),
               ),
-              const SizedBox(height: 16),
-              // Ambient player pill
+              const SizedBox(height: 18),
+              // Ambient player button
               GestureDetector(
                 onTap: () => _toggleStillnessAudio(drop.ambientPreset),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.22),
-                    borderRadius: BorderRadius.circular(24),
-                    border: Border.all(color: Colors.white30),
+                    color: Colors.white.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
                   ),
                   child: Row(
-                    mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(
-                        _isStillnessPlaying ? Icons.pause_circle : Icons.play_circle,
-                        color: Colors.white,
-                        size: 24,
+                        _isStillnessPlaying ? Icons.pause_circle_filled_rounded : Icons.play_circle_fill_rounded,
+                        color: const Color(0xFFE29578),
+                        size: 30,
                       ),
-                      const SizedBox(width: 8),
-                      Text(
-                        _isStillnessPlaying
-                            ? '${drop.ambientLabel} (${_stillnessSecondsElapsed}s / 60s)'
-                            : 'Play ${drop.ambientLabel}',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              drop.ambientLabel,
+                              style: GoogleFonts.inter(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.white,
+                              ),
+                            ),
+                            Text(
+                              _isStillnessPlaying
+                                  ? 'Playing (${_stillnessSecondsElapsed}s / 60s elapsed)'
+                                  : 'Tap to start 432 Hz loop',
+                              style: GoogleFonts.inter(
+                                fontSize: 11,
+                                color: Colors.white60,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ],
@@ -824,29 +1238,32 @@ class _SanctuaryHomeScreenState extends State<SanctuaryHomeScreen> {
               const SizedBox(height: 16),
               Row(
                 children: [
-                  ElevatedButton.icon(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      foregroundColor: const Color(0xFF2D5A60),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    ),
-                    icon: Icon(isStillnessDone ? Icons.check_circle : Icons.spa, size: 16),
-                    onPressed: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => StillnessSanctuaryScreen(drop: drop),
-                        ),
-                      );
-                    },
-                    label: Text(
-                      isStillnessDone ? 'Stillness Sealed ✓' : 'Enter Sanctuary Stillness',
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.white,
+                        foregroundColor: const Color(0xFF1E3C40),
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      ),
+                      icon: Icon(isStillnessDone ? Icons.check_circle_rounded : Icons.spa_rounded, size: 16),
+                      onPressed: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => StillnessSanctuaryScreen(drop: drop),
+                          ),
+                        );
+                      },
+                      label: Text(
+                        isStillnessDone ? 'Sanctuary Sealed ✓' : 'Enter Sanctuary',
+                        style: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 12.5),
+                      ),
                     ),
                   ),
                   const SizedBox(width: 10),
                   TextButton.icon(
                     style: TextButton.styleFrom(foregroundColor: Colors.white),
-                    icon: const Icon(Icons.mic, size: 18),
+                    icon: const Icon(Icons.mic, size: 16),
                     label: Text('Recite ($count)'),
                     onPressed: () {
                       Navigator.of(context).push(
@@ -882,41 +1299,69 @@ class _SanctuaryHomeScreenState extends State<SanctuaryHomeScreen> {
         final hasPassedMaster = count >= 1;
 
         return Container(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.all(22),
           decoration: BoxDecoration(
             color: surface,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(24),
             border: Border.all(color: LogosColors.coral, width: 1.5),
+            boxShadow: LogosColors.relicShadow,
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'Day 4: Master Recitation & The Exchange',
-                style: LogosTypography.label(color: LogosColors.coral),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'DAY 4 · THE SACRED CLIMAX',
+                    style: GoogleFonts.inter(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 1.4,
+                      color: LogosColors.coral,
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: state.isExchangeCompleted
+                          ? const Color(0xFF10B981).withValues(alpha: 0.15)
+                          : const Color(0xFFD4AF37).withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(
+                      state.isExchangeCompleted ? 'Week Completed ✓' : 'Master Test',
+                      style: GoogleFonts.inter(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: state.isExchangeCompleted ? const Color(0xFF10B981) : const Color(0xFFD4AF37),
+                      ),
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 6),
+              const SizedBox(height: 8),
               Text(
                 'The sacred climax of the week: pass your master recitation test in Memory Mode (from the heart), then drag the Scripture over your heavy burden to dissolve it into a Tear Sheet.',
                 style: LogosTypography.body(color: ink.withValues(alpha: 0.85)),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 18),
               Row(
                 children: [
                   Expanded(
                     child: OutlinedButton.icon(
                       style: OutlinedButton.styleFrom(
                         foregroundColor: ink,
-                        side: BorderSide(color: hasPassedMaster ? Colors.green : LogosColors.coral),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        side: BorderSide(color: hasPassedMaster ? const Color(0xFF10B981) : LogosColors.coral),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                       ),
                       icon: Icon(
-                        hasPassedMaster ? Icons.check_circle : Icons.psychology,
-                        color: hasPassedMaster ? Colors.green : LogosColors.coral,
+                        hasPassedMaster ? Icons.check_circle_rounded : Icons.psychology_rounded,
+                        color: hasPassedMaster ? const Color(0xFF10B981) : LogosColors.coral,
                       ),
                       label: Text(
-                        hasPassedMaster ? 'Master Test Passed ✓' : '1. Master Test (Memory)',
-                        style: const TextStyle(fontSize: 12),
+                        hasPassedMaster ? 'Master Test Passed ✓' : '1. Master Recitation',
+                        style: GoogleFonts.inter(fontSize: 11.5, fontWeight: FontWeight.w600),
                       ),
                       onPressed: () {
                         Navigator.of(context).push(
@@ -949,12 +1394,13 @@ class _SanctuaryHomeScreenState extends State<SanctuaryHomeScreen> {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: LogosColors.coral,
                         foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                       ),
-                      icon: const Icon(Icons.sync_alt, size: 16),
+                      icon: const Icon(Icons.sync_alt_rounded, size: 16),
                       label: Text(
                         state.isExchangeCompleted ? 'Exchange Done ✓' : '2. The Exchange',
-                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                        style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w700),
                       ),
                       onPressed: () {
                         Navigator.of(context).push(

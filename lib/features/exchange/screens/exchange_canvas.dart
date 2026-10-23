@@ -1,5 +1,6 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../../core/services/audio_service.dart';
 import '../../../core/theme/logos_theme.dart';
@@ -413,72 +414,113 @@ LOGOS IN ME
     final dateStr = '${now.day} / ${now.month} / ${now.year}';
 
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: const Color(0xFFFAF6F0), // Paper-textured card
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: LogosColors.coral.withValues(alpha: 0.4)),
+        gradient: LogosColors.parchmentGradient,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(
+          color: const Color(0xFFD4AF37).withValues(alpha: 0.6),
+          width: 1.2,
+        ),
+        boxShadow: LogosColors.relicShadow,
       ),
       child: SingleChildScrollView(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              width: 32,
-              height: 32,
-              decoration: const BoxDecoration(
-                color: LogosColors.coral,
+              width: 38,
+              height: 38,
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFFE29578), Color(0xFFD4AF37)],
+                ),
                 shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFFE29578).withValues(alpha: 0.4),
+                    blurRadius: 10,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
               ),
               alignment: Alignment.center,
               child: const Text('✝', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 12),
             Text(
-              'THE EXCHANGE · WEEK ${widget.weekNumber}',
-              style: LogosTypography.caption(color: LogosColors.ink.withValues(alpha: 0.6)).copyWith(
-                letterSpacing: 2.0,
-                fontWeight: FontWeight.bold,
+              'THE SACRED EXCHANGE · WEEK ${widget.weekNumber}',
+              style: GoogleFonts.inter(
+                fontSize: 10,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 2.2,
+                color: const Color(0xFFD4AF37),
               ),
             ),
             const SizedBox(height: 16),
             Text(
-              '"${widget.verseText}"',
+              '“${widget.verseText}”',
               textAlign: TextAlign.center,
-              style: LogosTypography.scriptureHero(color: LogosColors.ink).copyWith(fontSize: 19),
+              style: LogosTypography.scriptureHero(color: LogosColors.ink).copyWith(fontSize: 19.5, height: 1.4),
             ),
             const SizedBox(height: 10),
             Text(
               '${widget.reference} · ESV',
               style: LogosTypography.scriptureCitation(color: LogosColors.coral),
             ),
-            const SizedBox(height: 16),
-            Divider(color: LogosColors.taupe.withValues(alpha: 0.6)),
-            const SizedBox(height: 10),
+            const SizedBox(height: 18),
+            Container(
+              height: 1,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    Colors.transparent,
+                    const Color(0xFFD4AF37).withValues(alpha: 0.5),
+                    Colors.transparent,
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 14),
             Text(
-              'A burden was laid down here.',
-              style: LogosTypography.body(color: LogosColors.ink.withValues(alpha: 0.7)),
+              'A burden was laid down at the Cross.',
+              style: GoogleFonts.sourceSerif4(
+                fontSize: 14,
+                fontStyle: FontStyle.italic,
+                color: LogosColors.ink.withValues(alpha: 0.8),
+              ),
             ),
             const SizedBox(height: 4),
             Text(
               dateStr,
-              style: LogosTypography.caption(color: LogosColors.ink.withValues(alpha: 0.4)),
+              style: GoogleFonts.inter(
+                fontSize: 11,
+                color: LogosColors.ink.withValues(alpha: 0.5),
+                letterSpacing: 1.0,
+              ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 14),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
                 color: const Color(0xFF10B981).withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: const Color(0xFF10B981).withValues(alpha: 0.3),
+                ),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.check, size: 14, color: Colors.green),
-                  const SizedBox(width: 4),
+                  const Icon(Icons.verified_rounded, size: 14, color: Color(0xFF10B981)),
+                  const SizedBox(width: 6),
                   Text(
-                    'Saved to your Prayer Altar',
-                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Colors.green.shade900),
+                    'Sealed in your Prayer Altar',
+                    style: GoogleFonts.inter(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFF0F5132),
+                    ),
                   ),
                 ],
               ),

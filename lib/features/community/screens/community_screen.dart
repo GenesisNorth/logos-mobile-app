@@ -177,7 +177,7 @@ class CommunityScreen extends StatelessWidget {
               ),
             ),
 
-            const SliverToBoxAdapter(child: SizedBox(height: 32)),
+            const SliverToBoxAdapter(child: SizedBox(height: 100)),
           ],
         ),
       ),
