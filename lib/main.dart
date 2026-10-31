@@ -20,12 +20,14 @@ import 'features/journey/screens/stillness_sanctuary_screen.dart';
 import 'features/onboarding/screens/covenant_screen.dart';
 import 'features/recitation/screens/recitation_dialog.dart';
 import 'core/services/supabase_service.dart';
+import 'core/services/notification_service.dart';
 import 'features/journey/data/supabase_progress_repository.dart';
 import 'core/theme/logos_icons.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await SupabaseService.instance.initialize();
+  await NotificationService.instance.initialize();
   runApp(const LogosApp());
 }
 
@@ -297,6 +299,203 @@ class _SanctuaryHomeScreenState extends State<SanctuaryHomeScreen>
     }
   }
 
+  void _showNotificationSheet(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final surface = isDark ? LogosColors.examenSurface : LogosColors.surface;
+    final ink = isDark ? LogosColors.examenInk : LogosColors.ink;
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setModalState) {
+          final isEnabled = NotificationService.instance.isEnabled;
+          return Container(
+            padding: const EdgeInsets.fromLTRB(24, 18, 24, 34),
+            decoration: BoxDecoration(
+              color: surface,
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+              border: Border.all(color: LogosColors.taupe),
+              boxShadow: LogosColors.softShadow,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 36,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: ink.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 18),
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: LogosColors.coral.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: const AppIcon(
+                        LogosIcons.notificationsActive,
+                        color: LogosColors.coral,
+                        size: 22,
+                      ),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Liturgical Hours & Midnight Bell',
+                            style: GoogleFonts.inter(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w700,
+                              color: ink,
+                            ),
+                          ),
+                          Text(
+                            'Circadian prayer cadence & pace unlocks',
+                            style: GoogleFonts.inter(
+                              fontSize: 11,
+                              color: ink.withValues(alpha: 0.6),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Switch.adaptive(
+                      value: isEnabled,
+                      activeTrackColor: LogosColors.coral,
+                      onChanged: (val) async {
+                        await NotificationService.instance.toggleNotifications(val);
+                        setModalState(() {});
+                        setState(() {});
+                      },
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    gradient: LogosColors.whitePurpleBlend,
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(color: LogosColors.taupe.withValues(alpha: 0.7)),
+                  ),
+                  child: Column(
+                    children: [
+                      _buildScheduleRow(
+                        icon: LogosIcons.wbTwilightRounded,
+                        time: '7:00 AM',
+                        name: 'Morning Lauds',
+                        desc: 'Awaken in the Word',
+                        ink: ink,
+                      ),
+                      Divider(color: LogosColors.taupe.withValues(alpha: 0.5), height: 16),
+                      _buildScheduleRow(
+                        icon: LogosIcons.wbSunnyRounded,
+                        time: '12:00 PM',
+                        name: 'Noonday Sext',
+                        desc: 'Midday sanctuary dwell',
+                        ink: ink,
+                      ),
+                      Divider(color: LogosColors.taupe.withValues(alpha: 0.5), height: 16),
+                      _buildScheduleRow(
+                        icon: LogosIcons.bedtimeRounded,
+                        time: '9:00 PM',
+                        name: 'Evening Vespers',
+                        desc: 'Rest & sacred Examen',
+                        ink: ink,
+                      ),
+                      Divider(color: LogosColors.taupe.withValues(alpha: 0.5), height: 16),
+                      _buildScheduleRow(
+                        icon: LogosIcons.lockOutlineRounded,
+                        time: '12:01 AM',
+                        name: 'Midnight Strike 🔔',
+                        desc: 'Next rhythm step unlocks',
+                        ink: ink,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 18),
+                SizedBox(
+                  width: double.infinity,
+                  height: 48,
+                  child: OutlinedButton.icon(
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: LogosColors.coral,
+                      side: const BorderSide(color: LogosColors.coral),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    ),
+                    icon: const AppIcon(LogosIcons.volumeUpRounded, size: 18),
+                    label: Text(
+                      'Preview Sanctuary Chime & Alert',
+                      style: GoogleFonts.inter(fontSize: 12.5, fontWeight: FontWeight.w700),
+                    ),
+                    onPressed: () async {
+                      await AudioService().playSanctuaryChime();
+                      await NotificationService.instance.showInstantTestNotification();
+                    },
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildScheduleRow({
+    required LogosIconData icon,
+    required String time,
+    required String name,
+    required String desc,
+    required Color ink,
+  }) {
+    return Row(
+      children: [
+        AppIcon(icon, size: 18, color: LogosColors.coral),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                name,
+                style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w700, color: ink),
+              ),
+              Text(
+                desc,
+                style: GoogleFonts.inter(fontSize: 10, color: ink.withValues(alpha: 0.6)),
+              ),
+            ],
+          ),
+        ),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+          decoration: BoxDecoration(
+            color: ink.withValues(alpha: 0.06),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Text(
+            time,
+            style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w700, color: ink),
+          ),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -366,6 +565,16 @@ class _SanctuaryHomeScreenState extends State<SanctuaryHomeScreen>
                   ],
                 ),
                 actions: [
+                  IconButton(
+                    tooltip: 'Circadian Liturgical Chimes & Midnight Bell',
+                    icon: AppIcon(
+                      NotificationService.instance.isEnabled
+                          ? LogosIcons.notificationsActive
+                          : LogosIcons.notificationsNone,
+                      color: LogosColors.coral,
+                    ),
+                    onPressed: () => _showNotificationSheet(context),
+                  ),
                   IconButton(
                     tooltip: 'Toggle Examen Contemplation Mode',
                     icon: AppIcon(

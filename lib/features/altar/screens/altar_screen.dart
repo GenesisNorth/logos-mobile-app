@@ -8,6 +8,7 @@ import '../../journey/bloc/journey_bloc.dart';
 import '../../journey/bloc/journey_event.dart';
 import '../../journey/bloc/journey_state.dart';
 import '../../journey/data/progress_repository.dart';
+import '../../../core/services/notification_service.dart';
 import '../../../core/theme/logos_icons.dart';
 
 class AltarScreen extends StatelessWidget {
@@ -337,6 +338,49 @@ class AltarScreen extends StatelessWidget {
                         ),
                       ],
                     ),
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  // Liturgical Chimes & Midnight Bell Tile
+                  StatefulBuilder(
+                    builder: (ctx, setTileState) {
+                      final isEnabled = NotificationService.instance.isEnabled;
+                      return Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: surface,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: LogosColors.taupe),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Row(
+                              children: [
+                                const AppIcon(LogosIcons.notificationsActive, color: LogosColors.coral),
+                                const SizedBox(width: 12),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text('Liturgical Chimes & Midnight Bell', style: LogosTypography.label(color: ink)),
+                                    Text('Lauds (7am), Sext (12pm), Vespers (9pm), Midnight', style: LogosTypography.caption(color: ink.withValues(alpha: 0.6))),
+                                  ],
+                                ),
+                              ],
+                            ),
+                            Switch.adaptive(
+                              value: isEnabled,
+                              activeTrackColor: LogosColors.coral,
+                              onChanged: (val) async {
+                                await NotificationService.instance.toggleNotifications(val);
+                                setTileState(() {});
+                              },
+                            ),
+                          ],
+                        ),
+                      );
+                    },
                   ),
 
                   const SizedBox(height: 100),
