@@ -14,7 +14,15 @@ class AppConfig {
   /// The Deepgram key lives server-side only; it is never shipped in the app.
   static const transcribeUrl = String.fromEnvironment('TRANSCRIBE_URL');
 
+  /// Supabase project URL (e.g. https://xyz.supabase.co).
+  static const supabaseUrl = String.fromEnvironment('SUPABASE_URL');
+
+  /// Supabase public anonymous key.
   static const supabaseAnonKey = String.fromEnvironment('SUPABASE_ANON_KEY');
+
+  /// Whether Supabase configuration is present.
+  static bool get hasSupabase =>
+      supabaseUrl.isNotEmpty && supabaseAnonKey.isNotEmpty;
 
   /// Seconds of ambient listening required to complete Day 3 Stillness.
   static const stillnessSeconds =

@@ -19,10 +19,13 @@ import 'features/journey/screens/encounter_player_screen.dart';
 import 'features/journey/screens/stillness_sanctuary_screen.dart';
 import 'features/onboarding/screens/covenant_screen.dart';
 import 'features/recitation/screens/recitation_dialog.dart';
+import 'core/services/supabase_service.dart';
+import 'features/journey/data/supabase_progress_repository.dart';
 import 'core/theme/logos_icons.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await SupabaseService.instance.initialize();
   runApp(const LogosApp());
 }
 
@@ -47,7 +50,9 @@ class _LogosAppState extends State<LogosApp> {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => JourneyBloc()..add(const LoadJourneyProgress()),
+      create: (_) => JourneyBloc(
+        progressRepo: SupabaseProgressRepository(),
+      )..add(const LoadJourneyProgress()),
       child: MaterialApp(
         title: 'LOGOS IN ME',
         debugShowCheckedModeBanner: false,
