@@ -10,13 +10,14 @@
 | Dimension | Status | Verification Detail |
 | :--- | :---: | :--- |
 | **Static Code Quality** | ✅ `0 errors / 0 warnings` | Clean `flutter analyze` across all 18+ screen files |
-| **Unit & Widget Tests** | ✅ `9 / 9 Passing` | Verifier, Levenshtein, Midnight Pace-Locks, Grace Tokens |
+| **Unit & Widget Tests** | ✅ `11 / 11 Passing` | Verifier, Levenshtein, Pace-Locks, Grace, 5-Week Exegesis & Week Selector |
 | **Running Target** | 📱 **iPhone 17 Pro** | Running on iOS Simulator (`iOS 26.5`) with Impeller |
 | **Styling & Theme** | 🎨 **Blended White-Purple** | Luminous white background with soft lavender/purple gradients |
 | **Icon Suite** | ✨ **Hugeicons (Purged of AI)** | 100% stroke-rounded Hugeicons (Quill, Puzzle, Award, Praying Hands) |
 | **Cloud Backend** | ☁️ **Offline-First Supabase** | Anonymous pilgrim session + Postgres sync + RLS migration |
 | **Notifications** | 🔔 **Circadian & Midnight** | Lauds (7am), Sext (12pm), Vespers (9pm), Midnight Strike |
 | **Speech Engine** | 🎙️ **Hybrid ($0 Cost)** | Live on-device streaming + free Groq Whisper Large V3 fallback |
+| **Curriculum Pipeline** | 📖 **5 Complete Weeks** | John 15:5, Phil 4:6–7, Rom 8:1–2, Psalm 23:1–3, Col 3:1–3 with Greek/Hebrew |
 
 ---
 
@@ -40,22 +41,27 @@
    ├── Supabase Backend: Offline-first repository, anonymous auth, SQL migrations with RLS
    ├── Circadian Engine: NotificationService scheduling 4 liturgical hours + Midnight Bell
    └── Speech Recitation: Dual Hybrid Engine (Device streaming + Groq Whisper V3 fallback)
+
+ [Phase 2: Multi-Week Curriculum & Interactive Exegesis]
+   ├── Weeks 1–5 Scripture Exegesis Curriculum:
+   │    ├── Week 1: John 15:5 (The Vine & Branches · Greek Menō)
+   │    ├── Week 2: Philippians 4:6–7 (Guarding Peace · Greek Phroureō)
+   │    ├── Week 3: Romans 8:1–2 (No Condemnation · Greek Katakrima)
+   │    ├── Week 4: Psalm 23:1–3 (The Good Shepherd · Hebrew Yahweh Rohi & Mei Menuchot)
+   │    └── Week 5: Colossians 3:1–3 (Hidden in Christ · Greek Synēgerthēte & Kekryptai)
+   ├── Interactive Week Selector Modal Sheet: Browse curriculum & preview exegesis
+   ├── Dynamic Scripture Card Week Plaque: Interactive pill with dropdown chevron & haptic tick
+   └── End-to-end Unit & BLoC Test Coverage (11/11 tests passing)
 ```
 
 ---
 
 ## 3. Next Lines of Action (Prioritized Backlog)
 
-### Priority 1: Multi-Week Scripture Drops & Exegesis Content Pipeline
-- [ ] **Week 2 Content**: Romans 8:1–2 (*"There is therefore now no condemnation..."*) with Greek root deep-dive (`katakrima`).
-- [ ] **Week 3 Content**: Psalm 23:1–3 (*"The Lord is my shepherd..."*) with Hebrew root deep-dive (`ra'ah`).
-- [ ] **Week 4 Content**: Colossians 3:1–3 (*"Set your minds on things above..."*).
-- [ ] **Ambient Soundscapes**: Bundle high-definition 432 Hz audio stems for upcoming weeks.
-
 ### Priority 2: Sensory Polish & Interactive Physics (Days 3 & 4)
-- [ ] **Day 4 Tear Sheet Dissolve Physics**: Add haptic particle dissipation or tearing animation as the Scripture dissolves the burden.
-- [ ] **Day 3 Breathing Pacer Guide**: Expand the 60s Stillness countdown into an interactive 4-7-8 breathing circle rhythm.
-- [ ] **Audio Chime Stem Enhancements**: Fine-tune the sanctuary bronze bell chime on completion.
+- [ ] **Day 4 Tear Sheet Dissolve Physics**: Add ember glowing particles, enhanced dispersion physics, and sacred audio feedback during burden release.
+- [ ] **Day 3 Sacred Breath Pacer**: Synchronized 4-second box or circle breathing rhythm with dual outer glow ring expansion.
+- [ ] **Liturgical Ambient Audio Player Enhancements**: Volume slider and loop controls for 432 Hz sanctuary tones.
 
 ### Priority 3: Realtime Community Rooms (Supabase Live Feeds)
 - [ ] **The Well**: Connect live pastoral questions & audio replies to the `community_prayers` table.
