@@ -10,7 +10,7 @@
 | Dimension | Status | Verification Detail |
 | :--- | :---: | :--- |
 | **Static Code Quality** | ✅ `0 errors / 0 warnings` | Clean `flutter analyze` across all 18+ screen files |
-| **Unit & Widget Tests** | ✅ `11 / 11 Passing` | Verifier, Levenshtein, Pace-Locks, Grace, 5-Week Exegesis & Week Selector |
+| **Unit & Widget Tests** | ✅ `13 / 13 Passing` | Verifier, Levenshtein, Pace-Locks, Grace, 5-Week Exegesis, CommunityRepository |
 | **Running Target** | 📱 **iPhone 17 Pro** | Running on iOS Simulator (`iOS 26.5`) with Impeller |
 | **Styling & Theme** | 🎨 **Blended White-Purple** | Luminous white background with soft lavender/purple gradients |
 | **Icon Suite** | ✨ **Hugeicons (Purged of AI)** | 100% stroke-rounded Hugeicons (Quill, Puzzle, Award, Praying Hands) |
@@ -18,6 +18,7 @@
 | **Notifications** | 🔔 **Circadian & Midnight** | Lauds (7am), Sext (12pm), Vespers (9pm), Midnight Strike |
 | **Speech Engine** | 🎙️ **Hybrid ($0 Cost)** | Live on-device streaming + free Groq Whisper Large V3 fallback |
 | **Curriculum Pipeline** | 📖 **5 Complete Weeks** | John 15:5, Phil 4:6–7, Rom 8:1–2, Psalm 23:1–3, Col 3:1–3 with Greek/Hebrew |
+| **Community Feeds** | 🕊️ **Live & Cached Rooms** | The Well pastoral watch, Prayer Circles voice notes, Valley of Achor rooms |
 
 ---
 
@@ -61,21 +62,23 @@
    ├── Dynamic Breathing Aura: Multi-layer luminous violet and golden halos with sinusoidal hold shimmer
    ├── Liturgical Phase Badge: Real-time phase pill cues with haptic bead ticks at each boundary
    └── 432 Hz Soundscape Controller: Interactive intensity slider modal sheet (0-100%)
+
+ [Phase 4: Realtime Community Rooms & Pastoral Care]
+   ├── CommunityRepository Architecture: Dual-layer offline cache + live Supabase table sync
+   ├── The Well Pastoral Watch: Live petition submission, 4-hour SLA watch, pastoral audio responses
+   ├── Prayer Circles: Ephemeral 7-day voice note prayers synced to community feeds
+   ├── Valley of Achor: Themed quiet lament rooms with Scripture anchors & candle solidarity counter
+   └── Comprehensive BLoC & Community Unit Tests (13/13 tests passing)
 ```
 
 ---
 
 ## 3. Next Lines of Action (Prioritized Backlog)
 
-### Priority 3: Realtime Community Rooms (Supabase Live Feeds)
-- [ ] **The Well**: Connect live pastoral questions & audio replies to the `community_prayers` table.
-- [ ] **Prayer Circles**: Realtime 7-day ephemeral voice note prayers using Supabase Storage.
-- [ ] **Valley of Achor**: Silent candle-lighting counter synced across pilgrims worldwide.
-- [ ] **Prayer Circles**: Realtime 7-day ephemeral voice note prayers using Supabase Storage.
-- [ ] **Valley of Achor**: Silent candle-lighting counter synced across pilgrims worldwide.
-
 ### Priority 4: Account Upgrades & Cloud Recovery
-- [ ] **Account Linking**: Allow seekers to link their anonymous UUID to Apple Sign-In or Email without losing their streak.
+- [ ] **Account Linking**: Allow seekers to link their anonymous UUID to Apple Sign-In or Email without losing their streak or progress.
+- [ ] **Cross-Device Sync**: Automatic restore on fresh device login.
+- [ ] **Data Export**: Export covenant & completed relic tear sheets as offline PDF or prayer journal.
 - [ ] **Cross-Device Sync**: Automatic restore on fresh device login.
 
 ---
