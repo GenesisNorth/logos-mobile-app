@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme/logos_theme.dart';
 import '../../../core/theme/logos_typography.dart';
+import '../../../core/theme/logos_icons.dart';
 
 class StudyPodsScreen extends StatefulWidget {
   const StudyPodsScreen({super.key});
@@ -79,7 +80,7 @@ class _StudyPodsScreenState extends State<StudyPodsScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: ink),
+          icon: AppIcon(LogosIcons.arrowBack, color: ink),
           onPressed: () => Navigator.pop(context),
         ),
         title: Column(
@@ -125,7 +126,7 @@ class _StudyPodsScreenState extends State<StudyPodsScreen> {
                               ),
                               child: const Row(
                                 children: [
-                                  Icon(Icons.calendar_today, size: 12, color: Colors.white),
+                                  AppIcon(LogosIcons.calendarToday, size: 12, color: Colors.white),
                                   SizedBox(width: 5),
                                   Text(
                                     'Thu 8:00 PM EST',
@@ -328,7 +329,7 @@ class _StudyPodsScreenState extends State<StudyPodsScreen> {
                   ),
                   const SizedBox(width: 8),
                   IconButton(
-                    icon: const Icon(Icons.send, color: LogosColors.studyPods),
+                    icon: const AppIcon(LogosIcons.send, color: LogosColors.studyPods),
                     onPressed: _postReflection,
                   ),
                 ],

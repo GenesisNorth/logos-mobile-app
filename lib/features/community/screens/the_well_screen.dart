@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../core/services/audio_service.dart';
 import '../../../core/theme/logos_theme.dart';
 import '../../../core/theme/logos_typography.dart';
+import '../../../core/theme/logos_icons.dart';
 
 class TheWellScreen extends StatefulWidget {
   const TheWellScreen({super.key});
@@ -66,7 +67,7 @@ class _TheWellScreenState extends State<TheWellScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: ink),
+          icon: AppIcon(LogosIcons.arrowBack, color: ink),
           onPressed: () => Navigator.pop(context),
         ),
         title: Column(
@@ -93,7 +94,7 @@ class _TheWellScreenState extends State<TheWellScreen> {
                 children: [
                   Row(
                     children: [
-                      const Icon(Icons.timer_outlined, color: Colors.white, size: 20),
+                      const AppIcon(LogosIcons.timerOutlined, color: Colors.white, size: 20),
                       const SizedBox(width: 8),
                       Text(
                         '4-HOUR PASTORAL CARE SLA',
@@ -152,7 +153,7 @@ class _TheWellScreenState extends State<TheWellScreen> {
                         backgroundColor: LogosColors.theWell,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       ),
-                      icon: const Icon(Icons.water_drop, color: Colors.white),
+                      icon: const AppIcon(LogosIcons.waterDrop, color: Colors.white),
                       label: const Text('Bring to The Well', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                       onPressed: _submitRequest,
                     ),
@@ -173,7 +174,7 @@ class _TheWellScreenState extends State<TheWellScreen> {
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.video_call_outlined, color: LogosColors.theWell, size: 28),
+                  const AppIcon(LogosIcons.videoCallOutlined, color: LogosColors.theWell, size: 28),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(
@@ -245,7 +246,7 @@ class _TheWellScreenState extends State<TheWellScreen> {
                     const SizedBox(height: 10),
                     Row(
                       children: [
-                        const Icon(Icons.person_pin, size: 16, color: LogosColors.theWell),
+                        const AppIcon(LogosIcons.personPin, size: 16, color: LogosColors.theWell),
                         const SizedBox(width: 6),
                         Text(
                           req['pastor'] as String,
@@ -269,7 +270,7 @@ class _TheWellScreenState extends State<TheWellScreen> {
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Icon(Icons.play_circle_fill, color: LogosColors.theWell, size: 20),
+                            const AppIcon(LogosIcons.playCircleFill, color: LogosColors.theWell, size: 20),
                             const SizedBox(width: 6),
                             Text(
                               'Voice Prayer from Pastor (${req['audioDuration']})',

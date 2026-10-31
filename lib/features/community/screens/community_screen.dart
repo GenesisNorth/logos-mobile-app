@@ -8,6 +8,7 @@ import 'study_pods_screen.dart';
 import 'the_well_screen.dart';
 import 'valley_screen.dart';
 import 'voice_comfort_screen.dart';
+import '../../../core/theme/logos_icons.dart';
 
 class CommunityScreen extends StatelessWidget {
   const CommunityScreen({super.key});
@@ -37,7 +38,7 @@ class CommunityScreen extends StatelessWidget {
                           style: LogosTypography.headline(color: ink).copyWith(fontSize: 28),
                         ),
                         IconButton(
-                          icon: Icon(Icons.notifications_none, color: ink),
+                          icon: AppIcon(LogosIcons.notificationsNone, color: ink),
                           onPressed: () {
                             Navigator.push(
                               context,
@@ -66,7 +67,7 @@ class CommunityScreen extends StatelessWidget {
                         ),
                         child: Row(
                           children: [
-                            Icon(Icons.search, size: 20, color: ink.withValues(alpha: 0.5)),
+                            AppIcon(LogosIcons.search, size: 20, color: ink.withValues(alpha: 0.5)),
                             const SizedBox(width: 8),
                             Text(
                               'Search friends & ping...',
@@ -113,7 +114,7 @@ class CommunityScreen extends StatelessWidget {
                     title: 'Study Pods',
                     subtitle: '4 members · Thu 8pm\nFocused peer exegesis',
                     color: LogosColors.studyPods,
-                    icon: Icons.menu_book,
+                    icon: LogosIcons.menuBook,
                     onTap: () => Navigator.push(
                       context,
                       MaterialPageRoute(builder: (_) => const StudyPodsScreen()),
@@ -124,7 +125,7 @@ class CommunityScreen extends StatelessWidget {
                     title: 'Prayer Circles',
                     subtitle: '3 new voice notes\n7-day ephemeral prayers',
                     color: LogosColors.prayerCircles,
-                    icon: Icons.record_voice_over,
+                    icon: LogosIcons.recordVoiceOver,
                     onTap: () => Navigator.push(
                       context,
                       MaterialPageRoute(builder: (_) => const PrayerCirclesScreen()),
@@ -135,7 +136,7 @@ class CommunityScreen extends StatelessWidget {
                     title: 'In the Valley',
                     subtitle: 'Grief · Workplace · Digital\nThemed quiet sanctuaries',
                     color: LogosColors.valleyRooms,
-                    icon: Icons.terrain,
+                    icon: LogosIcons.terrain,
                     onTap: () => Navigator.push(
                       context,
                       MaterialPageRoute(builder: (_) => const ValleyScreen()),
@@ -146,7 +147,7 @@ class CommunityScreen extends StatelessWidget {
                     title: 'Voice Comfort',
                     subtitle: 'Hear the Word read\nBeloved voices worldwide',
                     color: LogosColors.voiceComfort,
-                    icon: Icons.hearing,
+                    icon: LogosIcons.hearing,
                     onTap: () => Navigator.push(
                       context,
                       MaterialPageRoute(builder: (_) => const VoiceComfortScreen()),
@@ -157,7 +158,7 @@ class CommunityScreen extends StatelessWidget {
                     title: 'The Well',
                     subtitle: 'Pastoral Care & Prayer\nGuaranteed 4h reply',
                     color: LogosColors.theWell,
-                    icon: Icons.water_drop,
+                    icon: LogosIcons.waterDrop,
                     onTap: () => Navigator.push(
                       context,
                       MaterialPageRoute(builder: (_) => const TheWellScreen()),
@@ -168,7 +169,7 @@ class CommunityScreen extends StatelessWidget {
                     title: 'Milestones',
                     subtitle: 'Birthdays & Roots\nLift up your family',
                     color: const Color(0xFF6E6457),
-                    icon: Icons.cake,
+                    icon: LogosIcons.cake,
                     onTap: () => Navigator.push(
                       context,
                       MaterialPageRoute(builder: (_) => const MilestonesScreen()),
@@ -233,7 +234,7 @@ class CommunityScreen extends StatelessWidget {
                         ),
                         child: Row(
                           children: [
-                            const Icon(Icons.local_fire_department, size: 10, color: Colors.white),
+                            const AppIcon(LogosIcons.localFireDepartment, size: 10, color: Colors.white),
                             Text(
                               '${f['streak']}',
                               style: const TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold),
@@ -262,7 +263,7 @@ class CommunityScreen extends StatelessWidget {
     required String title,
     required String subtitle,
     required Color color,
-    required IconData icon,
+    required LogosIconData icon,
     required VoidCallback onTap,
   }) {
     return GestureDetector(
@@ -301,10 +302,10 @@ class CommunityScreen extends StatelessWidget {
                     color: color.withValues(alpha: 0.12),
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(icon, color: color, size: 20),
+                  child: AppIcon(icon, color: color, size: 20),
                 ),
-                Icon(
-                  Icons.arrow_forward_ios,
+                AppIcon(
+                  LogosIcons.arrowForwardIos,
                   color: LogosColors.inkSecondary.withValues(alpha: 0.4),
                   size: 12,
                 ),

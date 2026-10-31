@@ -6,6 +6,7 @@ import '../../../core/services/audio_service.dart';
 import '../../../core/theme/logos_theme.dart';
 import '../../journey/bloc/journey_bloc.dart';
 import '../../journey/bloc/journey_event.dart';
+import '../../../core/theme/logos_icons.dart';
 
 class CovenantScreen extends StatefulWidget {
   final VoidCallback onCompleted;
@@ -332,8 +333,8 @@ class _CovenantScreenState extends State<CovenantScreen>
                             ),
                           ),
                           const SizedBox(width: 8),
-                          Icon(
-                            _step < 2 ? Icons.arrow_forward_rounded : Icons.lock_outline_rounded,
+                          AppIcon(
+                            _step < 2 ? LogosIcons.arrowForwardRounded : LogosIcons.lockOutlineRounded,
                             size: 18,
                             color: Colors.white,
                           ),
@@ -372,7 +373,7 @@ class _CovenantScreenState extends State<CovenantScreen>
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.auto_awesome, size: 13, color: LogosColors.coral),
+                    const AppIcon(LogosIcons.autoAwesome, size: 13, color: LogosColors.coral),
                     const SizedBox(width: 6),
                     Text(
                       'THE LITURGICAL MANIFESTO',
@@ -419,7 +420,7 @@ class _CovenantScreenState extends State<CovenantScreen>
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.shield_outlined, color: Color(0xFFF59E0B), size: 20),
+                    const AppIcon(LogosIcons.shieldOutlined, color: Color(0xFFF59E0B), size: 20),
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(
@@ -463,7 +464,7 @@ class _CovenantScreenState extends State<CovenantScreen>
               ),
               const SizedBox(height: 18),
               _buildRhythmCard(
-                icon: Icons.play_circle_fill_rounded,
+                icon: LogosIcons.playCircleFillRounded,
                 day: 'Day 1',
                 title: 'Encounter & Oral Recitation',
                 desc: 'Cinematic visual immersion & first 2 spoken recitation passes.',
@@ -471,7 +472,7 @@ class _CovenantScreenState extends State<CovenantScreen>
               ),
               const SizedBox(height: 10),
               _buildRhythmCard(
-                icon: Icons.auto_stories_rounded,
+                icon: LogosIcons.autoStoriesRounded,
                 day: 'Day 2',
                 title: 'Exegesis & Context',
                 desc: 'Greek/Hebrew root depth & historical background cards.',
@@ -479,7 +480,7 @@ class _CovenantScreenState extends State<CovenantScreen>
               ),
               const SizedBox(height: 10),
               _buildRhythmCard(
-                icon: Icons.spa_rounded,
+                icon: LogosIcons.spaRounded,
                 day: 'Day 3',
                 title: 'Stillness & Lectio Divina',
                 desc: '60-second breathing sanctuary with 432 Hz ambient pad.',
@@ -487,7 +488,7 @@ class _CovenantScreenState extends State<CovenantScreen>
               ),
               const SizedBox(height: 10),
               _buildRhythmCard(
-                icon: Icons.local_fire_department_rounded,
+                icon: LogosIcons.localFireDepartmentRounded,
                 day: 'Day 4',
                 title: 'Master Recitation & The Exchange',
                 desc: 'Memory verification & burden dissolution into the Light.',
@@ -623,7 +624,7 @@ class _CovenantScreenState extends State<CovenantScreen>
                       children: [
                         Row(
                           children: [
-                            const Icon(Icons.verified_outlined, size: 14, color: Color(0xFFF59E0B)),
+                            const AppIcon(LogosIcons.verifiedOutlined, size: 14, color: Color(0xFFF59E0B)),
                             const SizedBox(width: 5),
                             Text(
                               'SHA-256 Cloister Seal',
@@ -655,7 +656,7 @@ class _CovenantScreenState extends State<CovenantScreen>
   }
 
   Widget _buildRhythmCard({
-    required IconData icon,
+    required LogosIconData icon,
     required String day,
     required String title,
     required String desc,
@@ -686,7 +687,7 @@ class _CovenantScreenState extends State<CovenantScreen>
               ),
             ),
             alignment: Alignment.center,
-            child: Icon(icon, size: 18, color: accentColor),
+            child: AppIcon(icon, size: 18, color: accentColor),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -739,7 +740,7 @@ class _CovenantScreenState extends State<CovenantScreen>
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.check_circle_rounded, size: 15, color: LogosColors.coral),
+          const AppIcon(LogosIcons.checkCircleRounded, size: 15, color: LogosColors.coral),
           const SizedBox(width: 8),
           Expanded(
             child: Text(

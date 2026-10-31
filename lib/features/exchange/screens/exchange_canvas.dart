@@ -5,6 +5,7 @@ import 'package:share_plus/share_plus.dart';
 import '../../../core/services/audio_service.dart';
 import '../../../core/theme/logos_theme.dart';
 import '../../../core/theme/logos_typography.dart';
+import '../../../core/theme/logos_icons.dart';
 
 class Particle {
   double x;
@@ -167,14 +168,14 @@ LOGOS IN ME
         elevation: 0,
         centerTitle: true,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: ink),
+          icon: const AppIcon(LogosIcons.arrowBack, color: ink),
           onPressed: () => Navigator.of(context).pop(),
         ),
         actions: [
           if (_isDissolved)
             IconButton(
               tooltip: 'Share Tear Sheet',
-              icon: const Icon(Icons.share, color: LogosColors.coral),
+              icon: const AppIcon(LogosIcons.share, color: LogosColors.coral),
               onPressed: _shareTearSheet,
             ),
         ],
@@ -237,8 +238,8 @@ LOGOS IN ME
                                         children: [
                                           Row(
                                             children: [
-                                              const Icon(
-                                                Icons.edit_note,
+                                              const AppIcon(
+                                                LogosIcons.editNote,
                                                 size: 20,
                                                 color: LogosColors.coral,
                                               ),
@@ -343,7 +344,7 @@ LOGOS IN ME
                       foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     ),
-                    icon: const Icon(Icons.share),
+                    icon: const AppIcon(LogosIcons.share),
                     label: const Text(
                       'Share Tear Sheet & Return to Sanctuary',
                       style: TextStyle(fontWeight: FontWeight.bold),
@@ -388,7 +389,7 @@ LOGOS IN ME
                 'Mastered Scripture (Drag Upward)',
                 style: LogosTypography.label(color: LogosColors.coral),
               ),
-              const Icon(Icons.drag_indicator, color: LogosColors.coral),
+              const AppIcon(LogosIcons.dragIndicator, color: LogosColors.coral),
             ],
           ),
           const SizedBox(height: 10),
@@ -510,7 +511,7 @@ LOGOS IN ME
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.verified_rounded, size: 14, color: Color(0xFF10B981)),
+                  const AppIcon(LogosIcons.verifiedRounded, size: 14, color: Color(0xFF10B981)),
                   const SizedBox(width: 6),
                   Text(
                     'Sealed in your Prayer Altar',

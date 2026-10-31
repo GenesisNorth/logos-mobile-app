@@ -19,6 +19,7 @@ import 'features/journey/screens/encounter_player_screen.dart';
 import 'features/journey/screens/stillness_sanctuary_screen.dart';
 import 'features/onboarding/screens/covenant_screen.dart';
 import 'features/recitation/screens/recitation_dialog.dart';
+import 'core/theme/logos_icons.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -136,22 +137,22 @@ class _MainAppShellState extends State<MainAppShell> {
                         _buildFloatingTab(
                           index: 0,
                           label: 'Sanctuary',
-                          icon: Icons.spa_outlined,
-                          activeIcon: Icons.spa_rounded,
+                          icon: LogosIcons.spaOutlined,
+                          activeIcon: LogosIcons.spaRounded,
                           isDark: isDark,
                         ),
                         _buildFloatingTab(
                           index: 1,
                           label: 'Community',
-                          icon: Icons.forum_outlined,
-                          activeIcon: Icons.forum_rounded,
+                          icon: LogosIcons.forumOutlined,
+                          activeIcon: LogosIcons.forumRounded,
                           isDark: isDark,
                         ),
                         _buildFloatingTab(
                           index: 2,
                           label: 'Altar',
-                          icon: Icons.shield_outlined,
-                          activeIcon: Icons.shield_rounded,
+                          icon: LogosIcons.shieldOutlined,
+                          activeIcon: LogosIcons.shieldRounded,
                           isDark: isDark,
                         ),
                       ],
@@ -169,8 +170,8 @@ class _MainAppShellState extends State<MainAppShell> {
   Widget _buildFloatingTab({
     required int index,
     required String label,
-    required IconData icon,
-    required IconData activeIcon,
+    required LogosIconData icon,
+    required LogosIconData activeIcon,
     required bool isDark,
   }) {
     final isSelected = _currentTabIndex == index;
@@ -197,7 +198,7 @@ class _MainAppShellState extends State<MainAppShell> {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
+            AppIcon(
               isSelected ? activeIcon : icon,
               size: 20,
               color: isSelected ? LogosColors.coral : ink.withValues(alpha: 0.5),
@@ -254,12 +255,12 @@ class _SanctuaryHomeScreenState extends State<SanctuaryHomeScreen>
     return 'Compline · Sacred Quiet';
   }
 
-  IconData _getLiturgicalIcon() {
+  LogosIconData _getLiturgicalIcon() {
     final hour = DateTime.now().hour;
-    if (hour >= 5 && hour < 12) return Icons.wb_twilight_rounded;
-    if (hour >= 12 && hour < 17) return Icons.wb_sunny_rounded;
-    if (hour >= 17 && hour < 20) return Icons.wb_shade_rounded;
-    return Icons.nightlight_round;
+    if (hour >= 5 && hour < 12) return LogosIcons.wbTwilightRounded;
+    if (hour >= 12 && hour < 17) return LogosIcons.wbSunnyRounded;
+    if (hour >= 17 && hour < 20) return LogosIcons.wbShadeRounded;
+    return LogosIcons.nightlightRound;
   }
 
   void _toggleStillnessAudio(String preset) {
@@ -346,7 +347,7 @@ class _SanctuaryHomeScreenState extends State<SanctuaryHomeScreen>
                         ),
                         Row(
                           children: [
-                            Icon(_getLiturgicalIcon(), size: 11, color: LogosColors.coral),
+                            AppIcon(_getLiturgicalIcon(), size: 11, color: LogosColors.coral),
                             const SizedBox(width: 4),
                             Text(
                               _getLiturgicalHour(),
@@ -365,10 +366,10 @@ class _SanctuaryHomeScreenState extends State<SanctuaryHomeScreen>
                 actions: [
                   IconButton(
                     tooltip: 'Toggle Examen Contemplation Mode',
-                    icon: Icon(
+                    icon: AppIcon(
                       widget.examenController.isExamenMode
-                          ? Icons.wb_sunny_rounded
-                          : Icons.bedtime_rounded,
+                          ? LogosIcons.wbSunnyRounded
+                          : LogosIcons.bedtimeRounded,
                       color: LogosColors.coral,
                     ),
                     onPressed: () {
@@ -393,7 +394,7 @@ class _SanctuaryHomeScreenState extends State<SanctuaryHomeScreen>
                       Row(
                         children: [
                           _buildPill(
-                            icon: Icons.local_fire_department_rounded,
+                            icon: LogosIcons.localFireDepartmentRounded,
                             iconColor: LogosColors.coral,
                             label: '${state.currentStreak} Day Streak',
                             surface: surface,
@@ -401,7 +402,7 @@ class _SanctuaryHomeScreenState extends State<SanctuaryHomeScreen>
                           ),
                           const SizedBox(width: 8),
                           _buildPill(
-                            icon: Icons.eco_rounded,
+                            icon: LogosIcons.ecoRounded,
                             iconColor: const Color(0xFF10B981),
                             label: '${state.rootsPlanted} Roots',
                             surface: surface,
@@ -409,7 +410,7 @@ class _SanctuaryHomeScreenState extends State<SanctuaryHomeScreen>
                           ),
                           const Spacer(),
                           _buildPill(
-                            icon: Icons.shield_rounded,
+                            icon: LogosIcons.shieldRounded,
                             iconColor: const Color(0xFFD4AF37),
                             label: '${state.graceTokensBalance} Grace',
                             surface: surface,
@@ -440,8 +441,8 @@ class _SanctuaryHomeScreenState extends State<SanctuaryHomeScreen>
                             children: [
                               Row(
                                 children: [
-                                  const Icon(
-                                    Icons.nightlight_round,
+                                  const AppIcon(
+                                    LogosIcons.nightlightRound,
                                     size: 18,
                                     color: LogosColors.coral,
                                   ),
@@ -517,7 +518,7 @@ class _SanctuaryHomeScreenState extends State<SanctuaryHomeScreen>
                                       child: Row(
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
-                                          const Icon(Icons.auto_stories, size: 12, color: LogosColors.coral),
+                                          const AppIcon(LogosIcons.autoStories, size: 12, color: LogosColors.coral),
                                           const SizedBox(width: 6),
                                           Text(
                                             'WEEK ${drop.weekNumber} SCRIPTURE',
@@ -572,8 +573,8 @@ class _SanctuaryHomeScreenState extends State<SanctuaryHomeScreen>
                                         child: Row(
                                           mainAxisSize: MainAxisSize.min,
                                           children: [
-                                            Icon(
-                                              _isPlayingPlaqueChime ? Icons.graphic_eq : Icons.volume_up_rounded,
+                                            AppIcon(
+                                              _isPlayingPlaqueChime ? LogosIcons.graphicEq : LogosIcons.volumeUpRounded,
                                               size: 14,
                                               color: LogosColors.coral,
                                             ),
@@ -602,7 +603,7 @@ class _SanctuaryHomeScreenState extends State<SanctuaryHomeScreen>
                                         IconButton(
                                           constraints: const BoxConstraints(),
                                           padding: EdgeInsets.zero,
-                                          icon: Icon(Icons.share_outlined, size: 16, color: ink.withValues(alpha: 0.5)),
+                                          icon: AppIcon(LogosIcons.shareOutlined, size: 16, color: ink.withValues(alpha: 0.5)),
                                           onPressed: () {
                                             SharePlus.instance.share(
                                               ShareParams(
@@ -649,7 +650,7 @@ class _SanctuaryHomeScreenState extends State<SanctuaryHomeScreen>
                               style: TextButton.styleFrom(
                                 foregroundColor: LogosColors.coral,
                               ),
-                              icon: const Icon(Icons.arrow_forward_rounded, size: 14),
+                              icon: const AppIcon(LogosIcons.arrowForwardRounded, size: 14),
                               label: const Text('Next Week', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
                               onPressed: () {
                                 context.read<JourneyBloc>().add(const AdvanceToNextWeek());
@@ -725,12 +726,12 @@ class _SanctuaryHomeScreenState extends State<SanctuaryHomeScreen>
                                   ),
                                   child: Column(
                                     children: [
-                                      Icon(
+                                      AppIcon(
                                         isCompleted
-                                            ? Icons.check_circle_rounded
+                                            ? LogosIcons.checkCircleRounded
                                             : (isUnlocked
-                                                ? Icons.radio_button_unchecked_rounded
-                                                : Icons.lock_outline_rounded),
+                                                ? LogosIcons.radioButtonUncheckedRounded
+                                                : LogosIcons.lockOutlineRounded),
                                         size: 16,
                                         color: isSelected
                                             ? Colors.white
@@ -784,7 +785,7 @@ class _SanctuaryHomeScreenState extends State<SanctuaryHomeScreen>
   }
 
   Widget _buildPill({
-    required IconData icon,
+    required LogosIconData icon,
     required Color iconColor,
     required String label,
     required Color surface,
@@ -801,7 +802,7 @@ class _SanctuaryHomeScreenState extends State<SanctuaryHomeScreen>
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 14, color: iconColor),
+          AppIcon(icon, size: 14, color: iconColor),
           const SizedBox(width: 6),
           Text(
             label,
@@ -916,7 +917,7 @@ class _SanctuaryHomeScreenState extends State<SanctuaryHomeScreen>
                           color: LogosColors.coral.withValues(alpha: 0.2),
                           shape: BoxShape.circle,
                         ),
-                        child: const Icon(Icons.play_arrow_rounded, color: LogosColors.coral),
+                        child: const AppIcon(LogosIcons.playArrowRounded, color: LogosColors.coral),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
@@ -934,7 +935,7 @@ class _SanctuaryHomeScreenState extends State<SanctuaryHomeScreen>
                           ],
                         ),
                       ),
-                      const Icon(Icons.chevron_right, size: 18, color: Colors.grey),
+                      const AppIcon(LogosIcons.chevronRight, size: 18, color: Colors.grey),
                     ],
                   ),
                 ),
@@ -951,7 +952,7 @@ class _SanctuaryHomeScreenState extends State<SanctuaryHomeScreen>
                     elevation: 0,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                   ),
-                  icon: const Icon(Icons.mic_rounded),
+                  icon: const AppIcon(LogosIcons.micRounded),
                   label: Text(
                     isPassed
                         ? 'Recitations Complete ($count/2 Passed ✓)'
@@ -1095,7 +1096,7 @@ class _SanctuaryHomeScreenState extends State<SanctuaryHomeScreen>
                     elevation: 0,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                   ),
-                  icon: const Icon(Icons.mic_rounded),
+                  icon: const AppIcon(LogosIcons.micRounded),
                   label: Text(
                     isPassed
                         ? 'Day 2 Complete ($count/2 Passed ✓)'
@@ -1195,8 +1196,8 @@ class _SanctuaryHomeScreenState extends State<SanctuaryHomeScreen>
                   ),
                   child: Row(
                     children: [
-                      Icon(
-                        _isStillnessPlaying ? Icons.pause_circle_filled_rounded : Icons.play_circle_fill_rounded,
+                      AppIcon(
+                        _isStillnessPlaying ? LogosIcons.pauseCircleFilledRounded : LogosIcons.playCircleFillRounded,
                         color: LogosColors.coral,
                         size: 30,
                       ),
@@ -1240,7 +1241,7 @@ class _SanctuaryHomeScreenState extends State<SanctuaryHomeScreen>
                         elevation: 0,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                       ),
-                      icon: Icon(isStillnessDone ? Icons.check_circle_rounded : Icons.spa_rounded, size: 16),
+                      icon: AppIcon(isStillnessDone ? LogosIcons.checkCircleRounded : LogosIcons.spaRounded, size: 16),
                       onPressed: () {
                         Navigator.of(context).push(
                           MaterialPageRoute(
@@ -1257,7 +1258,7 @@ class _SanctuaryHomeScreenState extends State<SanctuaryHomeScreen>
                   const SizedBox(width: 10),
                   TextButton.icon(
                     style: TextButton.styleFrom(foregroundColor: Colors.white),
-                    icon: const Icon(Icons.mic, size: 16),
+                    icon: const AppIcon(LogosIcons.mic, size: 16),
                     label: Text('Recite ($count)'),
                     onPressed: () {
                       Navigator.of(context).push(
@@ -1349,8 +1350,8 @@ class _SanctuaryHomeScreenState extends State<SanctuaryHomeScreen>
                         side: BorderSide(color: hasPassedMaster ? const Color(0xFF10B981) : LogosColors.coral),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                       ),
-                      icon: Icon(
-                        hasPassedMaster ? Icons.check_circle_rounded : Icons.psychology_rounded,
+                      icon: AppIcon(
+                        hasPassedMaster ? LogosIcons.checkCircleRounded : LogosIcons.psychologyRounded,
                         color: hasPassedMaster ? const Color(0xFF10B981) : LogosColors.coral,
                       ),
                       label: Text(
@@ -1391,7 +1392,7 @@ class _SanctuaryHomeScreenState extends State<SanctuaryHomeScreen>
                         elevation: 0,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                       ),
-                      icon: const Icon(Icons.sync_alt_rounded, size: 16),
+                      icon: const AppIcon(LogosIcons.syncAltRounded, size: 16),
                       label: Text(
                         state.isExchangeCompleted ? 'Exchange Done ✓' : '2. The Exchange',
                         style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w700),

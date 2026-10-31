@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../core/services/audio_service.dart';
 import '../../../core/theme/logos_theme.dart';
 import '../../../core/theme/logos_typography.dart';
+import '../../../core/theme/logos_icons.dart';
 
 class MilestonesScreen extends StatefulWidget {
   const MilestonesScreen({super.key});
@@ -72,7 +73,7 @@ class _MilestonesScreenState extends State<MilestonesScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: ink),
+          icon: AppIcon(LogosIcons.arrowBack, color: ink),
           onPressed: () => Navigator.pop(context),
         ),
         title: Column(
@@ -155,7 +156,7 @@ class _MilestonesScreenState extends State<MilestonesScreen> {
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                           ),
-                          icon: const Icon(Icons.notifications_active, size: 14, color: LogosColors.coral),
+                          icon: const AppIcon(LogosIcons.notificationsActive, size: 14, color: LogosColors.coral),
                           label: const Text('Gentle Ping', style: TextStyle(fontSize: 11, color: LogosColors.coral)),
                           onPressed: () => _sendGentlePing(f['name'] as String),
                         ),
@@ -170,7 +171,7 @@ class _MilestonesScreenState extends State<MilestonesScreen> {
                       ),
                       child: Row(
                         children: [
-                          const Icon(Icons.verified, size: 18, color: Colors.green),
+                          const AppIcon(LogosIcons.verified, size: 18, color: Colors.green),
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(

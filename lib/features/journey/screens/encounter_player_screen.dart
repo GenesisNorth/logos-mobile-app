@@ -4,6 +4,7 @@ import '../../../core/services/audio_service.dart';
 import '../../../core/theme/logos_theme.dart';
 import '../../../core/theme/logos_typography.dart';
 import '../models/scripture_drop.dart';
+import '../../../core/theme/logos_icons.dart';
 
 class EncounterPlayerScreen extends StatefulWidget {
   final ScriptureDrop drop;
@@ -106,7 +107,7 @@ class _EncounterPlayerScreenState extends State<EncounterPlayerScreen> {
                       ),
                     ),
                     IconButton(
-                      icon: const Icon(Icons.close, color: LogosColors.ink),
+                      icon: const AppIcon(LogosIcons.close, color: LogosColors.ink),
                       onPressed: () => Navigator.pop(context),
                     ),
                   ],
@@ -183,7 +184,7 @@ class _EncounterPlayerScreenState extends State<EncounterPlayerScreen> {
                   children: [
                     if (_currentLineIndex > 0)
                       IconButton(
-                        icon: const Icon(Icons.arrow_back_ios, color: LogosColors.ink, size: 20),
+                        icon: const AppIcon(LogosIcons.arrowBackIos, color: LogosColors.ink, size: 20),
                         onPressed: _prev,
                       )
                     else

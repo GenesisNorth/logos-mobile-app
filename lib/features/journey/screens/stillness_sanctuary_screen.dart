@@ -8,6 +8,7 @@ import '../../../core/theme/logos_typography.dart';
 import '../bloc/journey_bloc.dart';
 import '../bloc/journey_event.dart';
 import '../models/scripture_drop.dart';
+import '../../../core/theme/logos_icons.dart';
 
 class StillnessSanctuaryScreen extends StatefulWidget {
   final ScriptureDrop drop;
@@ -120,7 +121,7 @@ class _StillnessSanctuaryScreenState extends State<StillnessSanctuaryScreen>
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       IconButton(
-                        icon: const Icon(Icons.close_rounded, color: LogosColors.ink),
+                        icon: const AppIcon(LogosIcons.closeRounded, color: LogosColors.ink),
                         onPressed: () {
                           AudioService().selectionTick();
                           Navigator.pop(context);
@@ -137,7 +138,7 @@ class _StillnessSanctuaryScreenState extends State<StillnessSanctuaryScreen>
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Icon(Icons.graphic_eq_rounded, size: 14, color: LogosColors.coral),
+                            const AppIcon(LogosIcons.graphicEqRounded, size: 14, color: LogosColors.coral),
                             const SizedBox(width: 8),
                             Text(
                               widget.drop.ambientLabel,
@@ -151,8 +152,8 @@ class _StillnessSanctuaryScreenState extends State<StillnessSanctuaryScreen>
                         ),
                       ),
                       IconButton(
-                        icon: Icon(
-                          _isPlayingAudio ? Icons.volume_up_rounded : Icons.volume_off_rounded,
+                        icon: AppIcon(
+                          _isPlayingAudio ? LogosIcons.volumeUpRounded : LogosIcons.volumeOffRounded,
                           color: LogosColors.ink,
                         ),
                         onPressed: _toggleAudio,
@@ -222,8 +223,8 @@ class _StillnessSanctuaryScreenState extends State<StillnessSanctuaryScreen>
                               ),
                               alignment: Alignment.center,
                               child: _isFinished
-                                  ? const Icon(
-                                      Icons.check_rounded,
+                                  ? const AppIcon(
+                                      LogosIcons.checkRounded,
                                       color: LogosColors.coral,
                                       size: 42,
                                     )

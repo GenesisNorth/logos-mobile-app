@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../core/services/audio_service.dart';
 import '../../../core/theme/logos_theme.dart';
 import '../../../core/theme/logos_typography.dart';
+import '../../../core/theme/logos_icons.dart';
 
 class VoiceComfortScreen extends StatefulWidget {
   const VoiceComfortScreen({super.key});
@@ -77,7 +78,7 @@ class _VoiceComfortScreenState extends State<VoiceComfortScreen> {
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
-              icon: const Icon(Icons.mic, color: Colors.white),
+              icon: const AppIcon(LogosIcons.mic, color: Colors.white),
               label: const Text('Record Comfort Recitation', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
               onPressed: () {
                 Navigator.pop(ctx);
@@ -109,7 +110,7 @@ class _VoiceComfortScreenState extends State<VoiceComfortScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: ink),
+          icon: AppIcon(LogosIcons.arrowBack, color: ink),
           onPressed: () => Navigator.pop(context),
         ),
         title: Column(
@@ -123,7 +124,7 @@ class _VoiceComfortScreenState extends State<VoiceComfortScreen> {
       floatingActionButton: FloatingActionButton.extended(
         backgroundColor: LogosColors.voiceComfort,
         foregroundColor: Colors.white,
-        icon: const Icon(Icons.mic),
+        icon: const AppIcon(LogosIcons.mic),
         label: const Text('Contribute Voice'),
         onPressed: _showContributeDialog,
       ),
@@ -209,8 +210,8 @@ class _VoiceComfortScreenState extends State<VoiceComfortScreen> {
                         Row(
                           children: [
                             IconButton(
-                              icon: Icon(
-                                isPlaying ? Icons.pause_circle_filled : Icons.play_circle_filled,
+                              icon: AppIcon(
+                                isPlaying ? LogosIcons.pauseCircleFilled : LogosIcons.playCircleFilled,
                                 color: LogosColors.voiceComfort,
                                 size: 36,
                               ),

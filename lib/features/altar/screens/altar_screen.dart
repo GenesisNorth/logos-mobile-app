@@ -8,6 +8,7 @@ import '../../journey/bloc/journey_bloc.dart';
 import '../../journey/bloc/journey_event.dart';
 import '../../journey/bloc/journey_state.dart';
 import '../../journey/data/progress_repository.dart';
+import '../../../core/theme/logos_icons.dart';
 
 class AltarScreen extends StatelessWidget {
   final ExamenController examenController;
@@ -155,7 +156,7 @@ class AltarScreen extends StatelessWidget {
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  const Icon(Icons.verified_user, size: 14, color: Colors.green),
+                                  const AppIcon(LogosIcons.verifiedUser, size: 14, color: Colors.green),
                                   const SizedBox(width: 4),
                                   Text(
                                     'Covenant Sealed',
@@ -197,7 +198,7 @@ class AltarScreen extends StatelessWidget {
                     children: [
                       Expanded(
                         child: _buildMetricTile(
-                          icon: Icons.local_fire_department,
+                          icon: LogosIcons.localFireDepartment,
                           iconColor: LogosColors.coral,
                           label: 'Daily Streak',
                           value: '${state.currentStreak} Days',
@@ -208,7 +209,7 @@ class AltarScreen extends StatelessWidget {
                       const SizedBox(width: 12),
                       Expanded(
                         child: _buildMetricTile(
-                          icon: Icons.eco,
+                          icon: LogosIcons.eco,
                           iconColor: const Color(0xFF10B981),
                           label: 'Roots Planted',
                           value: '${state.rootsPlanted} Verses',
@@ -231,7 +232,7 @@ class AltarScreen extends StatelessWidget {
                     ),
                     child: Row(
                       children: [
-                        Icon(Icons.shield, color: Colors.amber.shade700, size: 28),
+                        AppIcon(LogosIcons.shield, color: Colors.amber.shade700, size: 28),
                         const SizedBox(width: 14),
                         Expanded(
                           child: Column(
@@ -285,7 +286,7 @@ class AltarScreen extends StatelessWidget {
                       ),
                       child: Column(
                         children: [
-                          Icon(Icons.layers_clear, size: 36, color: ink.withValues(alpha: 0.3)),
+                          AppIcon(LogosIcons.layersClear, size: 36, color: ink.withValues(alpha: 0.3)),
                           const SizedBox(height: 10),
                           Text(
                             'No Tear Sheets yet',
@@ -318,7 +319,7 @@ class AltarScreen extends StatelessWidget {
                       children: [
                         Row(
                           children: [
-                            const Icon(Icons.bedtime_outlined, color: LogosColors.coral),
+                            const AppIcon(LogosIcons.bedtimeOutlined, color: LogosColors.coral),
                             const SizedBox(width: 12),
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -349,7 +350,7 @@ class AltarScreen extends StatelessWidget {
   }
 
   Widget _buildMetricTile({
-    required IconData icon,
+    required LogosIconData icon,
     required Color iconColor,
     required String label,
     required String value,
@@ -366,7 +367,7 @@ class AltarScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: iconColor, size: 24),
+          AppIcon(icon, color: iconColor, size: 24),
           const SizedBox(height: 10),
           Text(value, style: LogosTypography.headline(color: ink).copyWith(fontSize: 18)),
           Text(label, style: LogosTypography.caption(color: ink.withValues(alpha: 0.6))),
@@ -395,7 +396,7 @@ class AltarScreen extends StatelessWidget {
             children: [
               Text('TEAR SHEET · $dateStr', style: LogosTypography.caption(color: LogosColors.coral)),
               IconButton(
-                icon: const Icon(Icons.share, size: 18, color: LogosColors.coral),
+                icon: const AppIcon(LogosIcons.share, size: 18, color: LogosColors.coral),
                 onPressed: () {
                   SharePlus.instance.share(ShareParams(text: '✝ THE EXCHANGE · ${sheet.reference}\n"${sheet.verseText}"\n\nA burden was laid down here on $dateStr.\nLOGOS IN ME'));
                 },

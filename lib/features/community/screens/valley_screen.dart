@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme/logos_theme.dart';
 import '../../../core/theme/logos_typography.dart';
+import '../../../core/theme/logos_icons.dart';
 
 class ValleyScreen extends StatefulWidget {
   const ValleyScreen({super.key});
@@ -160,7 +161,7 @@ class _ValleyScreenState extends State<ValleyScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: ink),
+          icon: AppIcon(LogosIcons.arrowBack, color: ink),
           onPressed: () => Navigator.pop(context),
         ),
         title: Column(
@@ -174,7 +175,7 @@ class _ValleyScreenState extends State<ValleyScreen> {
       floatingActionButton: FloatingActionButton.extended(
         backgroundColor: LogosColors.valleyRooms,
         foregroundColor: Colors.white,
-        icon: const Icon(Icons.edit_note),
+        icon: const AppIcon(LogosIcons.editNote),
         label: const Text('Leave a Word'),
         onPressed: () => _showComposeDialog(context),
       ),
@@ -275,7 +276,7 @@ class _ValleyScreenState extends State<ValleyScreen> {
                         const SizedBox(height: 12),
                         Row(
                           children: [
-                            const Icon(Icons.shield_outlined, size: 12, color: Colors.green),
+                            const AppIcon(LogosIcons.shieldOutlined, size: 12, color: Colors.green),
                             const SizedBox(width: 4),
                             Text(
                               'Covenant Protected · Pastoral Oversight',

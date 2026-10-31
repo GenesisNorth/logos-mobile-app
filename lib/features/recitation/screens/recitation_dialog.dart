@@ -7,15 +7,16 @@ import '../../../core/services/speech/speech_recognizer.dart';
 import '../../../core/theme/logos_theme.dart';
 import '../../../core/theme/logos_typography.dart';
 import '../../../core/utils/scripture_verifier.dart';
+import '../../../core/theme/logos_icons.dart';
 
 enum ScaffoldingMode {
-  full('Full Text', Icons.visibility_outlined),
-  partial('50% Clue', Icons.blur_on_rounded),
-  firstLetters('Initials', Icons.short_text_rounded),
-  memory('Heart Recall', Icons.favorite_outline_rounded);
+  full('Full Text', LogosIcons.visibilityOutlined),
+  partial('50% Clue', LogosIcons.blurOnRounded),
+  firstLetters('Initials', LogosIcons.shortTextRounded),
+  memory('Heart Recall', LogosIcons.favoriteOutlineRounded);
 
   final String label;
-  final IconData icon;
+  final LogosIconData icon;
   const ScaffoldingMode(this.label, this.icon);
 }
 
@@ -230,7 +231,7 @@ class _RecitationDialogState extends State<RecitationDialog>
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.close_rounded, color: ink),
+          icon: AppIcon(LogosIcons.closeRounded, color: ink),
           onPressed: () => Navigator.of(context).pop(),
         ),
         centerTitle: true,
@@ -262,7 +263,7 @@ class _RecitationDialogState extends State<RecitationDialog>
         actions: [
           IconButton(
             tooltip: 'Type recitation manually',
-            icon: Icon(Icons.keyboard_alt_outlined, color: ink.withValues(alpha: 0.6)),
+            icon: AppIcon(LogosIcons.keyboardAltOutlined, color: ink.withValues(alpha: 0.6)),
             onPressed: () => _showFallbackInput(context, surface, ink),
           ),
         ],
@@ -311,7 +312,7 @@ class _RecitationDialogState extends State<RecitationDialog>
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(
+                              AppIcon(
                                 mode.icon,
                                 size: 13,
                                 color: isSelected ? LogosColors.coral : ink.withValues(alpha: 0.5),
@@ -366,8 +367,8 @@ class _RecitationDialogState extends State<RecitationDialog>
                                       color: LogosColors.coral.withValues(alpha: 0.4),
                                     ),
                                   ),
-                                  child: const Icon(
-                                    Icons.favorite_rounded,
+                                  child: const AppIcon(
+                                    LogosIcons.favoriteRounded,
                                     color: LogosColors.coral,
                                     size: 28,
                                   ),
@@ -434,7 +435,7 @@ class _RecitationDialogState extends State<RecitationDialog>
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.graphic_eq, size: 16, color: LogosColors.coral),
+                        const AppIcon(LogosIcons.graphicEq, size: 16, color: LogosColors.coral),
                         const SizedBox(width: 8),
                         Flexible(
                           child: Text(
@@ -542,8 +543,8 @@ class _RecitationDialogState extends State<RecitationDialog>
                                   ]
                                 : LogosColors.softShadow,
                           ),
-                          child: Icon(
-                            _isListening ? Icons.stop_rounded : Icons.mic_rounded,
+                          child: AppIcon(
+                            _isListening ? LogosIcons.stopRounded : LogosIcons.micRounded,
                             size: 38,
                             color: _isListening ? Colors.white : LogosColors.coral,
                           ),
@@ -601,8 +602,8 @@ class _RecitationDialogState extends State<RecitationDialog>
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(
-                        _passed ? Icons.check_circle_rounded : Icons.refresh_rounded,
+                      AppIcon(
+                        _passed ? LogosIcons.checkCircleRounded : LogosIcons.refreshRounded,
                         color: _passed ? Colors.green : Colors.amber.shade800,
                         size: 22,
                       ),

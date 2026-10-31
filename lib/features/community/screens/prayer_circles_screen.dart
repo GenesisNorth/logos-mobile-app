@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../core/services/audio_service.dart';
 import '../../../core/theme/logos_theme.dart';
 import '../../../core/theme/logos_typography.dart';
+import '../../../core/theme/logos_icons.dart';
 
 class PrayerCirclesScreen extends StatefulWidget {
   const PrayerCirclesScreen({super.key});
@@ -120,7 +121,7 @@ class _PrayerCirclesScreenState extends State<PrayerCirclesScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: ink),
+          icon: AppIcon(LogosIcons.arrowBack, color: ink),
           onPressed: () => Navigator.pop(context),
         ),
         title: Column(
@@ -150,7 +151,7 @@ class _PrayerCirclesScreenState extends State<PrayerCirclesScreen> {
                       children: [
                         Row(
                           children: [
-                            const Icon(Icons.auto_delete_outlined, color: Colors.white, size: 18),
+                            const AppIcon(LogosIcons.autoDeleteOutlined, color: Colors.white, size: 18),
                             const SizedBox(width: 8),
                             Text(
                               '7-DAY SACRED EPHEMERALITY',
@@ -286,8 +287,8 @@ class _PrayerCirclesScreenState extends State<PrayerCirclesScreen> {
                             child: Row(
                               children: [
                                 IconButton(
-                                  icon: Icon(
-                                    isPlaying ? Icons.pause_circle_filled : Icons.play_circle_filled,
+                                  icon: AppIcon(
+                                    isPlaying ? LogosIcons.pauseCircleFilled : LogosIcons.playCircleFilled,
                                     color: LogosColors.prayerCircles,
                                     size: 32,
                                   ),
@@ -378,8 +379,8 @@ class _PrayerCirclesScreenState extends State<PrayerCirclesScreen> {
                           ),
                         ],
                       ),
-                      child: Icon(
-                        _isRecording ? Icons.stop : Icons.mic,
+                      child: AppIcon(
+                        _isRecording ? LogosIcons.stop : LogosIcons.mic,
                         color: Colors.white,
                         size: 26,
                       ),
