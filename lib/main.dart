@@ -323,13 +323,10 @@ class _SanctuaryHomeScreenState extends State<SanctuaryHomeScreen>
                         shape: BoxShape.circle,
                       ),
                       alignment: Alignment.center,
-                      child: const Text(
-                        '✝',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
+                      child: const AppIcon(
+                        LogosIcons.menuBook,
+                        size: 17,
+                        color: Colors.white,
                       ),
                     ),
                     const SizedBox(width: 10),

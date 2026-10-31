@@ -31,7 +31,8 @@ class LogosIcons {
   static const LogosIconData notificationsActive = HugeIcons.strokeRoundedNotification03;
   static const LogosIconData visibilityOutlined = HugeIcons.strokeRoundedView;
 
-  // Tabs
+  // Tabs & Sacred
+  static const LogosIconData cross = HugeIcons.strokeRoundedCross;
   static const LogosIconData spaOutlined = HugeIcons.strokeRoundedChurch;
   static const LogosIconData spaRounded = HugeIcons.strokeRoundedChurch;
   static const LogosIconData forumOutlined = HugeIcons.strokeRoundedBubbleChat;
@@ -79,7 +80,7 @@ class LogosIcons {
   static const LogosIconData volumeOffRounded = HugeIcons.strokeRoundedVolumeOff;
   static const LogosIconData graphicEq = HugeIcons.strokeRoundedAudioWave01;
   static const LogosIconData graphicEqRounded = HugeIcons.strokeRoundedAudioWave01;
-  static const LogosIconData recordVoiceOver = HugeIcons.strokeRoundedVoice;
+  static const LogosIconData recordVoiceOver = HugeIcons.strokeRoundedHandPrayer;
   static const LogosIconData hearing = HugeIcons.strokeRoundedEar;
   static const LogosIconData videoCallOutlined = HugeIcons.strokeRoundedVideo01;
 
@@ -90,10 +91,11 @@ class LogosIcons {
   static const LogosIconData editNote = HugeIcons.strokeRoundedNoteEdit;
   static const LogosIconData shortTextRounded = HugeIcons.strokeRoundedTextAlignLeft;
   static const LogosIconData keyboardAltOutlined = HugeIcons.strokeRoundedKeyboard;
-  static const LogosIconData psychologyRounded = HugeIcons.strokeRoundedBrain02;
-  static const LogosIconData autoAwesome = HugeIcons.strokeRoundedSparkles;
-  static const LogosIconData blurOnRounded = HugeIcons.strokeRoundedSparkles;
-  static const LogosIconData syncAltRounded = HugeIcons.strokeRoundedArrowDataTransferHorizontal;
+  // Non-AI, elevated liturgical and achievement glyphs:
+  static const LogosIconData psychologyRounded = HugeIcons.strokeRoundedAward01;
+  static const LogosIconData autoAwesome = HugeIcons.strokeRoundedQuillWrite01;
+  static const LogosIconData blurOnRounded = HugeIcons.strokeRoundedPuzzle;
+  static const LogosIconData syncAltRounded = HugeIcons.strokeRoundedExchange01;
   static const LogosIconData layersClear = HugeIcons.strokeRoundedDelete02;
   static const LogosIconData autoDeleteOutlined = HugeIcons.strokeRoundedDelete02;
 
