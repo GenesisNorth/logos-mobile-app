@@ -1,9 +1,9 @@
 import 'dart:async';
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../core/services/audio_service.dart';
+import '../../../core/theme/logos_theme.dart';
 import '../../../core/theme/logos_typography.dart';
 import '../bloc/journey_bloc.dart';
 import '../bloc/journey_event.dart';
@@ -58,53 +58,53 @@ class _StillnessSanctuaryScreenState extends State<StillnessSanctuaryScreen>
     AudioService().selectionTick();
     if (_isPlayingAudio) {
       AudioService().pauseAmbient();
+      setState(() => _isPlayingAudio = false);
     } else {
       AudioService().startAmbient(widget.drop.ambientPreset);
+      setState(() => _isPlayingAudio = true);
     }
-    setState(() => _isPlayingAudio = !_isPlayingAudio);
   }
 
   @override
   void dispose() {
     _timer?.cancel();
     _breathController.dispose();
-    AudioService().pauseAmbient();
+    AudioService().stopAmbient();
     super.dispose();
   }
 
   String _getBreathingPrompt() {
-    if (_isFinished) return 'Stillness Sealed in Christ';
+    if (_isFinished) return 'Sanctuary Sealed · Walk in Peace';
     final progress = _breathController.value;
-    final isForward = _breathController.status == AnimationStatus.forward;
+    final status = _breathController.status;
 
-    if (isForward) {
-      if (progress < 0.7) return 'Inhale slowly... Draw near to God';
-      return 'Hold softly... Abide in His peace';
+    if (status == AnimationStatus.forward) {
+      if (progress < 0.2) return 'Prepare to breathe in...';
+      return 'Breathe In... Receive the Spirit';
     } else {
-      if (progress > 0.3) return 'Exhale unhurried... Surrender control';
-      return 'Rest in silence... He is with you';
+      if (progress > 0.8) return 'Hold gently in His peace...';
+      return 'Exhale slowly... Release all striving';
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0F2428),
+      backgroundColor: Colors.white,
       body: Stack(
         children: [
-          // Ambient Gradient Base
+          // Ambient Clean White & Soft Blended Purple Gradient Base
           Container(
             decoration: const BoxDecoration(
               gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
                 colors: [
-                  Color(0xFF132F34),
-                  Color(0xFF1E464E),
-                  Color(0xFF28565F),
-                  Color(0xFFB56A50),
+                  Color(0xFFFFFFFF),
+                  Color(0xFFFAF7FE),
+                  Color(0xFFF3EBFC),
                 ],
-                stops: [0.0, 0.3, 0.7, 1.0],
+                stops: [0.0, 0.5, 1.0],
               ),
             ),
           ),
@@ -120,7 +120,7 @@ class _StillnessSanctuaryScreenState extends State<StillnessSanctuaryScreen>
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       IconButton(
-                        icon: const Icon(Icons.close_rounded, color: Colors.white70),
+                        icon: const Icon(Icons.close_rounded, color: LogosColors.ink),
                         onPressed: () {
                           AudioService().selectionTick();
                           Navigator.pop(context);
@@ -129,19 +129,20 @@ class _StillnessSanctuaryScreenState extends State<StillnessSanctuaryScreen>
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                         decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.12),
+                          color: Colors.white,
                           borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+                          border: Border.all(color: LogosColors.taupe),
+                          boxShadow: LogosColors.softShadow,
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Icon(Icons.graphic_eq_rounded, size: 14, color: Color(0xFFE29578)),
+                            const Icon(Icons.graphic_eq_rounded, size: 14, color: LogosColors.coral),
                             const SizedBox(width: 8),
                             Text(
                               widget.drop.ambientLabel,
                               style: GoogleFonts.inter(
-                                color: Colors.white,
+                                color: LogosColors.ink,
                                 fontSize: 11,
                                 fontWeight: FontWeight.w700,
                               ),
@@ -152,7 +153,7 @@ class _StillnessSanctuaryScreenState extends State<StillnessSanctuaryScreen>
                       IconButton(
                         icon: Icon(
                           _isPlayingAudio ? Icons.volume_up_rounded : Icons.volume_off_rounded,
-                          color: Colors.white70,
+                          color: LogosColors.ink,
                         ),
                         onPressed: _toggleAudio,
                       ),
@@ -179,7 +180,7 @@ class _StillnessSanctuaryScreenState extends State<StillnessSanctuaryScreen>
                               height: 240 * scale,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                color: const Color(0xFFE29578).withValues(alpha: glowAlpha * 0.4),
+                                color: const Color(0xFF8B5CF6).withValues(alpha: glowAlpha * 0.18),
                               ),
                             ),
 
@@ -189,9 +190,9 @@ class _StillnessSanctuaryScreenState extends State<StillnessSanctuaryScreen>
                               height: 175 * scale,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                color: Colors.white.withValues(alpha: glowAlpha),
+                                color: Colors.white.withValues(alpha: glowAlpha * 0.6),
                                 border: Border.all(
-                                  color: Colors.white.withValues(alpha: 0.3),
+                                  color: const Color(0xFFDDD6FE).withValues(alpha: 0.5),
                                   width: 1.5,
                                 ),
                               ),
@@ -204,8 +205,8 @@ class _StillnessSanctuaryScreenState extends State<StillnessSanctuaryScreen>
                               child: CircularProgressIndicator(
                                 value: percentDone,
                                 strokeWidth: 3,
-                                valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFFE29578)),
-                                backgroundColor: Colors.white.withValues(alpha: 0.2),
+                                valueColor: const AlwaysStoppedAnimation<Color>(LogosColors.coral),
+                                backgroundColor: const Color(0xFFEDE9FE),
                               ),
                             ),
 
@@ -215,30 +216,21 @@ class _StillnessSanctuaryScreenState extends State<StillnessSanctuaryScreen>
                               height: 96,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                gradient: const LinearGradient(
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                  colors: [Colors.white, Color(0xFFF7EFE8)],
-                                ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withValues(alpha: 0.2),
-                                    blurRadius: 16,
-                                    offset: const Offset(0, 6),
-                                  ),
-                                ],
+                                color: Colors.white,
+                                border: Border.all(color: LogosColors.taupe, width: 1.5),
+                                boxShadow: LogosColors.softShadow,
                               ),
                               alignment: Alignment.center,
                               child: _isFinished
                                   ? const Icon(
                                       Icons.check_rounded,
-                                      color: Color(0xFF163E44),
+                                      color: LogosColors.coral,
                                       size: 42,
                                     )
                                   : Text(
                                       '${_secondsRemaining}s',
                                       style: GoogleFonts.inter(
-                                        color: const Color(0xFF163E44),
+                                        color: LogosColors.coral,
                                         fontWeight: FontWeight.w800,
                                         fontSize: 24,
                                         letterSpacing: -0.5,
@@ -261,7 +253,7 @@ class _StillnessSanctuaryScreenState extends State<StillnessSanctuaryScreen>
                         _getBreathingPrompt(),
                         key: ValueKey(_getBreathingPrompt()),
                         style: GoogleFonts.sourceSerif4(
-                          color: Colors.white,
+                          color: LogosColors.ink,
                           fontSize: 17,
                           fontWeight: FontWeight.w600,
                           letterSpacing: 0.2,
@@ -272,48 +264,36 @@ class _StillnessSanctuaryScreenState extends State<StillnessSanctuaryScreen>
 
                   const Spacer(),
 
-                  // Scripture Plaque in Sanctuary Light
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(22),
-                    child: BackdropFilter(
-                      filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-                      child: Container(
-                        padding: const EdgeInsets.all(22),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(22),
-                          border: Border.all(
-                            color: Colors.white.withValues(alpha: 0.22),
-                            width: 1,
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.15),
-                              blurRadius: 20,
-                              offset: const Offset(0, 8),
-                            ),
-                          ],
-                        ),
-                        child: Column(
-                          children: [
-                            Text(
-                              '“${widget.drop.verseText}”',
-                              textAlign: TextAlign.center,
-                              style: LogosTypography.scriptureHero(color: Colors.white).copyWith(
-                                fontSize: 18.5,
-                                height: 1.45,
-                              ),
-                            ),
-                            const SizedBox(height: 10),
-                            Text(
-                              '${widget.drop.reference} · ${widget.drop.translation}',
-                              style: LogosTypography.scriptureCitation(
-                                color: const Color(0xFFF7D6C8),
-                              ),
-                            ),
-                          ],
-                        ),
+                  // Scripture Plaque in Clean White Sanctuary Light
+                  Container(
+                    padding: const EdgeInsets.all(22),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(22),
+                      border: Border.all(
+                        color: LogosColors.taupe,
+                        width: 1,
                       ),
+                      boxShadow: LogosColors.softShadow,
+                    ),
+                    child: Column(
+                      children: [
+                        Text(
+                          '“${widget.drop.verseText}”',
+                          textAlign: TextAlign.center,
+                          style: LogosTypography.scriptureHero(color: LogosColors.ink).copyWith(
+                            fontSize: 18.5,
+                            height: 1.45,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        Text(
+                          '${widget.drop.reference} · ${widget.drop.translation}',
+                          style: LogosTypography.scriptureCitation(
+                            color: LogosColors.coral,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
 
@@ -324,8 +304,8 @@ class _StillnessSanctuaryScreenState extends State<StillnessSanctuaryScreen>
                     height: 54,
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.white,
-                        foregroundColor: const Color(0xFF163E44),
+                        backgroundColor: LogosColors.coral,
+                        foregroundColor: Colors.white,
                         elevation: 0,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(27),

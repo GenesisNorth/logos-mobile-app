@@ -432,13 +432,11 @@ LOGOS IN ME
               width: 38,
               height: 38,
               decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFFE29578), Color(0xFFD4AF37)],
-                ),
+                gradient: LogosColors.purpleGradient,
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFFE29578).withValues(alpha: 0.4),
+                    color: const Color(0xFF7C3AED).withValues(alpha: 0.35),
                     blurRadius: 10,
                     offset: const Offset(0, 2),
                   ),

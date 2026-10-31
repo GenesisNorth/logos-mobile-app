@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../../core/theme/logos_theme.dart';
 import '../../../core/theme/logos_typography.dart';
 import 'milestones_screen.dart';
@@ -269,15 +270,22 @@ class CommunityScreen extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: color,
-          borderRadius: BorderRadius.circular(18),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.08),
-              blurRadius: 8,
-              offset: const Offset(0, 4),
-            ),
-          ],
+          color: Colors.white,
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Colors.white,
+              const Color(0xFFFAF7FE),
+              color.withValues(alpha: 0.10),
+            ],
+          ),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: color.withValues(alpha: 0.22),
+            width: 1,
+          ),
+          boxShadow: LogosColors.softShadow,
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -286,8 +294,20 @@ class CommunityScreen extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Icon(icon, color: Colors.white, size: 24),
-                const Icon(Icons.arrow_forward_ios, color: Colors.white60, size: 12),
+                Container(
+                  width: 38,
+                  height: 38,
+                  decoration: BoxDecoration(
+                    color: color.withValues(alpha: 0.12),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(icon, color: color, size: 20),
+                ),
+                Icon(
+                  Icons.arrow_forward_ios,
+                  color: LogosColors.inkSecondary.withValues(alpha: 0.4),
+                  size: 12,
+                ),
               ],
             ),
             Column(
@@ -295,19 +315,19 @@ class CommunityScreen extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
+                  style: GoogleFonts.inter(
+                    color: LogosColors.ink,
+                    fontWeight: FontWeight.w700,
                     fontSize: 15,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   subtitle,
-                  style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.85),
+                  style: GoogleFonts.inter(
+                    color: LogosColors.inkSecondary,
                     fontSize: 11,
-                    height: 1.3,
+                    height: 1.35,
                   ),
                 ),
               ],

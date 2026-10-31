@@ -520,13 +520,11 @@ class _RecitationDialogState extends State<RecitationDialog>
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             gradient: _isListening
-                                ? const LinearGradient(
-                                    colors: [Color(0xFFE29578), Color(0xFFD4AF37)],
-                                  )
+                                ? LogosColors.purpleGradient
                                 : LinearGradient(
                                     colors: isDark
-                                        ? [const Color(0xFF2E2620), const Color(0xFF1F1B17)]
-                                        : [Colors.white, const Color(0xFFFAF6F0)],
+                                        ? [const Color(0xFF241445), const Color(0xFF160B30)]
+                                        : [Colors.white, const Color(0xFFFAF5FF)],
                                   ),
                             border: Border.all(
                               color: _isListening
@@ -537,7 +535,7 @@ class _RecitationDialogState extends State<RecitationDialog>
                             boxShadow: _isListening
                                 ? [
                                     BoxShadow(
-                                      color: const Color(0xFFE29578).withValues(alpha: 0.5),
+                                      color: const Color(0xFF7C3AED).withValues(alpha: 0.5),
                                       blurRadius: 24,
                                       spreadRadius: 4,
                                     ),
@@ -547,7 +545,7 @@ class _RecitationDialogState extends State<RecitationDialog>
                           child: Icon(
                             _isListening ? Icons.stop_rounded : Icons.mic_rounded,
                             size: 38,
-                            color: _isListening ? Colors.white : ink,
+                            color: _isListening ? Colors.white : LogosColors.coral,
                           ),
                         ),
                       ),

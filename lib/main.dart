@@ -119,13 +119,13 @@ class _MainAppShellState extends State<MainAppShell> {
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                     decoration: BoxDecoration(
                       color: isDark
-                          ? const Color(0xDD1F1B17)
-                          : const Color(0xEEFFFDF9),
+                          ? const Color(0xDD180F30)
+                          : const Color(0xF8FFFFFF),
                       borderRadius: BorderRadius.circular(32),
                       border: Border.all(
                         color: isDark
-                            ? const Color(0x33FFFFFF)
-                            : const Color(0x40E29578),
+                            ? const Color(0x33A855F7)
+                            : const Color(0x247C3AED),
                         width: 1,
                       ),
                       boxShadow: LogosColors.floatingDockShadow,
@@ -190,7 +190,7 @@ class _MainAppShellState extends State<MainAppShell> {
         ),
         decoration: BoxDecoration(
           color: isSelected
-              ? LogosColors.coral.withValues(alpha: isDark ? 0.28 : 0.16)
+              ? LogosColors.coral.withValues(alpha: isDark ? 0.28 : 0.10)
               : Colors.transparent,
           borderRadius: BorderRadius.circular(20),
         ),
@@ -318,9 +318,7 @@ class _SanctuaryHomeScreenState extends State<SanctuaryHomeScreen>
                       width: 32,
                       height: 32,
                       decoration: const BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [Color(0xFFE29578), Color(0xFFD4AF37)],
-                        ),
+                        gradient: LogosColors.purpleGradient,
                         shape: BoxShape.circle,
                       ),
                       alignment: Alignment.center,
@@ -429,7 +427,7 @@ class _SanctuaryHomeScreenState extends State<SanctuaryHomeScreen>
                             gradient: const LinearGradient(
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
-                              colors: [Color(0xFF2E2620), Color(0xFF1F1B17)],
+                              colors: [Color(0xFF241445), Color(0xFF160B30)],
                             ),
                             borderRadius: BorderRadius.circular(22),
                             border: Border.all(
@@ -482,10 +480,10 @@ class _SanctuaryHomeScreenState extends State<SanctuaryHomeScreen>
                               : LogosColors.parchmentGradient,
                           borderRadius: BorderRadius.circular(26),
                           border: Border.all(
-                            color: LogosColors.coral.withValues(alpha: 0.35),
+                            color: LogosColors.taupe,
                             width: 1.2,
                           ),
-                          boxShadow: LogosColors.relicShadow,
+                          boxShadow: LogosColors.softShadow,
                         ),
                         child: Stack(
                           children: [
@@ -703,9 +701,7 @@ class _SanctuaryHomeScreenState extends State<SanctuaryHomeScreen>
                                   padding: const EdgeInsets.symmetric(vertical: 12),
                                   decoration: BoxDecoration(
                                     gradient: isSelected
-                                        ? const LinearGradient(
-                                            colors: [Color(0xFFE29578), Color(0xFFD4AF37)],
-                                          )
+                                        ? LogosColors.purpleGradient
                                         : null,
                                     color: isSelected
                                         ? null
@@ -720,7 +716,7 @@ class _SanctuaryHomeScreenState extends State<SanctuaryHomeScreen>
                                     boxShadow: isSelected
                                         ? [
                                             BoxShadow(
-                                              color: const Color(0xFFE29578).withValues(alpha: 0.4),
+                                              color: const Color(0xFF7C3AED).withValues(alpha: 0.22),
                                               blurRadius: 10,
                                               offset: const Offset(0, 3),
                                             ),
@@ -1141,13 +1137,10 @@ class _SanctuaryHomeScreenState extends State<SanctuaryHomeScreen>
         return Container(
           padding: const EdgeInsets.all(22),
           decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [Color(0xFF24484D), Color(0xFF173337)],
-            ),
+            gradient: LogosColors.whitePurpleBlend,
             borderRadius: BorderRadius.circular(24),
-            boxShadow: LogosColors.relicShadow,
+            border: Border.all(color: LogosColors.taupe, width: 1.2),
+            boxShadow: LogosColors.softShadow,
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -1161,15 +1154,15 @@ class _SanctuaryHomeScreenState extends State<SanctuaryHomeScreen>
                       fontSize: 11,
                       fontWeight: FontWeight.w800,
                       letterSpacing: 1.4,
-                      color: const Color(0xFFE29578),
+                      color: LogosColors.coral,
                     ),
                   ),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                     decoration: BoxDecoration(
                       color: isStillnessDone
-                          ? const Color(0xFF10B981).withValues(alpha: 0.25)
-                          : Colors.white.withValues(alpha: 0.15),
+                          ? const Color(0xFF10B981).withValues(alpha: 0.15)
+                          : LogosColors.coral.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Text(
@@ -1177,7 +1170,7 @@ class _SanctuaryHomeScreenState extends State<SanctuaryHomeScreen>
                       style: GoogleFonts.inter(
                         fontSize: 11,
                         fontWeight: FontWeight.w700,
-                        color: isStillnessDone ? const Color(0xFF86EFAC) : Colors.white70,
+                        color: isStillnessDone ? const Color(0xFF10B981) : LogosColors.coral,
                       ),
                     ),
                   ),
@@ -1186,7 +1179,7 @@ class _SanctuaryHomeScreenState extends State<SanctuaryHomeScreen>
               const SizedBox(height: 8),
               Text(
                 'Full-bleed sanctuary contemplation with 432 Hz ambient soundscapes. Rest your thoughts in Christ for at least 60 seconds.',
-                style: GoogleFonts.inter(color: Colors.white70, fontSize: 13, height: 1.45),
+                style: LogosTypography.body(color: ink.withValues(alpha: 0.8)),
               ),
               const SizedBox(height: 18),
               // Ambient player button
@@ -1195,15 +1188,16 @@ class _SanctuaryHomeScreenState extends State<SanctuaryHomeScreen>
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.12),
+                    color: Colors.white,
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+                    border: Border.all(color: LogosColors.taupe),
+                    boxShadow: LogosColors.softShadow,
                   ),
                   child: Row(
                     children: [
                       Icon(
                         _isStillnessPlaying ? Icons.pause_circle_filled_rounded : Icons.play_circle_fill_rounded,
-                        color: const Color(0xFFE29578),
+                        color: LogosColors.coral,
                         size: 30,
                       ),
                       const SizedBox(width: 12),
@@ -1216,7 +1210,7 @@ class _SanctuaryHomeScreenState extends State<SanctuaryHomeScreen>
                               style: GoogleFonts.inter(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w700,
-                                color: Colors.white,
+                                color: ink,
                               ),
                             ),
                             Text(
@@ -1225,7 +1219,7 @@ class _SanctuaryHomeScreenState extends State<SanctuaryHomeScreen>
                                   : 'Tap to start 432 Hz loop',
                               style: GoogleFonts.inter(
                                 fontSize: 11,
-                                color: Colors.white60,
+                                color: ink.withValues(alpha: 0.6),
                               ),
                             ),
                           ],
@@ -1241,8 +1235,8 @@ class _SanctuaryHomeScreenState extends State<SanctuaryHomeScreen>
                   Expanded(
                     child: ElevatedButton.icon(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.white,
-                        foregroundColor: const Color(0xFF1E3C40),
+                        backgroundColor: LogosColors.coral,
+                        foregroundColor: Colors.white,
                         elevation: 0,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                       ),
@@ -1303,8 +1297,8 @@ class _SanctuaryHomeScreenState extends State<SanctuaryHomeScreen>
           decoration: BoxDecoration(
             color: surface,
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: LogosColors.coral, width: 1.5),
-            boxShadow: LogosColors.relicShadow,
+            border: Border.all(color: LogosColors.taupe, width: 1.2),
+            boxShadow: LogosColors.softShadow,
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,

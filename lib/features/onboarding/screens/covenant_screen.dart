@@ -1,9 +1,9 @@
 import 'dart:math' as math;
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../core/services/audio_service.dart';
+import '../../../core/theme/logos_theme.dart';
 import '../../journey/bloc/journey_bloc.dart';
 import '../../journey/bloc/journey_event.dart';
 
@@ -78,27 +78,26 @@ class _CovenantScreenState extends State<CovenantScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0C191B),
+      backgroundColor: Colors.white,
       body: Stack(
         children: [
-          // Ambient Gradient Base
+          // Luminous White & Subtle Purple Aura Base
           Container(
             decoration: const BoxDecoration(
               gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
                 colors: [
-                  Color(0xFF0F2428),
-                  Color(0xFF16363C),
-                  Color(0xFF234B52),
-                  Color(0xFF8F4D35),
+                  Color(0xFFFFFFFF),
+                  Color(0xFFFFFFFF),
+                  Color(0xFFFAF8FE),
                 ],
-                stops: [0.0, 0.35, 0.7, 1.0],
+                stops: [0.0, 0.6, 1.0],
               ),
             ),
           ),
 
-          // Luminous Radial Glows
+          // Luminous Soft Radial Whispers
           Positioned(
             top: -120,
             right: -60,
@@ -109,7 +108,7 @@ class _CovenantScreenState extends State<CovenantScreen>
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
                   colors: [
-                    const Color(0xFFE29578).withValues(alpha: 0.25),
+                    const Color(0xFF8B5CF6).withValues(alpha: 0.06),
                     Colors.transparent,
                   ],
                 ),
@@ -126,7 +125,7 @@ class _CovenantScreenState extends State<CovenantScreen>
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
                   colors: [
-                    const Color(0xFF2D5A60).withValues(alpha: 0.4),
+                    const Color(0xFFA78BFA).withValues(alpha: 0.05),
                     Colors.transparent,
                   ],
                 ),
@@ -165,14 +164,12 @@ class _CovenantScreenState extends State<CovenantScreen>
                             width: 32,
                             height: 32,
                             decoration: BoxDecoration(
-                              gradient: const LinearGradient(
-                                colors: [Color(0xFFE29578), Color(0xFFD4AF37)],
-                              ),
+                              gradient: LogosColors.purpleGradient,
                               shape: BoxShape.circle,
                               boxShadow: [
                                 BoxShadow(
-                                  color: const Color(0xFFE29578).withValues(alpha: 0.4),
-                                  blurRadius: 12,
+                                  color: const Color(0xFF7C3AED).withValues(alpha: 0.35),
+                                  blurRadius: 10,
                                   offset: const Offset(0, 2),
                                 ),
                               ],
@@ -194,19 +191,18 @@ class _CovenantScreenState extends State<CovenantScreen>
                               Text(
                                 'LOGOS IN ME',
                                 style: GoogleFonts.inter(
-                                  fontSize: 13,
+                                  fontSize: 12.5,
                                   fontWeight: FontWeight.w800,
-                                  letterSpacing: 2.2,
-                                  color: Colors.white,
+                                  letterSpacing: 2.0,
+                                  color: LogosColors.ink,
                                 ),
                               ),
                               Text(
-                                'SACRED SCRIPTURE CLOISTER',
+                                'Covenant Initiation · Step ${_step + 1} of 3',
                                 style: GoogleFonts.inter(
-                                  fontSize: 8.5,
+                                  fontSize: 10.5,
                                   fontWeight: FontWeight.w600,
-                                  letterSpacing: 1.4,
-                                  color: Colors.white.withValues(alpha: 0.6),
+                                  color: LogosColors.coral,
                                 ),
                               ),
                             ],
@@ -215,21 +211,14 @@ class _CovenantScreenState extends State<CovenantScreen>
                       ),
                       if (_step < 2)
                         TextButton(
-                          style: TextButton.styleFrom(
-                            foregroundColor: Colors.white.withValues(alpha: 0.8),
-                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                            backgroundColor: Colors.white.withValues(alpha: 0.08),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                          ),
                           onPressed: () {
                             AudioService().selectionTick();
                             setState(() => _step = 2);
                           },
                           child: Text(
-                            'Skip to Seal',
+                            'Skip',
                             style: GoogleFonts.inter(
+                              color: LogosColors.coral,
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
                             ),
@@ -238,9 +227,9 @@ class _CovenantScreenState extends State<CovenantScreen>
                     ],
                   ),
 
-                  const Spacer(flex: 2),
+                  const Spacer(flex: 1),
 
-                  // Dynamic Step View with Smooth Transitions
+                  // Animated Step Content Transition
                   AnimatedSwitcher(
                     duration: const Duration(milliseconds: 400),
                     switchInCurve: Curves.easeOutCubic,
@@ -260,19 +249,20 @@ class _CovenantScreenState extends State<CovenantScreen>
                     child: _buildCurrentStep(),
                   ),
 
-                  const Spacer(flex: 3),
+                  const Spacer(flex: 2),
 
-                  // Silicon Valley Liquid Pill Step Indicator
+                  // Step Progression Pill Indicator
                   Center(
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                       decoration: BoxDecoration(
-                        color: Colors.black.withValues(alpha: 0.25),
+                        color: Colors.white,
                         borderRadius: BorderRadius.circular(24),
                         border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.12),
-                          width: 0.8,
+                          color: LogosColors.taupe,
+                          width: 1,
                         ),
+                        boxShadow: LogosColors.softShadow,
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
@@ -285,17 +275,13 @@ class _CovenantScreenState extends State<CovenantScreen>
                             width: isActive ? 26 : 8,
                             height: 6,
                             decoration: BoxDecoration(
-                              gradient: isActive
-                                  ? const LinearGradient(
-                                      colors: [Color(0xFFE29578), Color(0xFFD4AF37)],
-                                    )
-                                  : null,
-                              color: isActive ? null : Colors.white.withValues(alpha: 0.25),
+                              gradient: isActive ? LogosColors.purpleGradient : null,
+                              color: isActive ? null : LogosColors.taupe,
                               borderRadius: BorderRadius.circular(4),
                               boxShadow: isActive
                                   ? [
                                       BoxShadow(
-                                        color: const Color(0xFFE29578).withValues(alpha: 0.5),
+                                        color: const Color(0xFF7C3AED).withValues(alpha: 0.45),
                                         blurRadius: 8,
                                         spreadRadius: 1,
                                       ),
@@ -323,25 +309,13 @@ class _CovenantScreenState extends State<CovenantScreen>
                     child: Container(
                       height: 58,
                       decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [
-                            Color(0xFFFFFFFF),
-                            Color(0xFFF7EFE8),
-                          ],
-                        ),
+                        gradient: LogosColors.purpleGradient,
                         borderRadius: BorderRadius.circular(29),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.25),
+                            color: const Color(0xFF7C3AED).withValues(alpha: 0.35),
                             blurRadius: 20,
                             offset: const Offset(0, 8),
-                          ),
-                          BoxShadow(
-                            color: const Color(0xFFE29578).withValues(alpha: 0.3),
-                            blurRadius: 14,
-                            offset: const Offset(0, 2),
                           ),
                         ],
                       ),
@@ -354,14 +328,14 @@ class _CovenantScreenState extends State<CovenantScreen>
                               fontSize: 16,
                               fontWeight: FontWeight.w700,
                               letterSpacing: 0.2,
-                              color: const Color(0xFF203B40),
+                              color: Colors.white,
                             ),
                           ),
                           const SizedBox(width: 8),
                           Icon(
                             _step < 2 ? Icons.arrow_forward_rounded : Icons.lock_outline_rounded,
                             size: 18,
-                            color: const Color(0xFF203B40),
+                            color: Colors.white,
                           ),
                         ],
                       ),
@@ -389,16 +363,16 @@ class _CovenantScreenState extends State<CovenantScreen>
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFE29578).withValues(alpha: 0.2),
+                  color: LogosColors.coralLight,
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
-                    color: const Color(0xFFE29578).withValues(alpha: 0.4),
+                    color: LogosColors.taupe,
                   ),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.auto_awesome, size: 13, color: Color(0xFFE29578)),
+                    const Icon(Icons.auto_awesome, size: 13, color: LogosColors.coral),
                     const SizedBox(width: 6),
                     Text(
                       'THE LITURGICAL MANIFESTO',
@@ -406,7 +380,7 @@ class _CovenantScreenState extends State<CovenantScreen>
                         fontSize: 10,
                         fontWeight: FontWeight.w800,
                         letterSpacing: 1.5,
-                        color: const Color(0xFFF7D6C8),
+                        color: LogosColors.coral,
                       ),
                     ),
                   ],
@@ -420,7 +394,7 @@ class _CovenantScreenState extends State<CovenantScreen>
                   fontWeight: FontWeight.w700,
                   height: 1.15,
                   letterSpacing: -0.6,
-                  color: Colors.white,
+                  color: LogosColors.ink,
                 ),
               ),
               const SizedBox(height: 16),
@@ -429,40 +403,35 @@ class _CovenantScreenState extends State<CovenantScreen>
                 style: GoogleFonts.inter(
                   fontSize: 15.5,
                   height: 1.55,
-                  color: Colors.white.withValues(alpha: 0.88),
+                  color: LogosColors.inkSecondary,
                   letterSpacing: -0.1,
                 ),
               ),
               const SizedBox(height: 24),
-              // Glass Relic Pill
-              ClipRRect(
-                borderRadius: BorderRadius.circular(16),
-                child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.08),
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: Colors.white.withValues(alpha: 0.16)),
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.shield_outlined, color: Color(0xFFD4AF37), size: 20),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Text(
-                            'Pace-locked: One step per calendar day to protect true contemplation.',
-                            style: GoogleFonts.inter(
-                              fontSize: 12,
-                              color: Colors.white.withValues(alpha: 0.9),
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
+              // White Card Pill
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(color: LogosColors.taupe),
+                  boxShadow: LogosColors.softShadow,
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.shield_outlined, color: Color(0xFFF59E0B), size: 20),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        'Pace-locked: One step per calendar day to protect true contemplation.',
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          color: LogosColors.ink,
+                          fontWeight: FontWeight.w600,
                         ),
-                      ],
+                      ),
                     ),
-                  ),
+                  ],
                 ),
               ),
             ],
@@ -481,7 +450,7 @@ class _CovenantScreenState extends State<CovenantScreen>
                   fontSize: 34,
                   fontWeight: FontWeight.w700,
                   letterSpacing: -0.5,
-                  color: Colors.white,
+                  color: LogosColors.ink,
                 ),
               ),
               const SizedBox(height: 8),
@@ -489,7 +458,7 @@ class _CovenantScreenState extends State<CovenantScreen>
                 'A scientifically structured spiritual cadence for eternal neural imprint:',
                 style: GoogleFonts.inter(
                   fontSize: 13.5,
-                  color: Colors.white.withValues(alpha: 0.8),
+                  color: LogosColors.inkSecondary,
                 ),
               ),
               const SizedBox(height: 18),
@@ -498,7 +467,7 @@ class _CovenantScreenState extends State<CovenantScreen>
                 day: 'Day 1',
                 title: 'Encounter & Oral Recitation',
                 desc: 'Cinematic visual immersion & first 2 spoken recitation passes.',
-                accentColor: const Color(0xFFE29578),
+                accentColor: const Color(0xFF7C3AED),
               ),
               const SizedBox(height: 10),
               _buildRhythmCard(
@@ -506,7 +475,7 @@ class _CovenantScreenState extends State<CovenantScreen>
                 day: 'Day 2',
                 title: 'Exegesis & Context',
                 desc: 'Greek/Hebrew root depth & historical background cards.',
-                accentColor: const Color(0xFF5AB4B8),
+                accentColor: const Color(0xFF8B5CF6),
               ),
               const SizedBox(height: 10),
               _buildRhythmCard(
@@ -514,7 +483,7 @@ class _CovenantScreenState extends State<CovenantScreen>
                 day: 'Day 3',
                 title: 'Stillness & Lectio Divina',
                 desc: '60-second breathing sanctuary with 432 Hz ambient pad.',
-                accentColor: const Color(0xFF8FD5A6),
+                accentColor: const Color(0xFF9333EA),
               ),
               const SizedBox(height: 10),
               _buildRhythmCard(
@@ -522,7 +491,7 @@ class _CovenantScreenState extends State<CovenantScreen>
                 day: 'Day 4',
                 title: 'Master Recitation & The Exchange',
                 desc: 'Memory verification & burden dissolution into the Light.',
-                accentColor: const Color(0xFFD4AF37),
+                accentColor: const Color(0xFF5B21B6),
               ),
             ],
           ),
@@ -541,7 +510,7 @@ class _CovenantScreenState extends State<CovenantScreen>
                   fontSize: 34,
                   fontWeight: FontWeight.w700,
                   letterSpacing: -0.5,
-                  color: Colors.white,
+                  color: LogosColors.ink,
                 ),
               ),
               const SizedBox(height: 8),
@@ -549,145 +518,134 @@ class _CovenantScreenState extends State<CovenantScreen>
                 'Before entering the cloister, seal your pledge before God to walk unhurried.',
                 style: GoogleFonts.inter(
                   fontSize: 13.5,
-                  color: Colors.white.withValues(alpha: 0.85),
+                  color: LogosColors.inkSecondary,
                 ),
               ),
               const SizedBox(height: 16),
 
-              // Frosted Glass Parchment Card
-              ClipRRect(
-                borderRadius: BorderRadius.circular(22),
-                child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
-                  child: Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(22),
-                      border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.28),
-                        width: 1.2,
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.15),
-                          blurRadius: 20,
-                          offset: const Offset(0, 10),
+              // Crisp White Luxury Card
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(22),
+                  border: Border.all(
+                    color: LogosColors.taupe,
+                    width: 1.2,
+                  ),
+                  boxShadow: LogosColors.softShadow,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'PLEDGE OF THE DISCIPLE',
+                          style: GoogleFonts.inter(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 1.8,
+                            color: LogosColors.coral,
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: LogosColors.coralLight,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            'Immutable',
+                            style: GoogleFonts.inter(
+                              fontSize: 10,
+                              color: LogosColors.coral,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
                         ),
                       ],
                     ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    const SizedBox(height: 12),
+                    _buildCommitmentBullet('I will speak the Word aloud with reverence.'),
+                    _buildCommitmentBullet('I will honor the midnight pace-lock.'),
+                    _buildCommitmentBullet('I will surrender heavy burdens into Christ.'),
+                    const SizedBox(height: 18),
+
+                    // Signature Pad in Purple Lilac Tint
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFAF5FF),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(
+                          color: LogosColors.taupe,
+                        ),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Your Name (Sacred Signature)',
+                            style: GoogleFonts.inter(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: LogosColors.inkSecondary,
+                            ),
+                          ),
+                          TextField(
+                            controller: _nameController,
+                            style: GoogleFonts.caveat(
+                              fontSize: 28,
+                              fontWeight: FontWeight.bold,
+                              color: const Color(0xFF5B21B6),
+                            ),
+                            decoration: InputDecoration(
+                              isDense: true,
+                              contentPadding: const EdgeInsets.symmetric(vertical: 4),
+                              border: InputBorder.none,
+                              hintText: 'Type your name...',
+                              hintStyle: GoogleFonts.caveat(
+                                fontSize: 24,
+                                color: const Color(0xFFC084FC).withValues(alpha: 0.5),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+
+                    // Monastic Seal Badge
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
+                            const Icon(Icons.verified_outlined, size: 14, color: Color(0xFFF59E0B)),
+                            const SizedBox(width: 5),
                             Text(
-                              'PLEDGE OF THE DISCIPLE',
-                              style: GoogleFonts.inter(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w800,
-                                letterSpacing: 1.8,
-                                color: const Color(0xFFD4AF37),
-                              ),
-                            ),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                              decoration: BoxDecoration(
-                                color: Colors.black.withValues(alpha: 0.2),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Text(
-                                'Immutable',
-                                style: GoogleFonts.inter(
-                                  fontSize: 10,
-                                  color: Colors.white70,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
-                        _buildCommitmentBullet('I will speak the Word aloud with reverence.'),
-                        _buildCommitmentBullet('I will honor the midnight pace-lock.'),
-                        _buildCommitmentBullet('I will surrender heavy burdens into Christ.'),
-                        const SizedBox(height: 18),
-
-                        // Signature Pad
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                          decoration: BoxDecoration(
-                            color: Colors.black.withValues(alpha: 0.2),
-                            borderRadius: BorderRadius.circular(14),
-                            border: Border.all(
-                              color: Colors.white.withValues(alpha: 0.15),
-                            ),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Your Name (Sacred Signature)',
-                                style: GoogleFonts.inter(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.white.withValues(alpha: 0.6),
-                                ),
-                              ),
-                              TextField(
-                                controller: _nameController,
-                                style: GoogleFonts.caveat(
-                                  fontSize: 28,
-                                  fontWeight: FontWeight.bold,
-                                  color: const Color(0xFFFFF2DC),
-                                ),
-                                decoration: InputDecoration(
-                                  isDense: true,
-                                  contentPadding: const EdgeInsets.symmetric(vertical: 4),
-                                  border: InputBorder.none,
-                                  hintText: 'Type your name...',
-                                  hintStyle: GoogleFonts.caveat(
-                                    fontSize: 24,
-                                    color: Colors.white30,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-
-                        // Monastic Seal Badge
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Row(
-                              children: [
-                                const Icon(Icons.verified_outlined, size: 14, color: Color(0xFFD4AF37)),
-                                const SizedBox(width: 5),
-                                Text(
-                                  'SHA-256 Cloister Seal',
-                                  style: GoogleFonts.inter(
-                                    fontSize: 11,
-                                    color: const Color(0xFFD4AF37),
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            Text(
-                              'Day 1 Ready',
+                              'SHA-256 Cloister Seal',
                               style: GoogleFonts.inter(
                                 fontSize: 11,
-                                color: Colors.white60,
+                                color: const Color(0xFFF59E0B),
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
                           ],
+                        ),
+                        Text(
+                          'Day 1 Ready',
+                          style: GoogleFonts.inter(
+                            fontSize: 11,
+                            color: LogosColors.inkSecondary,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ],
                     ),
-                  ),
+                  ],
                 ),
               ),
             ],
@@ -703,79 +661,74 @@ class _CovenantScreenState extends State<CovenantScreen>
     required String desc,
     required Color accentColor,
   }) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(14),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.08),
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(
-              color: Colors.white.withValues(alpha: 0.14),
-              width: 0.8,
-            ),
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(
-                  color: accentColor.withValues(alpha: 0.2),
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: accentColor.withValues(alpha: 0.5),
-                    width: 1,
-                  ),
-                ),
-                alignment: Alignment.center,
-                child: Icon(icon, size: 18, color: accentColor),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: LogosColors.taupe,
+          width: 1,
+        ),
+        boxShadow: LogosColors.softShadow,
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: accentColor.withValues(alpha: 0.12),
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: accentColor.withValues(alpha: 0.3),
+                width: 1,
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+            ),
+            alignment: Alignment.center,
+            child: Icon(icon, size: 18, color: accentColor),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
                   children: [
-                    Row(
-                      children: [
-                        Text(
-                          day,
-                          style: GoogleFonts.inter(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: 0.5,
-                            color: accentColor,
-                          ),
-                        ),
-                        const SizedBox(width: 6),
-                        Text(
-                          '· $title',
-                          style: GoogleFonts.inter(
-                            fontSize: 12.5,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 2),
                     Text(
-                      desc,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                      day,
                       style: GoogleFonts.inter(
                         fontSize: 11,
-                        color: Colors.white.withValues(alpha: 0.72),
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 0.5,
+                        color: accentColor,
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      '· $title',
+                      style: GoogleFonts.inter(
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w700,
+                        color: LogosColors.ink,
                       ),
                     ),
                   ],
                 ),
-              ),
-            ],
+                const SizedBox(height: 2),
+                Text(
+                  desc,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.inter(
+                    fontSize: 11,
+                    color: LogosColors.inkSecondary,
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }
@@ -786,7 +739,7 @@ class _CovenantScreenState extends State<CovenantScreen>
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.check_circle_rounded, size: 15, color: Color(0xFFD4AF37)),
+          const Icon(Icons.check_circle_rounded, size: 15, color: LogosColors.coral),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
@@ -794,7 +747,7 @@ class _CovenantScreenState extends State<CovenantScreen>
               style: GoogleFonts.inter(
                 fontSize: 12.5,
                 fontWeight: FontWeight.w500,
-                color: Colors.white.withValues(alpha: 0.9),
+                color: LogosColors.ink,
               ),
             ),
           ),
@@ -839,8 +792,8 @@ class _MotePainter extends CustomPainter {
       final py = currentY * size.height;
 
       final paint = Paint()
-        ..color = const Color(0xFFFFF2DC).withValues(
-          alpha: (mote.opacity * (0.6 + 0.4 * math.sin((progress * 4 * math.pi) + mote.phase))).clamp(0.05, 0.7),
+        ..color = const Color(0xFF8B5CF6).withValues(
+          alpha: (mote.opacity * (0.4 + 0.3 * math.sin((progress * 4 * math.pi) + mote.phase))).clamp(0.05, 0.5),
         )
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 1.2);
 
