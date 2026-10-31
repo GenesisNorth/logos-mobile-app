@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../core/theme/logos_theme.dart';
 import '../../../core/theme/logos_typography.dart';
 import '../../../core/theme/logos_icons.dart';
+import '../data/community_repository.dart';
 
 class ValleyScreen extends StatefulWidget {
   const ValleyScreen({super.key});
@@ -137,6 +138,12 @@ class _ValleyScreenState extends State<ValleyScreen> {
                       'time': 'Just now',
                     });
                   });
+                  CommunityRepository().submitPrayer(
+                    room: 'valley',
+                    title: selectedPhrase,
+                    content: text,
+                    authorName: 'Pilgrim',
+                  );
                   Navigator.pop(ctx);
                 },
                 child: const Text('Post to Sanctuary Room', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),

@@ -106,6 +106,7 @@ class LogosIcons {
   static const LogosIconData waterDrop = HugeIcons.strokeRoundedDroplet;
   static const LogosIconData cake = HugeIcons.strokeRoundedBirthdayCake;
   static const LogosIconData personPin = HugeIcons.strokeRoundedUserCircle;
+  static const LogosIconData volunteerActivism = HugeIcons.strokeRoundedHandPrayer;
   static const LogosIconData favoriteRounded = HugeIcons.strokeRoundedFavourite;
   static const LogosIconData favoriteOutlineRounded = HugeIcons.strokeRoundedFavourite;
 }

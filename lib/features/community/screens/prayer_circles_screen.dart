@@ -4,6 +4,7 @@ import '../../../core/services/audio_service.dart';
 import '../../../core/theme/logos_theme.dart';
 import '../../../core/theme/logos_typography.dart';
 import '../../../core/theme/logos_icons.dart';
+import '../data/community_repository.dart';
 
 class PrayerCirclesScreen extends StatefulWidget {
   const PrayerCirclesScreen({super.key});
@@ -78,6 +79,12 @@ class _PrayerCirclesScreenState extends State<PrayerCirclesScreen> {
         });
         _recordSeconds = 0;
       });
+      CommunityRepository().submitPrayer(
+        room: 'prayer_circles',
+        title: _selectedFixedPhrase,
+        content: 'Voice note prayer: "$_selectedFixedPhrase"',
+        authorName: 'Genesis A.',
+      );
       AudioService().playAmenChime();
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Prayer voice note shared (purges in 7 days)')),

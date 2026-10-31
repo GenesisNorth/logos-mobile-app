@@ -6,6 +6,7 @@ import 'package:logos_mobile_app/features/journey/bloc/journey_bloc.dart';
 import 'package:logos_mobile_app/features/journey/bloc/journey_event.dart';
 import 'package:logos_mobile_app/features/journey/data/content_repository.dart';
 import 'package:logos_mobile_app/features/journey/data/progress_repository.dart';
+import 'package:logos_mobile_app/features/community/data/community_repository.dart';
 import 'package:logos_mobile_app/main.dart';
 
 class InMemoryProgressRepository implements ProgressRepository {
@@ -174,6 +175,40 @@ void main() {
 
       expect(bloc.state.activeDrop.weekNumber, equals(5));
       expect(bloc.state.activeDrop.reference, equals('Colossians 3:1-3'));
+    });
+  });
+
+  group('CommunityRepository & Realtime Room Tests', () {
+    late CommunityRepository communityRepo;
+
+    setUp(() {
+      communityRepo = CommunityRepository();
+    });
+
+    test('fetchPrayers returns cached pastoral and community petitions', () async {
+      final wellPrayers = await communityRepo.fetchPrayers(room: 'the_well');
+      expect(wellPrayers.isNotEmpty, isTrue);
+      expect(wellPrayers.any((p) => p.pastorResponse != null), isTrue);
+
+      final valleyPrayers = await communityRepo.fetchPrayers(room: 'valley');
+      expect(valleyPrayers.isNotEmpty, isTrue);
+    });
+
+    test('submitPrayer prepends new petition and increments count on prayFor', () async {
+      final newPetition = await communityRepo.submitPrayer(
+        room: 'the_well',
+        title: 'Peace in Decision',
+        content: 'Praying for wisdom in a major life crossroads.',
+        authorName: 'Pilgrim',
+      );
+
+      expect(newPetition.title, equals('Peace in Decision'));
+      expect(newPetition.prayedCount, equals(1));
+
+      await communityRepo.prayFor(room: 'the_well', prayerId: newPetition.id);
+      final updated = await communityRepo.fetchPrayers(room: 'the_well');
+      final found = updated.firstWhere((p) => p.id == newPetition.id);
+      expect(found.prayedCount, equals(2));
     });
   });
 
