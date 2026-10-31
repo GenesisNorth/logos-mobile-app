@@ -52,19 +52,25 @@
    ├── Interactive Week Selector Modal Sheet: Browse curriculum & preview exegesis
    ├── Dynamic Scripture Card Week Plaque: Interactive pill with dropdown chevron & haptic tick
    └── End-to-end Unit & BLoC Test Coverage (11/11 tests passing)
+
+ [Phase 3: Sensory Polish & Sacred Physics]
+   ├── Day 4 Holy Altar Dissolution: 160 glowing embers, sinusoidal thermal lift, and holy shockwave
+   ├── Progressive Altar Haptics: Progressive ember crackles at 25%, 50%, 75% + bronze sanctuary chime
+   ├── Relic Tear Sheet Reveal: Smooth entrance animation with golden ambient halo
+   ├── Day 3 Sacred Breath Pacer: 16s Cloister rhythm (Inhale 4s · Hold 4s · Exhale 4s · Rest 4s)
+   ├── Dynamic Breathing Aura: Multi-layer luminous violet and golden halos with sinusoidal hold shimmer
+   ├── Liturgical Phase Badge: Real-time phase pill cues with haptic bead ticks at each boundary
+   └── 432 Hz Soundscape Controller: Interactive intensity slider modal sheet (0-100%)
 ```
 
 ---
 
 ## 3. Next Lines of Action (Prioritized Backlog)
 
-### Priority 2: Sensory Polish & Interactive Physics (Days 3 & 4)
-- [ ] **Day 4 Tear Sheet Dissolve Physics**: Add ember glowing particles, enhanced dispersion physics, and sacred audio feedback during burden release.
-- [ ] **Day 3 Sacred Breath Pacer**: Synchronized 4-second box or circle breathing rhythm with dual outer glow ring expansion.
-- [ ] **Liturgical Ambient Audio Player Enhancements**: Volume slider and loop controls for 432 Hz sanctuary tones.
-
 ### Priority 3: Realtime Community Rooms (Supabase Live Feeds)
 - [ ] **The Well**: Connect live pastoral questions & audio replies to the `community_prayers` table.
+- [ ] **Prayer Circles**: Realtime 7-day ephemeral voice note prayers using Supabase Storage.
+- [ ] **Valley of Achor**: Silent candle-lighting counter synced across pilgrims worldwide.
 - [ ] **Prayer Circles**: Realtime 7-day ephemeral voice note prayers using Supabase Storage.
 - [ ] **Valley of Achor**: Silent candle-lighting counter synced across pilgrims worldwide.
 
