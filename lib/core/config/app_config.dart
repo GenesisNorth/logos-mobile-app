@@ -24,10 +24,19 @@ class AppConfig {
   static bool get hasSupabase =>
       supabaseUrl.isNotEmpty && supabaseAnonKey.isNotEmpty;
 
+  /// Optional free Groq API key for high-accuracy Whisper Large V3 fallback.
+  static const groqApiKey = String.fromEnvironment('GROQ_API_KEY');
+
+  /// Whether Groq Whisper API is configured.
+  static bool get hasGroq => groqApiKey.isNotEmpty;
+
   /// Seconds of ambient listening required to complete Day 3 Stillness.
   static const stillnessSeconds =
       int.fromEnvironment('STILLNESS_SECONDS', defaultValue: 60);
 
   static bool get useDeepgram =>
       speechEngine == 'deepgram' && transcribeUrl.isNotEmpty;
+
+  /// Whether to use the hybrid speech engine (default).
+  static bool get useHybrid => speechEngine != 'device' && speechEngine != 'deepgram';
 }

@@ -1,6 +1,7 @@
 import '../../config/app_config.dart';
 import 'deepgram_speech_recognizer.dart';
 import 'device_speech_recognizer.dart';
+import 'hybrid_speech_recognizer.dart';
 
 enum SpeechPhase { idle, listening, processing, done, error }
 
@@ -46,10 +47,16 @@ abstract class SpeechRecognizer {
 
   Future<void> dispose();
 
-  static SpeechRecognizer create() => AppConfig.useDeepgram
-      ? DeepgramSpeechRecognizer(
-          endpoint: Uri.parse(AppConfig.transcribeUrl),
-          anonKey: AppConfig.supabaseAnonKey,
-        )
-      : DeviceSpeechRecognizer();
+  static SpeechRecognizer create({String? targetVerse}) {
+    if (AppConfig.useDeepgram) {
+      return DeepgramSpeechRecognizer(
+        endpoint: Uri.parse(AppConfig.transcribeUrl),
+        anonKey: AppConfig.supabaseAnonKey,
+      );
+    }
+    if (AppConfig.useHybrid) {
+      return HybridSpeechRecognizer(targetVerse: targetVerse);
+    }
+    return DeviceSpeechRecognizer();
+  }
 }

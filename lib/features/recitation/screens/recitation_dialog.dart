@@ -73,7 +73,7 @@ class _RecitationDialogState extends State<RecitationDialog>
       duration: const Duration(milliseconds: 1100),
     )..repeat(reverse: true);
 
-    _recognizer = SpeechRecognizer.create();
+    _recognizer = SpeechRecognizer.create(targetVerse: widget.verseText);
     _speechSub = _recognizer.updates.listen(_handleSpeechUpdate);
   }
 
