@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -9,6 +10,8 @@ import '../bloc/journey_bloc.dart';
 import '../bloc/journey_event.dart';
 import '../models/scripture_drop.dart';
 import '../../../core/theme/logos_icons.dart';
+
+enum BreathPhase { inhale, hold, exhale, rest }
 
 class StillnessSanctuaryScreen extends StatefulWidget {
   final ScriptureDrop drop;
@@ -25,15 +28,17 @@ class _StillnessSanctuaryScreenState extends State<StillnessSanctuaryScreen>
   Timer? _timer;
   bool _isFinished = false;
   bool _isPlayingAudio = true;
+  double _ambientVolume = 0.7;
+  int _lastPhaseIndex = -1;
 
   @override
   void initState() {
     super.initState();
-    // 4s Inhale, 4s Exhale
+    // 16s complete loop: 4s Inhale, 4s Hold, 4s Exhale, 4s Rest
     _breathController = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 4),
-    )..repeat(reverse: true);
+      duration: const Duration(seconds: 16),
+    )..addListener(_onBreathTick)..repeat();
 
     // 432 Hz Ambient Pad
     AudioService().startAmbient(widget.drop.ambientPreset);
@@ -47,6 +52,14 @@ class _StillnessSanctuaryScreenState extends State<StillnessSanctuaryScreen>
         _onCompleteStillness();
       }
     });
+  }
+
+  void _onBreathTick() {
+    final phaseIndex = (_breathController.value * 4).floor() % 4;
+    if (phaseIndex != _lastPhaseIndex) {
+      _lastPhaseIndex = phaseIndex;
+      AudioService().breathTick();
+    }
   }
 
   void _onCompleteStillness() {
@@ -66,26 +79,139 @@ class _StillnessSanctuaryScreenState extends State<StillnessSanctuaryScreen>
     }
   }
 
+  void _showVolumeSheet(BuildContext context) {
+    AudioService().selectionTick();
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (ctx, setSheetState) {
+            return Container(
+              padding: const EdgeInsets.fromLTRB(24, 20, 24, 34),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                border: Border.all(color: LogosColors.taupe),
+                boxShadow: LogosColors.softShadow,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 36,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: LogosColors.ink.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+                  Row(
+                    children: [
+                      const AppIcon(LogosIcons.graphicEqRounded, color: LogosColors.coral, size: 20),
+                      const SizedBox(width: 10),
+                      Text(
+                        '432 Hz Sanctuary Soundscape',
+                        style: GoogleFonts.inter(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: LogosColors.ink,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      const AppIcon(LogosIcons.volumeOffRounded, size: 18, color: LogosColors.coral),
+                      Expanded(
+                        child: Slider(
+                          value: _ambientVolume,
+                          activeColor: LogosColors.coral,
+                          inactiveColor: const Color(0xFFDDD6FE),
+                          onChanged: (val) {
+                            setSheetState(() => _ambientVolume = val);
+                            setState(() => _ambientVolume = val);
+                            AudioService().setAmbientVolume(val);
+                          },
+                        ),
+                      ),
+                      const AppIcon(LogosIcons.volumeUpRounded, size: 18, color: LogosColors.coral),
+                    ],
+                  ),
+                  Text(
+                    '${(_ambientVolume * 100).toInt()}% Intensity · ${widget.drop.ambientLabel}',
+                    style: GoogleFonts.inter(
+                      fontSize: 12,
+                      color: LogosColors.ink.withValues(alpha: 0.6),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  BreathPhase _getPhase() {
+    final v = _breathController.value;
+    if (v < 0.25) return BreathPhase.inhale;
+    if (v < 0.50) return BreathPhase.hold;
+    if (v < 0.75) return BreathPhase.exhale;
+    return BreathPhase.rest;
+  }
+
+  String _getBreathingPrompt() {
+    if (_isFinished) return 'Sanctuary Sealed · Walk in Peace';
+    switch (_getPhase()) {
+      case BreathPhase.inhale:
+        return 'Breathe In... Receive the Holy Spirit';
+      case BreathPhase.hold:
+        return 'Hold gently in His unbroken peace...';
+      case BreathPhase.exhale:
+        return 'Exhale slowly... Release all striving & fear';
+      case BreathPhase.rest:
+        return 'Rest empty... Be still before the Lord';
+    }
+  }
+
+  String _getPhaseLabel() {
+    if (_isFinished) return 'SANCTUARY SEALED';
+    switch (_getPhase()) {
+      case BreathPhase.inhale:
+        return 'INHALE · 4 SECONDS';
+      case BreathPhase.hold:
+        return 'HOLD · 4 SECONDS';
+      case BreathPhase.exhale:
+        return 'EXHALE · 4 SECONDS';
+      case BreathPhase.rest:
+        return 'REST · 4 SECONDS';
+    }
+  }
+
+  Color _getPhaseColor() {
+    if (_isFinished) return const Color(0xFF10B981);
+    switch (_getPhase()) {
+      case BreathPhase.inhale:
+        return LogosColors.coral;
+      case BreathPhase.hold:
+        return const Color(0xFFD4AF37); // Warm gold
+      case BreathPhase.exhale:
+        return const Color(0xFF8B5CF6); // Liturgical purple
+      case BreathPhase.rest:
+        return const Color(0xFF0284C7); // Quiet blue
+    }
+  }
+
   @override
   void dispose() {
     _timer?.cancel();
     _breathController.dispose();
     AudioService().stopAmbient();
     super.dispose();
-  }
-
-  String _getBreathingPrompt() {
-    if (_isFinished) return 'Sanctuary Sealed · Walk in Peace';
-    final progress = _breathController.value;
-    final status = _breathController.status;
-
-    if (status == AnimationStatus.forward) {
-      if (progress < 0.2) return 'Prepare to breathe in...';
-      return 'Breathe In... Receive the Spirit';
-    } else {
-      if (progress > 0.8) return 'Hold gently in His peace...';
-      return 'Exhale slowly... Release all striving';
-    }
   }
 
   @override
@@ -127,28 +253,31 @@ class _StillnessSanctuaryScreenState extends State<StillnessSanctuaryScreen>
                           Navigator.pop(context);
                         },
                       ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: LogosColors.taupe),
-                          boxShadow: LogosColors.softShadow,
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const AppIcon(LogosIcons.graphicEqRounded, size: 14, color: LogosColors.coral),
-                            const SizedBox(width: 8),
-                            Text(
-                              widget.drop.ambientLabel,
-                              style: GoogleFonts.inter(
-                                color: LogosColors.ink,
-                                fontSize: 11,
-                                fontWeight: FontWeight.w700,
+                      GestureDetector(
+                        onTap: () => _showVolumeSheet(context),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(color: LogosColors.taupe),
+                            boxShadow: LogosColors.softShadow,
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const AppIcon(LogosIcons.graphicEqRounded, size: 14, color: LogosColors.coral),
+                              const SizedBox(width: 8),
+                              Text(
+                                widget.drop.ambientLabel,
+                                style: GoogleFonts.inter(
+                                  color: LogosColors.ink,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w700,
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
                       IconButton(
@@ -163,55 +292,86 @@ class _StillnessSanctuaryScreenState extends State<StillnessSanctuaryScreen>
 
                   const Spacer(),
 
-                  // Multi-Layered Luminous Breathing Halo Visualizer
+                  // Multi-Layered Luminous Sacred Breathing Halo Visualizer
                   Center(
                     child: AnimatedBuilder(
                       animation: _breathController,
                       builder: (context, child) {
-                        final scale = 1.0 + (_breathController.value * 0.32);
-                        final glowAlpha = 0.12 + (_breathController.value * 0.22);
+                        final v = _breathController.value;
+                        double scale;
+                        double glowAlpha;
+
+                        if (v < 0.25) {
+                          // Inhale: 0.0 -> 0.25
+                          final t = Curves.easeInOutCubic.transform(v / 0.25);
+                          scale = 1.0 + (0.35 * t);
+                          glowAlpha = 0.12 + (0.24 * t);
+                        } else if (v < 0.50) {
+                          // Hold: 0.25 -> 0.50
+                          final subT = (v - 0.25) / 0.25;
+                          scale = 1.35 + (0.025 * sin(subT * 2 * pi));
+                          glowAlpha = 0.36;
+                        } else if (v < 0.75) {
+                          // Exhale: 0.50 -> 0.75
+                          final t = Curves.easeInOutCubic.transform((v - 0.50) / 0.25);
+                          scale = 1.35 - (0.35 * t);
+                          glowAlpha = 0.36 - (0.24 * t);
+                        } else {
+                          // Rest: 0.75 -> 1.00
+                          scale = 1.0;
+                          glowAlpha = 0.12;
+                        }
+
                         final percentDone = (60 - _secondsRemaining) / 60.0;
+                        final activeColor = _getPhaseColor();
 
                         return Stack(
                           alignment: Alignment.center,
                           children: [
-                            // Outermost Ambient Glow Ring
+                            // Outermost Ambient Violet & Gold Glow Ring
                             Container(
-                              width: 240 * scale,
-                              height: 240 * scale,
+                              width: 250 * scale,
+                              height: 250 * scale,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                color: const Color(0xFF8B5CF6).withValues(alpha: glowAlpha * 0.18),
+                                color: activeColor.withValues(alpha: glowAlpha * 0.2),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: activeColor.withValues(alpha: glowAlpha * 0.3),
+                                    blurRadius: 36 * scale,
+                                    spreadRadius: 6,
+                                  ),
+                                ],
                               ),
                             ),
 
-                            // Middle Breathing Halo
+                            // Middle Resonant Breathing Halo
                             Container(
-                              width: 175 * scale,
-                              height: 175 * scale,
+                              width: 180 * scale,
+                              height: 180 * scale,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                color: Colors.white.withValues(alpha: glowAlpha * 0.6),
+                                color: Colors.white.withValues(alpha: glowAlpha * 0.7),
                                 border: Border.all(
-                                  color: const Color(0xFFDDD6FE).withValues(alpha: 0.5),
-                                  width: 1.5,
+                                  color: activeColor.withValues(alpha: 0.45),
+                                  width: 1.6,
                                 ),
                               ),
                             ),
 
                             // Circular 60s Progress Arc
                             SizedBox(
-                              width: 120,
-                              height: 120,
+                              width: 124,
+                              height: 124,
                               child: CircularProgressIndicator(
                                 value: percentDone,
-                                strokeWidth: 3,
-                                valueColor: const AlwaysStoppedAnimation<Color>(LogosColors.coral),
+                                strokeWidth: 3.5,
+                                valueColor: AlwaysStoppedAnimation<Color>(activeColor),
                                 backgroundColor: const Color(0xFFEDE9FE),
                               ),
                             ),
 
-                            // Center Stillness Orb
+                            // Center Sacred Stillness Orb
                             Container(
                               width: 96,
                               height: 96,
@@ -225,13 +385,13 @@ class _StillnessSanctuaryScreenState extends State<StillnessSanctuaryScreen>
                               child: _isFinished
                                   ? const AppIcon(
                                       LogosIcons.checkRounded,
-                                      color: LogosColors.coral,
+                                      color: Color(0xFF10B981),
                                       size: 42,
                                     )
                                   : Text(
                                       '${_secondsRemaining}s',
                                       style: GoogleFonts.inter(
-                                        color: LogosColors.coral,
+                                        color: activeColor,
                                         fontWeight: FontWeight.w800,
                                         fontSize: 24,
                                         letterSpacing: -0.5,
@@ -244,7 +404,37 @@ class _StillnessSanctuaryScreenState extends State<StillnessSanctuaryScreen>
                     ),
                   ),
 
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 28),
+
+                  // Liturgical Phase Badge Pill
+                  Center(
+                    child: AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 300),
+                      child: Container(
+                        key: ValueKey(_getPhaseLabel()),
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
+                        decoration: BoxDecoration(
+                          color: _getPhaseColor().withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(
+                            color: _getPhaseColor().withValues(alpha: 0.3),
+                            width: 1,
+                          ),
+                        ),
+                        child: Text(
+                          _getPhaseLabel(),
+                          style: GoogleFonts.inter(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 1.8,
+                            color: _getPhaseColor(),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 14),
 
                   // Dynamic Breathing Directive Prompt
                   Center(
@@ -253,6 +443,7 @@ class _StillnessSanctuaryScreenState extends State<StillnessSanctuaryScreen>
                       child: Text(
                         _getBreathingPrompt(),
                         key: ValueKey(_getBreathingPrompt()),
+                        textAlign: TextAlign.center,
                         style: GoogleFonts.sourceSerif4(
                           color: LogosColors.ink,
                           fontSize: 17,

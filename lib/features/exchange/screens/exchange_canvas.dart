@@ -14,6 +14,8 @@ class Particle {
   double vy;
   double size;
   double opacity;
+  double flutter;
+  double flutterSpeed;
   Color color;
 
   Particle({
@@ -23,21 +25,49 @@ class Particle {
     required this.vy,
     required this.size,
     required this.opacity,
+    required this.flutter,
+    required this.flutterSpeed,
     required this.color,
   });
 }
 
 class ParticlePainter extends CustomPainter {
   final List<Particle> particles;
-  ParticlePainter(this.particles);
+  final double progress;
+
+  ParticlePainter(this.particles, this.progress);
 
   @override
   void paint(Canvas canvas, Size size) {
+    // Holy altar shockwave ripple
+    if (progress < 0.65) {
+      final waveProgress = progress / 0.65;
+      final waveRadius = (size.width * 0.65) * waveProgress;
+      final wavePaint = Paint()
+        ..color = const Color(0xFFF59E0B).withValues(alpha: (1.0 - waveProgress) * 0.35)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 3.5 * (1.0 - waveProgress);
+      canvas.drawCircle(Offset(size.width / 2, size.height / 2), waveRadius, wavePaint);
+    }
+
     for (final p in particles) {
-      final paint = Paint()
+      // Ambient holy aura glow
+      final glowPaint = Paint()
+        ..color = p.color.withValues(alpha: p.opacity * 0.35)
+        ..style = PaintingStyle.fill;
+      canvas.drawCircle(Offset(p.x, p.y), p.size * 2.6, glowPaint);
+
+      // Core ember
+      final corePaint = Paint()
         ..color = p.color.withValues(alpha: p.opacity)
         ..style = PaintingStyle.fill;
-      canvas.drawCircle(Offset(p.x, p.y), p.size, paint);
+      canvas.drawCircle(Offset(p.x, p.y), p.size, corePaint);
+
+      // Incandescent bright center
+      final centerPaint = Paint()
+        ..color = Colors.white.withValues(alpha: (p.opacity * 0.85).clamp(0.0, 1.0))
+        ..style = PaintingStyle.fill;
+      canvas.drawCircle(Offset(p.x, p.y), p.size * 0.45, centerPaint);
     }
   }
 
@@ -71,6 +101,7 @@ class _ExchangeCanvasState extends State<ExchangeCanvas>
 
   bool _isDissolved = false;
   bool _isDraggingOver = false;
+  int _lastHapticTick = 0;
 
   late AnimationController _dissolveController;
   final List<Particle> _particles = [];
@@ -81,7 +112,7 @@ class _ExchangeCanvasState extends State<ExchangeCanvas>
     super.initState();
     _dissolveController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1800),
+      duration: const Duration(milliseconds: 2100),
     )..addListener(_updateParticles);
   }
 
@@ -94,11 +125,13 @@ class _ExchangeCanvasState extends State<ExchangeCanvas>
 
   void _spawnParticles(Size zoneSize) {
     _particles.clear();
-    const count = 120;
+    const count = 160;
     final colors = [
       LogosColors.coral,
-      const Color(0xFFFFD1A9),
-      const Color(0xFFE89070),
+      const Color(0xFFF59E0B), // Warm amber gold
+      const Color(0xFFFDE68A), // Incandescent pale gold
+      const Color(0xFFE89070), // Terracotta flame
+      const Color(0xFFDDD6FE), // Holy violet ember
       Colors.white,
     ];
 
@@ -106,10 +139,12 @@ class _ExchangeCanvasState extends State<ExchangeCanvas>
       _particles.add(Particle(
         x: _rand.nextDouble() * zoneSize.width,
         y: _rand.nextDouble() * zoneSize.height,
-        vx: (_rand.nextDouble() - 0.5) * 4.0,
-        vy: -(_rand.nextDouble() * 3.5 + 1.5), // drift upwards
-        size: _rand.nextDouble() * 3.5 + 1.5,
-        opacity: 0.9,
+        vx: (_rand.nextDouble() - 0.5) * 3.6,
+        vy: -(_rand.nextDouble() * 3.8 + 1.8), // drift upwards
+        size: _rand.nextDouble() * 3.8 + 1.4,
+        opacity: 0.95,
+        flutter: _rand.nextDouble() * 2 * pi,
+        flutterSpeed: _rand.nextDouble() * 0.12 + 0.04,
         color: colors[_rand.nextInt(colors.length)],
       ));
     }
@@ -117,16 +152,27 @@ class _ExchangeCanvasState extends State<ExchangeCanvas>
 
   void _updateParticles() {
     final progress = _dissolveController.value;
+
+    // Progressive ember crackle haptic feedback
+    final currentTick = (progress * 4).floor();
+    if (currentTick > _lastHapticTick && currentTick <= 3) {
+      _lastHapticTick = currentTick;
+      AudioService().emberPulse();
+    }
+
     for (final p in _particles) {
-      p.x += p.vx;
+      p.flutter += p.flutterSpeed;
+      p.x += p.vx + sin(p.flutter) * 1.4;
       p.y += p.vy;
-      p.opacity = ((1.0 - progress) * 0.9).clamp(0.0, 1.0);
-      p.size = (p.size * 0.99).clamp(0.5, 5.0);
+      p.vy -= 0.04; // Thermal updraft
+      p.opacity = ((1.0 - progress) * 0.95).clamp(0.0, 1.0);
+      p.size = (p.size * 0.993).clamp(0.6, 5.5);
     }
     setState(() {});
   }
 
   void _triggerExchangeDissolution(Size zoneSize) {
+    _lastHapticTick = 0;
     AudioService().triggerExchangeHaptic();
     _spawnParticles(zoneSize);
 
@@ -134,6 +180,7 @@ class _ExchangeCanvasState extends State<ExchangeCanvas>
       setState(() {
         _isDissolved = true;
       });
+      AudioService().playSanctuaryChime();
       widget.onExchangeCompleted();
     });
   }
@@ -290,7 +337,7 @@ LOGOS IN ME
                           Positioned.fill(
                             child: IgnorePointer(
                               child: CustomPaint(
-                                painter: ParticlePainter(_particles),
+                                painter: ParticlePainter(_particles, _dissolveController.value),
                               ),
                             ),
                           ),
@@ -414,17 +461,37 @@ LOGOS IN ME
     final now = DateTime.now();
     final dateStr = '${now.day} / ${now.month} / ${now.year}';
 
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        gradient: LogosColors.parchmentGradient,
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(
-          color: const Color(0xFFD4AF37).withValues(alpha: 0.6),
-          width: 1.2,
+    return TweenAnimationBuilder<double>(
+      duration: const Duration(milliseconds: 700),
+      curve: Curves.easeOutCubic,
+      tween: Tween<double>(begin: 0.0, end: 1.0),
+      builder: (context, animValue, child) {
+        return Opacity(
+          opacity: animValue,
+          child: Transform.scale(
+            scale: 0.92 + (0.08 * animValue),
+            child: child,
+          ),
+        );
+      },
+      child: Container(
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          gradient: LogosColors.parchmentGradient,
+          borderRadius: BorderRadius.circular(22),
+          border: Border.all(
+            color: const Color(0xFFD4AF37).withValues(alpha: 0.6),
+            width: 1.2,
+          ),
+          boxShadow: [
+            ...LogosColors.relicShadow,
+            BoxShadow(
+              color: const Color(0xFFD4AF37).withValues(alpha: 0.22),
+              blurRadius: 28,
+              spreadRadius: 2,
+            ),
+          ],
         ),
-        boxShadow: LogosColors.relicShadow,
-      ),
       child: SingleChildScrollView(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -527,6 +594,7 @@ LOGOS IN ME
           ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 }

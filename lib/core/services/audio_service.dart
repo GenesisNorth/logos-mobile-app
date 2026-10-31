@@ -64,8 +64,20 @@ class AudioService {
     } catch (_) {}
   }
 
+  Future<void> setAmbientVolume(double volume) async {
+    try {
+      await _ambient.setVolume(volume.clamp(0.0, 1.0));
+    } catch (_) {}
+  }
+
   /// Heavy impact when the Word meets the burden in The Exchange.
   void triggerExchangeHaptic() => HapticFeedback.heavyImpact();
+
+  /// Progressive ember crackle haptic during burden dissolution.
+  void emberPulse() => HapticFeedback.mediumImpact();
+
+  /// Soft tactile click at breathing cadence transitions.
+  void breathTick() => HapticFeedback.lightImpact();
 
   void selectionTick() => HapticFeedback.selectionClick();
 }
