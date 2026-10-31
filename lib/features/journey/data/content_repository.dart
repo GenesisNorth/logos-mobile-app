@@ -79,5 +79,119 @@ class ContentRepository {
       ambientPreset: 'sanctuary_dune',
       ambientLabel: 'Sanctuary Dune · 432 Hz',
     ),
+    ScriptureDrop(
+      id: '00000000-0000-0000-0000-000000000003',
+      weekNumber: 3,
+      reference: 'Romans 8:1-2',
+      verseText:
+          'There is therefore now no condemnation for those who are in Christ Jesus. For the law of the Spirit of life has set you free in Christ Jesus from the law of sin and death.',
+      translation: 'ESV',
+      videoUrl: 'https://assets.logosinme.com/videos/week3_encounter_hd.mp4',
+      encounterLines: [
+        'The gavel has fallen in the courts of eternity.',
+        'Not by your striving, but by His covenant blood.',
+        'The verdict is written in indelible grace:',
+        'No condemnation. None.',
+        '“You are free in Christ Jesus.”',
+      ],
+      contextCards: [
+        ContextCard(
+          title: 'Katakrima: The Annulled Verdict',
+          subtitle: 'Greek Judicial Term',
+          content:
+              'In Roman law, "katakrima" denoted the penal sentence and subsequent execution. Paul proclaims that Christ took the full penal sentence into Himself; no judicial punishment remains for you.',
+        ),
+        ContextCard(
+          title: 'The Law of the Spirit of Life',
+          subtitle: 'Dynamic Spiritual Power',
+          content:
+              'Just as aerodynamics overcomes gravity without destroying it, the law of the Spirit of life effortlessly lifts the believer above the pull of sin and shame.',
+        ),
+        ContextCard(
+          title: 'In Christ Jesus',
+          subtitle: 'The Sphere of Inviolable Refuge',
+          content:
+              'Paul uses "in Christ" over 160 times. To be "in Christ" means your past is subsumed into His death, and your future is sealed in His resurrection.',
+        ),
+      ],
+      ambientPreset: 'sanctuary_dawn',
+      ambientLabel: 'Sanctuary Deep · 432 Hz',
+    ),
+    ScriptureDrop(
+      id: '00000000-0000-0000-0000-000000000004',
+      weekNumber: 4,
+      reference: 'Psalm 23:1-3',
+      verseText:
+          'The Lord is my shepherd; I shall not want. He makes me lie down in green pastures. He leads me beside still waters. He restores my soul.',
+      translation: 'ESV',
+      videoUrl: 'https://assets.logosinme.com/videos/week4_encounter_hd.mp4',
+      encounterLines: [
+        'David was a shepherd in the Judean wilderness.',
+        'He knew sheep cannot lie down while anxious or afraid.',
+        'Your Shepherd has prepared quiet waters.',
+        'Breathe deeply. In Him, you lack nothing.',
+        '“He restores my soul.”',
+      ],
+      contextCards: [
+        ContextCard(
+          title: 'Yahweh Rohi: The Lord My Shepherd',
+          subtitle: 'Hebrew Covenant Name',
+          content:
+              'Ancient shepherds lived in direct proximity to their flock, sleeping across the threshold of the pen. God does not guide you from a distance; He is your threshold protector.',
+        ),
+        ContextCard(
+          title: 'Mei Menuchot: Still Waters',
+          subtitle: 'Hebrew Poetic Depth',
+          content:
+              'Sheep fear rushing torrents because their heavy wool can pull them under. "Mei Menuchot" literally means "waters of deep, quiet rest"—streams made tranquil so you can drink in peace.',
+        ),
+        ContextCard(
+          title: 'Nafshi Yeshovev: Soul Restoration',
+          subtitle: 'Return to Vitality',
+          content:
+              'In Hebrew, "yeshovev" implies turning around or bringing home what was exhausted or lost. God actively rehabilitates your inner life.',
+        ),
+      ],
+      ambientPreset: 'sanctuary_dune',
+      ambientLabel: 'Quiet Waters · 432 Hz',
+    ),
+    ScriptureDrop(
+      id: '00000000-0000-0000-0000-000000000005',
+      weekNumber: 5,
+      reference: 'Colossians 3:1-3',
+      verseText:
+          'If then you have been raised with Christ, seek the things that are above, where Christ is, seated at the right hand of God. Set your minds on things that are above, not on things that are on earth. For you have died, and your life is hidden with Christ in God.',
+      translation: 'ESV',
+      videoUrl: 'https://assets.logosinme.com/videos/week5_encounter_hd.mp4',
+      encounterLines: [
+        'Your earthly anxieties do not hold your true identity.',
+        'You have been co-raised into heavenly places.',
+        'Your life is not exposed, fragile, or abandoned.',
+        'It is safely hidden inside the Father’s heart.',
+        '“Set your minds on things above.”',
+      ],
+      contextCards: [
+        ContextCard(
+          title: 'Synēgerthēte: Co-Resurrected',
+          subtitle: 'Greek Spiritual Union',
+          content:
+              'Paul uses a compound verb meaning "raised together with". The believer’s new life is not an aspiration; it is an accomplished metaphysical union with the risen Lord.',
+        ),
+        ContextCard(
+          title: 'Kekryptai: Hidden & Inviolable',
+          subtitle: 'Perfect Tense Security',
+          content:
+              'In the ancient world, valuables were hidden in secret earthen vaults for preservation. Your life is permanently sheltered inside the Father, untouchable by accusations.',
+        ),
+        ContextCard(
+          title: 'Phroneō: Set Your Affection',
+          subtitle: 'The Discipline of Contemplation',
+          content:
+              'To "set the mind" is not passive positive thinking, but an active calibration of heart, values, and gaze toward eternal reality.',
+        ),
+      ],
+      ambientPreset: 'sanctuary_dawn',
+      ambientLabel: 'Heavenly Places · 432 Hz',
+    ),
   ];
 }

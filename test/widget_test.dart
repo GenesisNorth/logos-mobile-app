@@ -142,6 +142,39 @@ void main() {
       // Unlocks Day 2 immediately without waiting for midnight
       expect(bloc.state.isDayUnlocked(2, now: fixedClock.now()), isTrue);
     });
+
+    test('ContentRepository has 5 comprehensive drops with Greek and Hebrew exegesis', () {
+      final drops = contentRepo.drops;
+      expect(drops.length, equals(5));
+      expect(drops[0].reference, equals('John 15:5'));
+      expect(drops[1].reference, equals('Philippians 4:6-7'));
+      expect(drops[2].reference, equals('Romans 8:1-2'));
+      expect(drops[3].reference, equals('Psalm 23:1-3'));
+      expect(drops[4].reference, equals('Colossians 3:1-3'));
+
+      // Check Greek & Hebrew exegesis presence in context cards
+      expect(drops[0].contextCards.any((c) => c.title.contains('Menō')), isTrue);
+      expect(drops[1].contextCards.any((c) => c.content.contains('phroureō')), isTrue);
+      expect(drops[2].contextCards.any((c) => c.title.contains('Katakrima')), isTrue);
+      expect(drops[3].contextCards.any((c) => c.title.contains('Yahweh Rohi')), isTrue);
+      expect(drops[4].contextCards.any((c) => c.title.contains('Synēgerthēte')), isTrue);
+    });
+
+    test('SelectWeek and AdvanceToNextWeek switches activeDrop correctly', () async {
+      expect(bloc.state.activeDrop.weekNumber, equals(1));
+
+      bloc.add(const SelectWeek(3)); // Select Week 4 (Psalm 23)
+      await Future.delayed(const Duration(milliseconds: 50));
+
+      expect(bloc.state.activeDrop.weekNumber, equals(4));
+      expect(bloc.state.activeDrop.reference, equals('Psalm 23:1-3'));
+
+      bloc.add(const AdvanceToNextWeek());
+      await Future.delayed(const Duration(milliseconds: 50));
+
+      expect(bloc.state.activeDrop.weekNumber, equals(5));
+      expect(bloc.state.activeDrop.reference, equals('Colossians 3:1-3'));
+    });
   });
 
   testWidgets('LogosApp renders Onboarding Covenant or Sanctuary successfully', (WidgetTester tester) async {

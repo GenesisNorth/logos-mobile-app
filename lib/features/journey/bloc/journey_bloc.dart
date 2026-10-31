@@ -29,6 +29,7 @@ class JourneyBloc extends Bloc<JourneyEvent, JourneyState> {
     on<CompleteExchange>(_onCompleteExchange);
     on<RedeemGraceToken>(_onRedeemGraceToken);
     on<AdvanceToNextWeek>(_onAdvanceToNextWeek);
+    on<SelectWeek>(_onSelectWeek);
   }
 
   Future<void> _onLoadJourneyProgress(
@@ -263,6 +264,16 @@ class JourneyBloc extends Bloc<JourneyEvent, JourneyState> {
       isExchangeCompleted: false,
     );
 
+    emit(newState);
+    await _persistJourneyData(newState);
+  }
+
+  Future<void> _onSelectWeek(
+    SelectWeek event,
+    Emitter<JourneyState> emit,
+  ) async {
+    final drop = _contentRepo.dropForWeekIndex(event.weekIndex);
+    final newState = state.copyWith(activeDrop: drop);
     emit(newState);
     await _persistJourneyData(newState);
   }

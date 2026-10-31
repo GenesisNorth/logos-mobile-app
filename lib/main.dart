@@ -22,6 +22,7 @@ import 'features/recitation/screens/recitation_dialog.dart';
 import 'core/services/supabase_service.dart';
 import 'core/services/notification_service.dart';
 import 'features/journey/data/supabase_progress_repository.dart';
+import 'features/journey/data/content_repository.dart';
 import 'core/theme/logos_icons.dart';
 
 void main() async {
@@ -496,6 +497,190 @@ class _SanctuaryHomeScreenState extends State<SanctuaryHomeScreen>
     );
   }
 
+  void _showWeekSelectorSheet(BuildContext context, JourneyState state) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final surface = isDark ? LogosColors.examenSurface : LogosColors.surface;
+    final ink = isDark ? LogosColors.examenInk : LogosColors.ink;
+    const contentRepo = ContentRepository();
+    final allDrops = contentRepo.drops;
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (ctx) {
+        return Container(
+          padding: const EdgeInsets.fromLTRB(24, 18, 24, 34),
+          decoration: BoxDecoration(
+            color: surface,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+            border: Border.all(color: LogosColors.taupe),
+            boxShadow: LogosColors.softShadow,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 36,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: ink.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 18),
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: LogosColors.coral.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: const AppIcon(
+                      LogosIcons.autoStories,
+                      color: LogosColors.coral,
+                      size: 22,
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Weekly Scripture Cloister',
+                          style: GoogleFonts.inter(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                            color: ink,
+                          ),
+                        ),
+                        Text(
+                          'Select any unlocked week or advance your rhythm',
+                          style: GoogleFonts.inter(
+                            fontSize: 11,
+                            color: ink.withValues(alpha: 0.6),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 18),
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxHeight: 320),
+                child: ListView.separated(
+                  shrinkWrap: true,
+                  itemCount: allDrops.length,
+                  separatorBuilder: (_, __) => const SizedBox(height: 10),
+                  itemBuilder: (ctx, i) {
+                    final drop = allDrops[i];
+                    final isCurrent = drop.id == state.activeDrop.id;
+                    return InkWell(
+                      borderRadius: BorderRadius.circular(16),
+                      onTap: () {
+                        Navigator.pop(ctx);
+                        context.read<JourneyBloc>().add(SelectWeek(i));
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        decoration: BoxDecoration(
+                          color: isCurrent
+                              ? LogosColors.coral.withValues(alpha: 0.08)
+                              : ink.withValues(alpha: 0.03),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: isCurrent ? LogosColors.coral : LogosColors.taupe.withValues(alpha: 0.6),
+                            width: isCurrent ? 1.5 : 1.0,
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: isCurrent ? LogosColors.coral : ink.withValues(alpha: 0.08),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text(
+                                'WK ${drop.weekNumber}',
+                                style: GoogleFonts.inter(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w800,
+                                  color: isCurrent ? Colors.white : ink,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    drop.reference,
+                                    style: GoogleFonts.inter(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w700,
+                                      color: ink,
+                                    ),
+                                  ),
+                                  Text(
+                                    drop.contextCards.first.title,
+                                    style: GoogleFonts.inter(
+                                      fontSize: 11,
+                                      color: ink.withValues(alpha: 0.6),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            if (isCurrent)
+                              const AppIcon(LogosIcons.checkCircleRounded, color: LogosColors.coral, size: 20)
+                            else
+                              const AppIcon(LogosIcons.chevronRight, size: 16, color: Colors.grey),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+              if (state.isExchangeCompleted) ...[
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  height: 48,
+                  child: ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: LogosColors.coral,
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    ),
+                    icon: const AppIcon(LogosIcons.arrowForwardRounded, size: 16),
+                    label: Text(
+                      'Advance to Week ${state.activeDrop.weekNumber + 1}',
+                      style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w700),
+                    ),
+                    onPressed: () {
+                      Navigator.pop(ctx);
+                      context.read<JourneyBloc>().add(const AdvanceToNextWeek());
+                    },
+                  ),
+                ),
+              ],
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -720,27 +905,47 @@ class _SanctuaryHomeScreenState extends State<SanctuaryHomeScreen>
                                 Row(
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: [
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                      decoration: BoxDecoration(
-                                        color: LogosColors.coral.withValues(alpha: 0.15),
+                                    Material(
+                                      color: Colors.transparent,
+                                      child: InkWell(
                                         borderRadius: BorderRadius.circular(10),
-                                      ),
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          const AppIcon(LogosIcons.autoStories, size: 12, color: LogosColors.coral),
-                                          const SizedBox(width: 6),
-                                          Text(
-                                            'WEEK ${drop.weekNumber} SCRIPTURE',
-                                            style: GoogleFonts.inter(
-                                              fontSize: 10,
-                                              fontWeight: FontWeight.w800,
-                                              letterSpacing: 1.4,
-                                              color: LogosColors.coral,
+                                        onTap: () {
+                                          AudioService().selectionTick();
+                                          _showWeekSelectorSheet(context, state);
+                                        },
+                                        child: Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                                          decoration: BoxDecoration(
+                                            color: LogosColors.coral.withValues(alpha: 0.15),
+                                            borderRadius: BorderRadius.circular(10),
+                                            border: Border.all(
+                                              color: LogosColors.coral.withValues(alpha: 0.3),
+                                              width: 0.8,
                                             ),
                                           ),
-                                        ],
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              const AppIcon(LogosIcons.autoStories, size: 12, color: LogosColors.coral),
+                                              const SizedBox(width: 6),
+                                              Text(
+                                                'WEEK ${drop.weekNumber} SCRIPTURE',
+                                                style: GoogleFonts.inter(
+                                                  fontSize: 10,
+                                                  fontWeight: FontWeight.w800,
+                                                  letterSpacing: 1.4,
+                                                  color: LogosColors.coral,
+                                                ),
+                                              ),
+                                              const SizedBox(width: 4),
+                                              const AppIcon(
+                                                LogosIcons.arrowDropDownRounded,
+                                                size: 13,
+                                                color: LogosColors.coral,
+                                              ),
+                                            ],
+                                          ),
+                                        ),
                                       ),
                                     ),
                                     Container(

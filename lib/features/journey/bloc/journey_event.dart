@@ -73,3 +73,11 @@ class RedeemGraceToken extends JourneyEvent {
 class AdvanceToNextWeek extends JourneyEvent {
   const AdvanceToNextWeek();
 }
+
+class SelectWeek extends JourneyEvent {
+  final int weekIndex;
+  const SelectWeek(this.weekIndex);
+
+  @override
+  List<Object?> get props => [weekIndex];
+}

@@ -18,6 +18,8 @@ class LogosIcons {
   static const LogosIconData arrowBackIos = HugeIcons.strokeRoundedArrowLeft01;
   static const LogosIconData arrowForwardRounded = HugeIcons.strokeRoundedArrowRight01;
   static const LogosIconData arrowForwardIos = HugeIcons.strokeRoundedArrowRight01;
+  static const LogosIconData arrowDown = HugeIcons.strokeRoundedArrowDown01;
+  static const LogosIconData arrowDropDownRounded = HugeIcons.strokeRoundedArrowDown01;
   static const LogosIconData chevronRight = HugeIcons.strokeRoundedArrowRight01;
   static const LogosIconData close = HugeIcons.strokeRoundedCancel01;
   static const LogosIconData closeRounded = HugeIcons.strokeRoundedCancel01;
