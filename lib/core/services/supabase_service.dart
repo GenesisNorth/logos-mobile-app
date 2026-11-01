@@ -63,4 +63,31 @@ class SupabaseService {
       debugPrint('[SupabaseService] Anonymous session creation warning: $e');
     }
   }
+
+  /// Whether the current session is an anonymous cloister account.
+  bool get isAnonymous => client?.auth.currentUser?.isAnonymous ?? true;
+
+  /// Email address if the user has linked a persistent account.
+  String? get currentEmail => client?.auth.currentUser?.email;
+
+  /// Links an existing anonymous session to an email and password
+  /// so streaks and tokens persist across devices without losing history.
+  Future<bool> linkWithEmail({required String email, required String password}) async {
+    final c = client;
+    if (c == null) return false;
+
+    try {
+      await c.auth.updateUser(
+        UserAttributes(
+          email: email,
+          password: password,
+        ),
+      );
+      debugPrint('[SupabaseService] Account successfully linked to $email');
+      return true;
+    } catch (e) {
+      debugPrint('[SupabaseService] Account linking notice: $e');
+      return false;
+    }
+  }
 }

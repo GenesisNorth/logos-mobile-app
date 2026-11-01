@@ -1,7 +1,11 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:logos_mobile_app/core/clock.dart';
 import 'package:logos_mobile_app/core/utils/scripture_verifier.dart';
+import 'package:logos_mobile_app/core/theme/logos_theme.dart';
+import 'package:logos_mobile_app/features/examen/controllers/examen_controller.dart';
 import 'package:logos_mobile_app/features/journey/bloc/journey_bloc.dart';
 import 'package:logos_mobile_app/features/journey/bloc/journey_event.dart';
 import 'package:logos_mobile_app/features/journey/data/content_repository.dart';
@@ -213,10 +217,125 @@ void main() {
   });
 
   testWidgets('LogosApp renders Onboarding Covenant or Sanctuary successfully', (WidgetTester tester) async {
+    tester.view.physicalSize = const Size(1080, 2400);
+    tester.view.devicePixelRatio = 2.0;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+
     await tester.pumpWidget(const LogosApp());
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 500));
 
     expect(find.text('LOGOS IN ME'), findsAtLeastNWidgets(1));
   });
+
+  Widget buildTestShell() {
+    return BlocProvider(
+      create: (_) => JourneyBloc(
+        progressRepo: InMemoryProgressRepository(),
+      )..add(const LoadJourneyProgress()),
+      child: MaterialApp(
+        theme: LogosTheme.lightTheme(),
+        home: MainAppShell(examenController: ExamenController()),
+      ),
+    );
+  }
+
+  testWidgets('Bottom Navigation Dock switches seamlessly between Sanctuary, Community, and Altar', (WidgetTester tester) async {
+    tester.view.physicalSize = const Size(1080, 2400);
+    tester.view.devicePixelRatio = 2.0;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+
+    await tester.pumpWidget(buildTestShell());
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+
+    // 1. Initially on Sanctuary
+    expect(find.text('The 4-Day Sacred Rhythm'), findsOneWidget);
+
+    // 2. Tap Community tab
+    final communityTab = find.byKey(const Key('nav_tab_community'));
+    expect(communityTab, findsOneWidget);
+    await tester.tap(communityTab);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+
+    // Verify Community rooms are present
+    expect(find.text('The Well'), findsOneWidget);
+    expect(find.text('In the Valley'), findsOneWidget);
+
+    // 3. Tap Altar tab
+    final altarTab = find.byKey(const Key('nav_tab_altar'));
+    expect(altarTab, findsOneWidget);
+    await tester.tap(altarTab);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+
+    // Verify Altar features: Covenant, Cloud Recovery, and Export Relics
+    expect(find.text('Prayer Altar & Covenant'), findsOneWidget);
+    expect(find.text('Cloud Recovery'), findsOneWidget);
+    expect(find.text('Export Relics'), findsOneWidget);
+
+    // 4. Tap Cloud Recovery button to open dialog
+    await tester.tap(find.text('Cloud Recovery'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+
+    expect(find.text('Cloud Account & Recovery'), findsOneWidget);
+    expect(find.text('Email Address'), findsOneWidget);
+    expect(find.byType(TextField), findsNWidgets(2));
+
+    // Dismiss bottom sheet by tapping outside
+    await tester.tapAt(const Offset(20, 20));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+
+    // 5. Navigate back to Sanctuary
+    final sanctuaryTab = find.byKey(const Key('nav_tab_sanctuary'));
+    await tester.tap(sanctuaryTab);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+
+    expect(find.text('The 4-Day Sacred Rhythm'), findsOneWidget);
+  });
+
+  testWidgets('Pilgrim Account Sheet & Curriculum Week Selector open cleanly', (WidgetTester tester) async {
+    tester.view.physicalSize = const Size(1080, 2400);
+    tester.view.devicePixelRatio = 2.0;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+
+    await tester.pumpWidget(buildTestShell());
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+
+    // Tap top-left book avatar to open Pilgrim Account Sheet
+    final accountIcon = find.byKey(const Key('pilgrim_account_button'));
+    expect(accountIcon, findsOneWidget);
+    await tester.tap(accountIcon);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+
+    expect(find.text('Genesis A.'), findsOneWidget);
+    expect(find.text('Curriculum (5 Wks)'), findsOneWidget);
+    expect(find.text('Export Relics'), findsOneWidget);
+
+    // Tap Curriculum button to open Week Selector
+    await tester.tap(find.text('Curriculum (5 Wks)'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+
+    expect(find.text('Weekly Scripture Cloister'), findsOneWidget);
+    expect(find.text('WK 1'), findsOneWidget);
+    expect(find.text('WK 2'), findsOneWidget);
+    expect(find.text('WK 5'), findsOneWidget);
+  });
 }
+

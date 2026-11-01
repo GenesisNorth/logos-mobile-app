@@ -186,6 +186,7 @@ class _MainAppShellState extends State<MainAppShell> {
     final ink = isDark ? LogosColors.examenInk : LogosColors.ink;
 
     return GestureDetector(
+      key: Key('nav_tab_${label.toLowerCase()}'),
       onTap: () {
         AudioService().selectionTick();
         setState(() => _currentTabIndex = index);
@@ -497,6 +498,180 @@ class _SanctuaryHomeScreenState extends State<SanctuaryHomeScreen>
     );
   }
 
+  void _showPilgrimAccountSheet(BuildContext context, JourneyState state) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final surface = isDark ? LogosColors.examenSurface : LogosColors.surface;
+    final ink = isDark ? LogosColors.examenInk : LogosColors.ink;
+    final profile = state.profile;
+    final isCloud = SupabaseService.instance.isConfigured;
+    final userId = SupabaseService.instance.currentUserId ?? 'Local Cloister Session';
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (ctx) {
+        return Container(
+          padding: const EdgeInsets.fromLTRB(24, 18, 24, 34),
+          decoration: BoxDecoration(
+            color: surface,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+            border: Border.all(color: LogosColors.taupe),
+            boxShadow: LogosColors.softShadow,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 36,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: ink.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 18),
+              Row(
+                children: [
+                  CircleAvatar(
+                    radius: 22,
+                    backgroundColor: LogosColors.coral.withValues(alpha: 0.2),
+                    child: Text(
+                      profile.displayName.isNotEmpty ? profile.displayName[0] : 'P',
+                      style: GoogleFonts.inter(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: LogosColors.coral,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          profile.displayName,
+                          style: LogosTypography.headline(color: ink).copyWith(fontSize: 16),
+                        ),
+                        Text(
+                          '@${profile.username} · Covenant Sealed',
+                          style: LogosTypography.caption(color: ink.withValues(alpha: 0.6)),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: isCloud
+                          ? const Color(0xFF10B981).withValues(alpha: 0.15)
+                          : Colors.orange.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      isCloud ? 'CLOUD SYNC' : 'OFFLINE',
+                      style: TextStyle(
+                        fontSize: 9,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 0.8,
+                        color: isCloud ? const Color(0xFF0F5132) : Colors.orange.shade800,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 18),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: ink.withValues(alpha: 0.04),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: LogosColors.taupe.withValues(alpha: 0.5)),
+                ),
+                child: Row(
+                  children: [
+                    const AppIcon(LogosIcons.lockOutlineRounded, size: 16, color: LogosColors.coral),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'UUID: ${userId.length > 22 ? "${userId.substring(0, 22)}..." : userId}',
+                        style: GoogleFonts.inter(fontSize: 11, color: ink.withValues(alpha: 0.7)),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 18),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: ink,
+                        side: const BorderSide(color: LogosColors.taupe),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      icon: const AppIcon(LogosIcons.share, size: 16, color: LogosColors.coral),
+                      label: Text(
+                        'Export Relics',
+                        style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w700),
+                      ),
+                      onPressed: () {
+                        Navigator.pop(ctx);
+                        final buffer = StringBuffer();
+                        buffer.writeln('✝ LOGOS IN ME · PILGRIM RELIC JOURNAL');
+                        buffer.writeln('Pilgrim: ${profile.displayName} (@${profile.username})');
+                        buffer.writeln('Active Streak: ${state.currentStreak} Days');
+                        buffer.writeln('Roots Planted: ${state.rootsPlanted} Verses');
+                        buffer.writeln('Grace Tokens: ${state.graceTokensBalance}');
+                        if (state.savedTearSheets.isNotEmpty) {
+                          buffer.writeln('\nSacred Exchange Relics:');
+                          for (final s in state.savedTearSheets) {
+                            buffer.writeln('• ${s.reference}: "${s.verseText}"');
+                          }
+                        }
+                        SharePlus.instance.share(ShareParams(
+                          text: buffer.toString(),
+                          subject: 'LOGOS IN ME — Spiritual Journal Export',
+                        ));
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: LogosColors.coral,
+                        foregroundColor: Colors.white,
+                        elevation: 0,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      icon: const AppIcon(LogosIcons.autoStories, size: 16),
+                      label: Text(
+                        'Curriculum (${const ContentRepository().drops.length} Wks)',
+                        style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w700),
+                      ),
+                      onPressed: () {
+                        Navigator.pop(ctx);
+                        _showWeekSelectorSheet(context, state);
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   void _showWeekSelectorSheet(BuildContext context, JourneyState state) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final surface = isDark ? LogosColors.examenSurface : LogosColors.surface;
@@ -704,18 +879,29 @@ class _SanctuaryHomeScreenState extends State<SanctuaryHomeScreen>
                 elevation: 0,
                 title: Row(
                   children: [
-                    Container(
-                      width: 32,
-                      height: 32,
-                      decoration: const BoxDecoration(
-                        gradient: LogosColors.purpleGradient,
-                        shape: BoxShape.circle,
-                      ),
-                      alignment: Alignment.center,
-                      child: const AppIcon(
-                        LogosIcons.menuBook,
-                        size: 17,
-                        color: Colors.white,
+                    Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        key: const Key('pilgrim_account_button'),
+                        borderRadius: BorderRadius.circular(16),
+                        onTap: () {
+                          AudioService().selectionTick();
+                          _showPilgrimAccountSheet(context, state);
+                        },
+                        child: Container(
+                          width: 32,
+                          height: 32,
+                          decoration: const BoxDecoration(
+                            gradient: LogosColors.purpleGradient,
+                            shape: BoxShape.circle,
+                          ),
+                          alignment: Alignment.center,
+                          child: const AppIcon(
+                            LogosIcons.menuBook,
+                            size: 17,
+                            color: Colors.white,
+                          ),
+                        ),
                       ),
                     ),
                     const SizedBox(width: 10),
@@ -1045,21 +1231,23 @@ class _SanctuaryHomeScreenState extends State<SanctuaryHomeScreen>
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'The 4-Day Sacred Rhythm',
-                                style: LogosTypography.sacredHeader(color: ink),
-                              ),
-                              Text(
-                                'Pace-locked: One divine step per day',
-                                style: GoogleFonts.inter(
-                                  fontSize: 11,
-                                  color: ink.withValues(alpha: 0.6),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'The 4-Day Sacred Rhythm',
+                                  style: LogosTypography.sacredHeader(color: ink),
                                 ),
-                              ),
-                            ],
+                                Text(
+                                  'Pace-locked: One divine step per day',
+                                  style: GoogleFonts.inter(
+                                    fontSize: 11,
+                                    color: ink.withValues(alpha: 0.6),
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                           if (state.dayCompletionStatus[4] == true)
                             TextButton.icon(

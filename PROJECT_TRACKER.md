@@ -69,17 +69,24 @@
    ├── Prayer Circles: Ephemeral 7-day voice note prayers synced to community feeds
    ├── Valley of Achor: Themed quiet lament rooms with Scripture anchors & candle solidarity counter
    └── Comprehensive BLoC & Community Unit Tests (13/13 tests passing)
+4. **Cloud Recovery, Account Upgrades & Data Export (Completed)**
+   ├── Anonymous Pilgrim Session -> Email/Password Account Linking (`SupabaseService.linkWithEmail`)
+   ├── Spiritual Relic Journal & Covenant Export via `SharePlus` (UUID, Streaks, Roots, Tear Sheets)
+   ├── Fast-Access Pilgrim Account Sheet accessible from the top-left Sanctuary Cloister Avatar
+   ├── Dedicated Cloud Recovery dialog in Prayer Altar with real-time status and offline fallback
+   ├── Direct 5-Week Scripture Curriculum Cloister bottom sheet selector
+   ├── Zero layout overflows on all device viewports (responsive flex headers & settings tiles)
+   └── Automated Navigation & Integration Test Suite (15/15 tests passing, 0 analyzer issues)
 ```
 
 ---
 
 ## 3. Next Lines of Action (Prioritized Backlog)
 
-### Priority 4: Account Upgrades & Cloud Recovery
-- [ ] **Account Linking**: Allow seekers to link their anonymous UUID to Apple Sign-In or Email without losing their streak or progress.
-- [ ] **Cross-Device Sync**: Automatic restore on fresh device login.
-- [ ] **Data Export**: Export covenant & completed relic tear sheets as offline PDF or prayer journal.
-- [ ] **Cross-Device Sync**: Automatic restore on fresh device login.
+### Priority 5: Sensory Depth & Immersive Contemplation
+- [ ] **Ambient Drone & Stillness Stems**: Multi-track ambient stems (Gentle Rain, Convent Organ, Gregorian Drone) with independent volume mix sliders.
+- [ ] **Haptic Liturgical Feedback**: Subtle physical clicks on recitation word milestones and sacred exchange burden dissolution.
+- [ ] **Production Push Notification Tuning**: APNS / FCM token registration for background midnight strike chime triggers.
 
 ---
 

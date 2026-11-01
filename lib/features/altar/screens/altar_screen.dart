@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:share_plus/share_plus.dart';
+import '../../../core/services/audio_service.dart';
+import '../../../core/services/notification_service.dart';
+import '../../../core/services/supabase_service.dart';
 import '../../../core/theme/logos_theme.dart';
 import '../../../core/theme/logos_typography.dart';
+import '../../../core/theme/logos_icons.dart';
 import '../../examen/controllers/examen_controller.dart';
 import '../../journey/bloc/journey_bloc.dart';
 import '../../journey/bloc/journey_event.dart';
 import '../../journey/bloc/journey_state.dart';
 import '../../journey/data/progress_repository.dart';
-import '../../../core/services/notification_service.dart';
-import '../../../core/theme/logos_icons.dart';
 
 class AltarScreen extends StatelessWidget {
   final ExamenController examenController;
@@ -67,6 +70,235 @@ class AltarScreen extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+
+  void _exportSpiritualJournal(BuildContext context, JourneyState state) {
+    AudioService().selectionTick();
+    final profile = state.profile;
+    final buffer = StringBuffer();
+    buffer.writeln('✝ LOGOS IN ME · PILGRIM RELIC JOURNAL');
+    buffer.writeln('========================================');
+    buffer.writeln('Pilgrim: ${profile.displayName} (@${profile.username})');
+    buffer.writeln('Active Streak: ${state.currentStreak} Days');
+    buffer.writeln('Roots Planted: ${state.rootsPlanted} Verses');
+    buffer.writeln('Grace Tokens Balance: ${state.graceTokensBalance}');
+    if (profile.covenantSignature != null) {
+      buffer.writeln('Covenant Signature: "${profile.covenantSignature}"');
+      buffer.writeln('Covenant Signed At: ${profile.covenantSignedAt ?? DateTime.now()}');
+    }
+    buffer.writeln('Cloister UUID: ${SupabaseService.instance.currentUserId ?? "Offline Local Cloister"}');
+    buffer.writeln('\n----------------------------------------');
+    buffer.writeln('SACRED EXCHANGE TEAR SHEETS (${state.savedTearSheets.length} Dissolved):');
+    buffer.writeln('----------------------------------------');
+    if (state.savedTearSheets.isEmpty) {
+      buffer.writeln('No tear sheets yet recorded.');
+    } else {
+      for (final sheet in state.savedTearSheets) {
+        buffer.writeln('\n• ${sheet.reference} · Dissolved on ${sheet.completedAt.day}/${sheet.completedAt.month}/${sheet.completedAt.year}');
+        buffer.writeln('  "${sheet.verseText}"');
+        buffer.writeln('  Burden: A heavy burden was surrendered at the Cross.');
+      }
+    }
+    buffer.writeln('\n========================================');
+    buffer.writeln('Preserved in LOGOS IN ME · Soli Deo Gloria');
+
+    SharePlus.instance.share(ShareParams(
+      text: buffer.toString(),
+      subject: 'LOGOS IN ME — Spiritual Relic Journal & Covenant',
+    ));
+  }
+
+  void _showAccountSyncDialog(BuildContext context, JourneyState state) {
+    AudioService().selectionTick();
+    final emailController = TextEditingController(text: SupabaseService.instance.currentEmail ?? '');
+    final passController = TextEditingController();
+    final isCloudConfigured = SupabaseService.instance.isConfigured;
+    final isAnon = SupabaseService.instance.isAnonymous;
+    final userId = SupabaseService.instance.currentUserId ?? 'Local Pilgrim Session';
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (ctx, setModalState) {
+            final isDark = Theme.of(ctx).brightness == Brightness.dark;
+            final surface = isDark ? LogosColors.examenSurface : Colors.white;
+            final ink = isDark ? LogosColors.examenInk : LogosColors.ink;
+
+            return Container(
+              padding: EdgeInsets.fromLTRB(24, 20, 24, MediaQuery.of(ctx).viewInsets.bottom + 34),
+              decoration: BoxDecoration(
+                color: surface,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(26)),
+                border: Border.all(color: LogosColors.taupe),
+                boxShadow: LogosColors.softShadow,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 36,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: ink.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: LogosColors.coral.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const AppIcon(LogosIcons.shieldRounded, color: LogosColors.coral, size: 22),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Cloud Account & Recovery',
+                              style: LogosTypography.headline(color: ink).copyWith(fontSize: 17),
+                            ),
+                            Text(
+                              'Protect streaks & tear sheets across devices',
+                              style: LogosTypography.caption(color: ink.withValues(alpha: 0.6)),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 18),
+
+                  // Status Plaque
+                  Container(
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: isCloudConfigured
+                          ? const Color(0xFF10B981).withValues(alpha: 0.1)
+                          : Colors.orange.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(
+                        color: isCloudConfigured
+                            ? const Color(0xFF10B981).withValues(alpha: 0.3)
+                            : Colors.orange.withValues(alpha: 0.3),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        AppIcon(
+                          isCloudConfigured ? LogosIcons.verifiedRounded : LogosIcons.lockOutlineRounded,
+                          color: isCloudConfigured ? const Color(0xFF10B981) : Colors.orange.shade800,
+                          size: 18,
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                isCloudConfigured ? 'Supabase Cloud Sync Active' : 'Offline Cloister Mode Active',
+                                style: GoogleFonts.inter(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w700,
+                                  color: isCloudConfigured ? const Color(0xFF0F5132) : Colors.orange.shade900,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                'UUID: ${userId.length > 20 ? "${userId.substring(0, 20)}..." : userId}',
+                                style: GoogleFonts.inter(
+                                  fontSize: 10.5,
+                                  color: isCloudConfigured ? const Color(0xFF0F5132) : Colors.orange.shade800,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  Text('Link Email to Anonymous Session:', style: LogosTypography.label(color: ink)),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: emailController,
+                    decoration: InputDecoration(
+                      labelText: 'Email Address',
+                      hintText: 'pilgrim@logos.app',
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  TextField(
+                    controller: passController,
+                    obscureText: true,
+                    decoration: InputDecoration(
+                      labelText: 'Password (Minimum 6 characters)',
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 48,
+                    child: ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: LogosColors.coral,
+                        foregroundColor: Colors.white,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      ),
+                      icon: const AppIcon(LogosIcons.verifiedUser, size: 18),
+                      label: Text(
+                        isAnon ? 'Link Account & Preserve Streak' : 'Account Linked',
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      onPressed: () async {
+                        final email = emailController.text.trim();
+                        final pass = passController.text.trim();
+                        if (email.isEmpty || pass.length < 6) {
+                          ScaffoldMessenger.of(ctx).showSnackBar(
+                            const SnackBar(content: Text('Please enter a valid email and 6+ character password.')),
+                          );
+                          return;
+                        }
+                        final ok = await SupabaseService.instance.linkWithEmail(email: email, password: pass);
+                        if (ctx.mounted) {
+                          Navigator.pop(ctx);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              backgroundColor: ok ? const Color(0xFF10B981) : Colors.orange.shade800,
+                              content: Text(ok
+                                  ? 'Account successfully linked to $email! Streaks & grace preserved.'
+                                  : 'Saved to local cloister profile. Cloud sync will push when online.'),
+                            ),
+                          );
+                        }
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
     );
   }
 
@@ -192,7 +424,48 @@ class AltarScreen extends StatelessWidget {
                     ),
                   ),
 
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 12),
+
+                  // Quick Actions: Cloud Recovery & Relic Export
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: ink,
+                            side: const BorderSide(color: LogosColors.taupe),
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                          ),
+                          icon: const AppIcon(LogosIcons.shieldRounded, size: 16, color: LogosColors.coral),
+                          label: Text(
+                            'Cloud Recovery',
+                            style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600),
+                          ),
+                          onPressed: () => _showAccountSyncDialog(context, state),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: ink,
+                            side: const BorderSide(color: LogosColors.taupe),
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                          ),
+                          icon: const AppIcon(LogosIcons.share, size: 16, color: LogosColors.coral),
+                          label: Text(
+                            'Export Relics',
+                            style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600),
+                          ),
+                          onPressed: () => _exportSpiritualJournal(context, state),
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 18),
 
                   // Metrics Row
                   Row(
@@ -318,18 +591,22 @@ class AltarScreen extends StatelessWidget {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Row(
-                          children: [
-                            const AppIcon(LogosIcons.bedtimeOutlined, color: LogosColors.coral),
-                            const SizedBox(width: 12),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text('Examen Contemplation Mode', style: LogosTypography.label(color: ink)),
-                                Text('Active 8:00 PM – 5:00 AM', style: LogosTypography.caption(color: ink.withValues(alpha: 0.6))),
-                              ],
-                            ),
-                          ],
+                        Expanded(
+                          child: Row(
+                            children: [
+                              const AppIcon(LogosIcons.bedtimeOutlined, color: LogosColors.coral),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text('Examen Contemplation Mode', style: LogosTypography.label(color: ink)),
+                                    Text('Active 8:00 PM – 5:00 AM', style: LogosTypography.caption(color: ink.withValues(alpha: 0.6))),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                         Switch(
                           value: examenController.isExamenMode,
@@ -356,18 +633,22 @@ class AltarScreen extends StatelessWidget {
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Row(
-                              children: [
-                                const AppIcon(LogosIcons.notificationsActive, color: LogosColors.coral),
-                                const SizedBox(width: 12),
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text('Liturgical Chimes & Midnight Bell', style: LogosTypography.label(color: ink)),
-                                    Text('Lauds (7am), Sext (12pm), Vespers (9pm), Midnight', style: LogosTypography.caption(color: ink.withValues(alpha: 0.6))),
-                                  ],
-                                ),
-                              ],
+                            Expanded(
+                              child: Row(
+                                children: [
+                                  const AppIcon(LogosIcons.notificationsActive, color: LogosColors.coral),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text('Liturgical Chimes & Midnight Bell', style: LogosTypography.label(color: ink)),
+                                        Text('Lauds (7am), Sext (12pm), Vespers (9pm), Midnight', style: LogosTypography.caption(color: ink.withValues(alpha: 0.6))),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                             Switch.adaptive(
                               value: isEnabled,
