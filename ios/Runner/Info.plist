@@ -30,6 +30,12 @@
 	<string>LOGOS IN ME uses your microphone to verify oral Scripture recitation.</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
 	<string>LOGOS IN ME uses speech recognition to verify your memorized recitation against the sacred text.</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>audio</string>
+		<string>fetch</string>
+		<string>remote-notification</string>
+	</array>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

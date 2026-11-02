@@ -24,6 +24,7 @@ import 'core/services/notification_service.dart';
 import 'features/journey/data/supabase_progress_repository.dart';
 import 'features/journey/data/content_repository.dart';
 import 'features/journey/screens/scripture_packs_sheet.dart';
+import 'features/journey/screens/liturgical_widget_preview_sheet.dart';
 import 'core/theme/logos_icons.dart';
 
 void main() async {
@@ -517,6 +518,27 @@ class _SanctuaryHomeScreenState extends State<SanctuaryHomeScreen>
                         ),
                       ),
                     ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  height: 44,
+                  child: OutlinedButton.icon(
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: ink,
+                      side: const BorderSide(color: LogosColors.taupe),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    ),
+                    icon: const AppIcon(LogosIcons.timerOutlined, size: 16, color: LogosColors.coral),
+                    label: Text(
+                      'Preview iOS Home Widget & Dynamic Island',
+                      style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w700),
+                    ),
+                    onPressed: () {
+                      Navigator.pop(ctx);
+                      LiturgicalWidgetPreviewSheet.show(context);
+                    },
                   ),
                 ),
               ],

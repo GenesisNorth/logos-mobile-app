@@ -8,6 +8,7 @@ import 'package:logos_mobile_app/core/theme/logos_theme.dart';
 import 'package:logos_mobile_app/features/examen/controllers/examen_controller.dart';
 import 'package:logos_mobile_app/features/journey/bloc/journey_bloc.dart';
 import 'package:logos_mobile_app/features/journey/bloc/journey_event.dart';
+import 'package:logos_mobile_app/features/journey/bloc/journey_state.dart';
 import 'package:logos_mobile_app/features/journey/data/content_repository.dart';
 import 'package:logos_mobile_app/features/journey/data/progress_repository.dart';
 import 'package:logos_mobile_app/core/services/audio_service.dart';
@@ -16,6 +17,8 @@ import 'package:logos_mobile_app/features/journey/screens/stillness_sanctuary_sc
 import 'package:logos_mobile_app/core/services/notification_service.dart';
 import 'package:logos_mobile_app/features/journey/data/scripture_pack_repository.dart';
 import 'package:logos_mobile_app/features/journey/screens/scripture_packs_sheet.dart';
+import 'package:logos_mobile_app/core/services/widget_service.dart';
+import 'package:logos_mobile_app/features/journey/screens/liturgical_widget_preview_sheet.dart';
 import 'package:logos_mobile_app/main.dart';
 
 class InMemoryProgressRepository implements ProgressRepository {
@@ -507,6 +510,81 @@ void main() {
 
       await tester.pumpWidget(const SizedBox());
       await tester.pump(const Duration(seconds: 2));
+    });
+
+    test('LiturgicalWidgetService computes accurate Circadian snapshot and serializes to preferences', () async {
+      SharedPreferences.setMockInitialValues({});
+      final service = LiturgicalWidgetService();
+
+      const contentRepo = ContentRepository();
+      final drop = contentRepo.drops.first;
+      final state = JourneyState.initial(drop);
+
+      // Test 8:30 AM (after Lauds, before Sext)
+      final testMorning = DateTime(2026, 11, 2, 8, 30);
+      final snapshot = service.computeSnapshot(state: state, now: testMorning);
+
+      expect(snapshot.nextHourName, equals('Noonday Sext'));
+      expect(snapshot.nextHourTime, equals('12:00 PM'));
+      expect(snapshot.countdownText, equals('3h 30m'));
+      expect(snapshot.scriptureReference, equals('John 15:5'));
+      expect(snapshot.streakCount, equals(1));
+
+      // Test sync to SharedPreferences
+      await service.syncWidgetData(state: state, now: testMorning);
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.getString('logos_widget_next_hour_name'), equals('Noonday Sext'));
+      expect(prefs.getString('logos_widget_payload_json'), contains('John 15:5'));
+    });
+
+    testWidgets('LiturgicalWidgetPreviewSheet displays Dynamic Island, Medium & Small widgets and syncs', (WidgetTester tester) async {
+      tester.view.physicalSize = const Size(1080, 2400);
+      tester.view.devicePixelRatio = 2.0;
+      addTearDown(() {
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
+      });
+
+      SharedPreferences.setMockInitialValues({});
+      final service = LiturgicalWidgetService();
+
+      await tester.pumpWidget(
+        BlocProvider(
+          create: (_) => JourneyBloc(progressRepo: InMemoryProgressRepository()),
+          child: MaterialApp(
+            theme: LogosTheme.lightTheme(),
+            home: Scaffold(
+              body: LiturgicalWidgetPreviewSheet(widgetService: service),
+            ),
+          ),
+        ),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      // Verifies previews exist
+      expect(find.text('Liturgical iOS Widgets'), findsOneWidget);
+      expect(find.text('Dynamic Island (Tap to Expand)'), findsOneWidget);
+      expect(find.text('Medium Home Screen Widget (4x2)'), findsOneWidget);
+      expect(find.text('Small Home Screen Widget (2x2)'), findsOneWidget);
+      expect(find.text('LOCK SCREEN'), findsOneWidget);
+
+      // Tap to expand Dynamic Island
+      await tester.tap(find.text('Dynamic Island (Tap to Expand)'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      // Tap sync button
+      final syncButton = find.text('Sync Current State to iOS Widget');
+      expect(syncButton, findsOneWidget);
+      await tester.tap(syncButton);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      expect(find.text('Synced ✓'), findsOneWidget);
+
+      await tester.pumpWidget(const SizedBox());
+      await tester.pump(const Duration(milliseconds: 500));
     });
   });
 }

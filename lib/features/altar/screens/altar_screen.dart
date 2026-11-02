@@ -14,6 +14,7 @@ import '../../journey/bloc/journey_event.dart';
 import '../../journey/bloc/journey_state.dart';
 import '../../journey/data/progress_repository.dart';
 import '../../journey/screens/scripture_packs_sheet.dart';
+import '../../journey/screens/liturgical_widget_preview_sheet.dart';
 
 class AltarScreen extends StatelessWidget {
   final ExamenController examenController;
@@ -747,6 +748,48 @@ class AltarScreen extends StatelessWidget {
                           ),
                         ),
                       ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  // iOS Home Widget & Dynamic Island Tile
+                  InkWell(
+                    borderRadius: BorderRadius.circular(16),
+                    onTap: () => LiturgicalWidgetPreviewSheet.show(context),
+                    child: Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: surface,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: LogosColors.taupe),
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: LogosColors.coral.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const AppIcon(LogosIcons.timerOutlined, color: LogosColors.coral, size: 20),
+                          ),
+                          const SizedBox(width: 14),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text('iOS Home Widget & Dynamic Island', style: LogosTypography.label(color: ink)),
+                                Text(
+                                  'Glanceable Circadian hours & live activity sync',
+                                  style: LogosTypography.caption(color: ink.withValues(alpha: 0.6)),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const AppIcon(LogosIcons.chevronRight, size: 18, color: Colors.grey),
+                        ],
+                      ),
                     ),
                   ),
 

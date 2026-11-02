@@ -9,14 +9,15 @@
 
 | Dimension | Status | Verification Detail |
 | :--- | :---: | :--- |
-| **Static Code Quality** | ✅ `0 errors / 0 warnings` | Clean `flutter analyze` across all 20+ screen & service files |
-| **Unit & Widget Tests** | ✅ `21 / 21 Passing` | Verifier, Pace-Locks, Grace, 5-Week Exegesis, Community, Soundscapes, APNS, Packs |
+| **Static Code Quality** | ✅ `0 errors / 0 warnings` | Clean `flutter analyze` across all 22+ screen & service files |
+| **Unit & Widget Tests** | ✅ `23 / 23 Passing` | Verifier, Pace-Locks, Grace, Exegesis, Community, Soundscapes, APNS, Packs, Widgets |
 | **Running Target** | 📱 **iPhone 17 Pro** | Running on iOS Simulator (`iOS 26.5`) with Impeller |
 | **Styling & Theme** | 🎨 **Blended White-Purple** | Luminous white background with soft lavender/purple gradients |
 | **Icon Suite** | ✨ **Hugeicons (Purged of AI)** | 100% stroke-rounded Hugeicons (Quill, Puzzle, Award, Praying Hands, Books) |
 | **Cloud Backend** | ☁️ **Offline-First Supabase** | Anonymous pilgrim session + Postgres sync + APNS device token sync + RLS |
 | **Notifications** | 🔔 **Circadian & APNS Cloud** | Lauds (7am), Sext (12pm), Vespers (9pm), Midnight Bell + APNS token sync |
-| **Speech Engine** | 🎙️ **Hybrid ($0 Cost)** | Live on-device streaming + free Groq Whisper Large V3 fallback |
+| **iOS Widgets & Island**| 📲 **Live Activity Ready** | Dynamic Island pill + 2x2 Small + 4x2 Medium + Lock Screen preview & sync |
+| **App Store Compliance**| 🛡️ **Privacy Manifest Ready** | `PrivacyInfo.xcprivacy` with UserDefaults, FileTimestamp, BootTime declarations |
 | **Curriculum Pipeline** | 📖 **52-Week Scripture Packs** | Offline pack downloader with seasonal bundles (Weeks 1–4, 5–8, 9–12, 13–16) |
 | **Community Feeds** | 🕊️ **Live & Cached Rooms** | The Well pastoral watch, Prayer Circles voice notes, Valley of Achor rooms |
 
@@ -94,16 +95,24 @@
    ├── Full Modal Bottom Sheet `ScripturePacksSheet` with real-time progress indicators & storage freeing
    ├── Fast entry points from Curriculum Week Selector and Altar Screen settings
    └── 100% Automated Unit & Widget Test Suite (21/21 tests passing, 0 analyzer issues)
+7. **Liturgical iOS Widgets, Dynamic Island & App Store Compliance (Completed)**
+   ├── Official Apple Privacy Manifest (`ios/Runner/PrivacyInfo.xcprivacy`) for App Store compliance
+   ├── iOS Background Modes configured (`audio`, `fetch`, `remote-notification` in `Info.plist`)
+   ├── `LiturgicalWidgetService` & `LiturgicalWidgetData` model computing Circadian hour & countdown
+   ├── Real-time payload serialization into shared preferences for iOS WidgetKit
+   ├── `LiturgicalWidgetPreviewSheet` interactive modal for Dynamic Island (expandable pill), Small (2x2), Medium (4x2), and Lock Screen widgets
+   ├── Single-tap "Sync Current State to iOS Widget" action with haptic response and sync badge
+   └── Comprehensive Unit & Widget Test Suite (23/23 tests passing, 0 analyzer issues)
 ```
 
 ---
 
 ## 3. Next Lines of Action (Prioritized Backlog)
 
-### Priority 7: Liturgical iOS Widget, Live Activities & App Store Preparation
-- [ ] **Liturgical Hours Widget / Dynamic Island**: Glanceable Next Liturgical Hour and Active Streak countdown for iOS 16+.
-- [ ] **App Store Metadata & Privacy Manifest**: Liturgical screenshot package, localized App Store copy, and iOS `PrivacyInfo.xcprivacy`.
-- [ ] **Background Fetch Refresh**: Periodic background audio and scripture sync when waking near midnight or dawn.
+### Priority 8: App Store Screenshots, Localization & Final Distribution Build
+- [ ] **App Store Marketing Presentation Package**: 6.7" & 6.1" liturgical screenshot set showcasing the 4-Day Sacred Rhythm.
+- [ ] **Localized Strings & Scripture Multi-Translation Bridge**: KJV, ESV, NASB, and NIV translation switcher.
+- [ ] **Production Archive / TestFlight Build**: Release signing configuration and pre-flight validation.
 
 ---
 
