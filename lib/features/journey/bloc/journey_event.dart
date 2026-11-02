@@ -81,3 +81,12 @@ class SelectWeek extends JourneyEvent {
   @override
   List<Object?> get props => [weekIndex];
 }
+
+class SelectTranslation extends JourneyEvent {
+  final String translationKey;
+  const SelectTranslation(this.translationKey);
+
+  @override
+  List<Object?> get props => [translationKey];
+}
+

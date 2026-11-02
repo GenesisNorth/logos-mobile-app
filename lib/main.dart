@@ -1,10 +1,12 @@
 import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:share_plus/share_plus.dart';
 import 'core/services/audio_service.dart';
+import 'core/services/widget_service.dart';
 import 'core/theme/logos_theme.dart';
 import 'core/theme/logos_typography.dart';
 import 'features/altar/screens/altar_screen.dart';
@@ -969,8 +971,229 @@ class _SanctuaryHomeScreenState extends State<SanctuaryHomeScreen>
     );
   }
 
+  void _showTranslationSelectorSheet(BuildContext context, JourneyState state) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final surface = isDark ? LogosColors.examenSurface : LogosColors.surface;
+    final ink = isDark ? LogosColors.examenInk : LogosColors.ink;
+
+    final translations = [
+      {
+        'key': 'ESV',
+        'name': 'English Standard Version',
+        'badge': 'Word-for-Word',
+        'desc': 'Literal formal equivalence with literary majesty and cadence.',
+      },
+      {
+        'key': 'KJV',
+        'name': 'King James Version',
+        'badge': 'Traditional',
+        'desc': 'Historic liturgical cadence and timeless Elizabethan phrasing.',
+      },
+      {
+        'key': 'NASB',
+        'name': 'New American Standard Bible',
+        'badge': 'Strict Formal',
+        'desc': 'Direct grammatical fidelity suited for exegesis and memorization.',
+      },
+      {
+        'key': 'NIV',
+        'name': 'New International Version',
+        'badge': 'Modern Balance',
+        'desc': 'Thought-for-thought clarity crafted for everyday contemplation.',
+      },
+    ];
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (ctx) {
+        return Container(
+          padding: const EdgeInsets.fromLTRB(24, 18, 24, 34),
+          decoration: BoxDecoration(
+            color: surface,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+            border: Border.all(color: LogosColors.taupe),
+            boxShadow: LogosColors.softShadow,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 36,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: ink.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 18),
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: LogosColors.coral.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: const AppIcon(
+                      LogosIcons.bookOpen,
+                      color: LogosColors.coral,
+                      size: 22,
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Scripture Translation Bridge',
+                          style: GoogleFonts.inter(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                            color: ink,
+                          ),
+                        ),
+                        Text(
+                          'Select your rhythm for oral recitation and contemplation',
+                          style: GoogleFonts.inter(
+                            fontSize: 11,
+                            color: ink.withValues(alpha: 0.6),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 18),
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxHeight: 480),
+                child: ListView.separated(
+                  shrinkWrap: true,
+                  itemCount: translations.length,
+                  separatorBuilder: (_, __) => const SizedBox(height: 10),
+                  itemBuilder: (ctx, i) {
+                    final t = translations[i];
+                    final key = t['key']!;
+                    final isCurrent = state.activeDrop.translation == key;
+                    final previewVerse = state.activeDrop.translations?[key] ?? state.activeDrop.verseText;
+
+                    return InkWell(
+                      borderRadius: BorderRadius.circular(16),
+                      onTap: () {
+                        HapticFeedback.selectionClick();
+                        Navigator.pop(ctx);
+                        context.read<JourneyBloc>().add(SelectTranslation(key));
+                        LiturgicalWidgetService().syncWidgetData(
+                          state: state.copyWith(activeDrop: state.activeDrop.withTranslation(key)),
+                        );
+                      },
+
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        decoration: BoxDecoration(
+                          color: isCurrent
+                              ? LogosColors.coral.withValues(alpha: 0.08)
+                              : ink.withValues(alpha: 0.03),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: isCurrent ? LogosColors.coral : LogosColors.taupe.withValues(alpha: 0.6),
+                            width: isCurrent ? 1.5 : 1.0,
+                          ),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: isCurrent ? LogosColors.coral : ink.withValues(alpha: 0.08),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Text(
+                                    key,
+                                    style: GoogleFonts.inter(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w800,
+                                      color: isCurrent ? Colors.white : ink,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: ink.withValues(alpha: 0.05),
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: Text(
+                                    t['badge']!,
+                                    style: GoogleFonts.inter(
+                                      fontSize: 9,
+                                      fontWeight: FontWeight.w600,
+                                      color: ink.withValues(alpha: 0.7),
+                                    ),
+                                  ),
+                                ),
+                                const Spacer(),
+                                if (isCurrent)
+                                  const AppIcon(LogosIcons.checkCircleRounded, color: LogosColors.coral, size: 20)
+                                else
+                                  const AppIcon(LogosIcons.radioButtonUncheckedRounded, color: Colors.grey, size: 18),
+                              ],
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              t['name']!,
+                              style: GoogleFonts.inter(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                                color: ink,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              t['desc']!,
+                              style: GoogleFonts.inter(
+                                fontSize: 11,
+                                color: ink.withValues(alpha: 0.6),
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              '“$previewVerse”',
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: GoogleFonts.newsreader(
+                                fontSize: 12,
+                                fontStyle: FontStyle.italic,
+                                color: ink.withValues(alpha: 0.8),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final ink = isDark ? LogosColors.examenInk : LogosColors.ink;
     final surface = isDark ? LogosColors.examenSurface : LogosColors.surface;
@@ -1247,23 +1470,49 @@ class _SanctuaryHomeScreenState extends State<SanctuaryHomeScreen>
                                         ),
                                       ),
                                     ),
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                                      decoration: BoxDecoration(
-                                        color: ink.withValues(alpha: 0.06),
+                                    Material(
+                                      color: Colors.transparent,
+                                      child: InkWell(
+                                        onTap: () {
+                                          HapticFeedback.selectionClick();
+                                          _showTranslationSelectorSheet(context, state);
+                                        },
                                         borderRadius: BorderRadius.circular(8),
-                                      ),
-                                      child: Text(
-                                        drop.translation,
-                                        style: GoogleFonts.inter(
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.w600,
-                                          color: ink.withValues(alpha: 0.7),
+                                        child: Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                          decoration: BoxDecoration(
+                                            color: ink.withValues(alpha: 0.06),
+                                            borderRadius: BorderRadius.circular(8),
+                                            border: Border.all(
+                                              color: LogosColors.coral.withValues(alpha: 0.35),
+                                              width: 0.8,
+                                            ),
+                                          ),
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Text(
+                                                drop.translation,
+                                                style: GoogleFonts.inter(
+                                                  fontSize: 11,
+                                                  fontWeight: FontWeight.w700,
+                                                  color: LogosColors.coral,
+                                                ),
+                                              ),
+                                              const SizedBox(width: 3),
+                                              const AppIcon(
+                                                LogosIcons.arrowDropDownRounded,
+                                                size: 13,
+                                                color: LogosColors.coral,
+                                              ),
+                                            ],
+                                          ),
                                         ),
                                       ),
                                     ),
                                   ],
                                 ),
+
                                 const SizedBox(height: 16),
                                 Text(
                                   '“${drop.verseText}”',

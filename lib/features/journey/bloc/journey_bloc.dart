@@ -30,6 +30,7 @@ class JourneyBloc extends Bloc<JourneyEvent, JourneyState> {
     on<RedeemGraceToken>(_onRedeemGraceToken);
     on<AdvanceToNextWeek>(_onAdvanceToNextWeek);
     on<SelectWeek>(_onSelectWeek);
+    on<SelectTranslation>(_onSelectTranslation);
   }
 
   Future<void> _onLoadJourneyProgress(
@@ -43,7 +44,9 @@ class JourneyBloc extends Bloc<JourneyEvent, JourneyState> {
     final tearSheets = await _progressRepo.loadTearSheets();
 
     final weekIndex = journeyData['weekIndex'] as int? ?? 0;
-    final activeDrop = _contentRepo.dropForWeekIndex(weekIndex);
+    final savedTranslation = journeyData['preferredTranslation'] as String? ?? 'ESV';
+    final baseDrop = _contentRepo.dropForWeekIndex(weekIndex);
+    final activeDrop = baseDrop.withTranslation(savedTranslation);
 
     // Parse day completion status
     final dayCompletionRaw = journeyData['dayCompletion'] as Map<String, dynamic>? ?? {};
@@ -248,8 +251,10 @@ class JourneyBloc extends Bloc<JourneyEvent, JourneyState> {
     AdvanceToNextWeek event,
     Emitter<JourneyState> emit,
   ) async {
-    final currentIndex = _contentRepo.drops.indexOf(state.activeDrop);
-    final nextDrop = _contentRepo.dropForWeekIndex(currentIndex + 1);
+    final currentIndex = _contentRepo.drops.indexWhere((d) => d.id == state.activeDrop.id);
+    final safeIndex = currentIndex >= 0 ? currentIndex : 0;
+    final currentTranslation = state.activeDrop.translation;
+    final nextDrop = _contentRepo.dropForWeekIndex(safeIndex + 1).withTranslation(currentTranslation);
 
     const resetStatus = {1: false, 2: false, 3: false, 4: false};
     const resetCompletedAt = {1: null, 2: null, 3: null, 4: null};
@@ -272,16 +277,29 @@ class JourneyBloc extends Bloc<JourneyEvent, JourneyState> {
     SelectWeek event,
     Emitter<JourneyState> emit,
   ) async {
-    final drop = _contentRepo.dropForWeekIndex(event.weekIndex);
+    final currentTranslation = state.activeDrop.translation;
+    final drop = _contentRepo.dropForWeekIndex(event.weekIndex).withTranslation(currentTranslation);
     final newState = state.copyWith(activeDrop: drop);
     emit(newState);
     await _persistJourneyData(newState);
   }
 
+  Future<void> _onSelectTranslation(
+    SelectTranslation event,
+    Emitter<JourneyState> emit,
+  ) async {
+    final updatedDrop = state.activeDrop.withTranslation(event.translationKey);
+    final newState = state.copyWith(activeDrop: updatedDrop);
+    emit(newState);
+    await _persistJourneyData(newState);
+  }
+
   Future<void> _persistJourneyData(JourneyState state) async {
-    final weekIndex = _contentRepo.drops.indexOf(state.activeDrop);
+    final weekIndex = _contentRepo.drops.indexWhere((d) => d.id == state.activeDrop.id);
+    final safeWeekIndex = weekIndex >= 0 ? weekIndex : 0;
     final data = {
-      'weekIndex': weekIndex,
+      'weekIndex': safeWeekIndex,
+      'preferredTranslation': state.activeDrop.translation,
       'activeDay': state.activeDay,
       'currentStreak': state.currentStreak,
       'rootsPlanted': state.rootsPlanted,
@@ -309,3 +327,4 @@ class JourneyBloc extends Bloc<JourneyEvent, JourneyState> {
     await _progressRepo.saveJourneyData(data);
   }
 }
+

@@ -593,5 +593,106 @@ void main() {
       await tester.pump(const Duration(milliseconds: 500));
     });
   });
+
+  group('Scripture Multi-Translation Bridge Tests', () {
+    test('ScriptureDrop withTranslation switches verse text authentically across ESV, KJV, NASB, NIV', () {
+      const repo = ContentRepository();
+      for (final drop in repo.drops) {
+        expect(drop.translations, isNotNull);
+        expect(drop.translations!.containsKey('ESV'), isTrue);
+        expect(drop.translations!.containsKey('KJV'), isTrue);
+        expect(drop.translations!.containsKey('NASB'), isTrue);
+        expect(drop.translations!.containsKey('NIV'), isTrue);
+
+        final kjvDrop = drop.withTranslation('KJV');
+        expect(kjvDrop.translation, equals('KJV'));
+        expect(kjvDrop.verseText, equals(drop.translations!['KJV']));
+        expect(kjvDrop.reference, equals(drop.reference));
+
+        final nasbDrop = drop.withTranslation('NASB');
+        expect(nasbDrop.translation, equals('NASB'));
+        expect(nasbDrop.verseText, equals(drop.translations!['NASB']));
+
+        final nivDrop = drop.withTranslation('NIV');
+        expect(nivDrop.translation, equals('NIV'));
+        expect(nivDrop.verseText, equals(drop.translations!['NIV']));
+      }
+    });
+
+    test('JourneyBloc SelectTranslation switches active drop translation and preserves on next week', () async {
+      final repo = InMemoryProgressRepository();
+      final bloc = JourneyBloc(progressRepo: repo);
+
+      expect(bloc.state.activeDrop.translation, equals('ESV'));
+
+      bloc.add(const SelectTranslation('KJV'));
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+
+      expect(bloc.state.activeDrop.translation, equals('KJV'));
+      expect(bloc.state.activeDrop.verseText, contains('ye are the branches'));
+
+      // Advancing week maintains chosen translation
+      bloc.add(const AdvanceToNextWeek());
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+
+      expect(bloc.state.activeDrop.weekNumber, equals(2));
+      expect(bloc.state.activeDrop.translation, equals('KJV'));
+      expect(bloc.state.activeDrop.verseText, contains('Be careful for nothing'));
+    });
+
+    testWidgets('Tapping translation badge opens selector sheet and updates Sanctuary card', (tester) async {
+      tester.view.physicalSize = const Size(1080, 2400);
+      tester.view.devicePixelRatio = 2.0;
+      addTearDown(() {
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
+      });
+
+      final repo = InMemoryProgressRepository();
+      final bloc = JourneyBloc(progressRepo: repo)..add(const LoadJourneyProgress());
+
+      await tester.pumpWidget(
+        BlocProvider<JourneyBloc>.value(
+          value: bloc,
+          child: MaterialApp(
+            theme: LogosTheme.lightTheme(),
+            home: MainAppShell(examenController: ExamenController()),
+          ),
+        ),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+
+
+
+      // Sanctuary card shows ESV initially
+      expect(find.text('ESV'), findsOneWidget);
+      expect(find.text('“I am the vine; you are the branches. Whoever abides in me and I in him, he it is that bears much fruit, for apart from me you can do nothing.”'), findsOneWidget);
+
+      // Tap translation badge
+      await tester.tap(find.text('ESV'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      // Modal sheet opens with all 4 translations
+      expect(find.text('Scripture Translation Bridge'), findsOneWidget);
+      expect(find.text('King James Version'), findsOneWidget);
+      expect(find.text('New American Standard Bible'), findsOneWidget);
+      expect(find.text('New International Version'), findsOneWidget);
+
+      // Tap KJV option
+      await tester.tap(find.text('King James Version'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+
+      // Modal dismissed and Sanctuary card now displays KJV and King James text
+      expect(find.text('KJV'), findsOneWidget);
+      expect(find.text('“I am the vine, ye are the branches: He that abideth in me, and I in him, the same bringeth forth much fruit: for without me ye can do nothing.”'), findsOneWidget);
+
+      await tester.pumpWidget(const SizedBox());
+      await tester.pump(const Duration(milliseconds: 500));
+    });
+  });
 }
+
 

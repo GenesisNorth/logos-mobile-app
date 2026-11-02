@@ -10,13 +10,14 @@
 | Dimension | Status | Verification Detail |
 | :--- | :---: | :--- |
 | **Static Code Quality** | ✅ `0 errors / 0 warnings` | Clean `flutter analyze` across all 22+ screen & service files |
-| **Unit & Widget Tests** | ✅ `23 / 23 Passing` | Verifier, Pace-Locks, Grace, Exegesis, Community, Soundscapes, APNS, Packs, Widgets |
+| **Unit & Widget Tests** | ✅ `26 / 26 Passing` | Verifier, Pace-Locks, Grace, Exegesis, Community, Soundscapes, APNS, Packs, Widgets, Multi-Translation |
 | **Running Target** | 📱 **iPhone 17 Pro** | Running on iOS Simulator (`iOS 26.5`) with Impeller |
 | **Styling & Theme** | 🎨 **Blended White-Purple** | Luminous white background with soft lavender/purple gradients |
 | **Icon Suite** | ✨ **Hugeicons (Purged of AI)** | 100% stroke-rounded Hugeicons (Quill, Puzzle, Award, Praying Hands, Books) |
 | **Cloud Backend** | ☁️ **Offline-First Supabase** | Anonymous pilgrim session + Postgres sync + APNS device token sync + RLS |
 | **Notifications** | 🔔 **Circadian & APNS Cloud** | Lauds (7am), Sext (12pm), Vespers (9pm), Midnight Bell + APNS token sync |
 | **iOS Widgets & Island**| 📲 **Live Activity Ready** | Dynamic Island pill + 2x2 Small + 4x2 Medium + Lock Screen preview & sync |
+| **Translations** | 📖 **ESV, KJV, NASB, NIV** | Multi-translation bridge with live recitation target switching |
 | **App Store Compliance**| 🛡️ **Privacy Manifest Ready** | `PrivacyInfo.xcprivacy` with UserDefaults, FileTimestamp, BootTime declarations |
 | **Curriculum Pipeline** | 📖 **52-Week Scripture Packs** | Offline pack downloader with seasonal bundles (Weeks 1–4, 5–8, 9–12, 13–16) |
 | **Community Feeds** | 🕊️ **Live & Cached Rooms** | The Well pastoral watch, Prayer Circles voice notes, Valley of Achor rooms |
@@ -103,16 +104,25 @@
    ├── `LiturgicalWidgetPreviewSheet` interactive modal for Dynamic Island (expandable pill), Small (2x2), Medium (4x2), and Lock Screen widgets
    ├── Single-tap "Sync Current State to iOS Widget" action with haptic response and sync badge
    └── Comprehensive Unit & Widget Test Suite (23/23 tests passing, 0 analyzer issues)
+8. **Scripture Multi-Translation Bridge (ESV, KJV, NASB, NIV) (Completed)**
+   ├── Complete multi-translation mappings populated across all 5 weeks for ESV, KJV, NASB, and NIV
+   ├── `ScriptureDrop.withTranslation(key)` model transformation preserving exegesis & audio metadata
+   ├── Interactive Sanctuary Hero Card `[ESV ▾]` pill trigger with dropdown chevron and haptic tick
+   ├── `_showTranslationSelectorSheet` modal featuring translation attributes, live verse preview, and selection state
+   ├── Real-time target text propagation to Day 1 Oral Recitation (Levenshtein engine), Day 3 Stillness, Day 4 Exchange, and Home Screen Widgets
+   ├── Translation choice persisted across sessions and automatically applied when advancing curriculum weeks
+   └── Comprehensive Unit & Widget Test Suite (26/26 tests passing, 0 analyzer issues)
 ```
 
 ---
 
 ## 3. Next Lines of Action (Prioritized Backlog)
 
-### Priority 8: App Store Screenshots, Localization & Final Distribution Build
-- [ ] **App Store Marketing Presentation Package**: 6.7" & 6.1" liturgical screenshot set showcasing the 4-Day Sacred Rhythm.
-- [ ] **Localized Strings & Scripture Multi-Translation Bridge**: KJV, ESV, NASB, and NIV translation switcher.
-- [ ] **Production Archive / TestFlight Build**: Release signing configuration and pre-flight validation.
+### Priority 9: App Store Distribution, Screenshots & Pre-Flight Validation
+- [ ] **Production Archive & Release Pre-Flight**: Verify release builds (`flutter build ipa --no-codesign` and `flutter build appbundle --release`), signing configurations, and dependency shrink verification.
+- [ ] **App Store Marketing Presentation Package**: 6.7" & 6.1" liturgical screenshot set showcasing the 4-Day Sacred Rhythm, Soundscape Console, and Translation Switcher.
+- [ ] **Liturgical Audio Stem Expansion**: Additional contemplative vocal stem variations and binaural frequencies.
+
 
 ---
 

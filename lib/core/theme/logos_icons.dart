@@ -92,6 +92,7 @@ class LogosIcons {
 
   // Scripture, study & reflection
   static const LogosIconData menuBook = HugeIcons.strokeRoundedBookOpen01;
+  static const LogosIconData bookOpen = HugeIcons.strokeRoundedBookOpen01;
   static const LogosIconData autoStories = HugeIcons.strokeRoundedBook02;
   static const LogosIconData autoStoriesRounded = HugeIcons.strokeRoundedBook02;
   static const LogosIconData editNote = HugeIcons.strokeRoundedNoteEdit;

@@ -47,6 +47,16 @@ class ContentRepository {
       ],
       ambientPreset: 'sanctuary_dawn',
       ambientLabel: 'Sanctuary Dawn · 432 Hz',
+      translations: {
+        'ESV':
+            'I am the vine; you are the branches. Whoever abides in me and I in him, he it is that bears much fruit, for apart from me you can do nothing.',
+        'KJV':
+            'I am the vine, ye are the branches: He that abideth in me, and I in him, the same bringeth forth much fruit: for without me ye can do nothing.',
+        'NASB':
+            'I am the vine, you are the branches; he who abides in Me and I in him, he bears much fruit, for apart from Me you can do nothing.',
+        'NIV':
+            'I am the vine; you are the branches. If you remain in me and I in you, you will bear much fruit; apart from me you can do nothing.',
+      },
     ),
     ScriptureDrop(
       id: '00000000-0000-0000-0000-000000000002',
@@ -78,6 +88,16 @@ class ContentRepository {
       ],
       ambientPreset: 'sanctuary_dune',
       ambientLabel: 'Sanctuary Dune · 432 Hz',
+      translations: {
+        'ESV':
+            'Do not be anxious about anything, but in everything by prayer and supplication with thanksgiving let your requests be made known to God. And the peace of God, which surpasses all understanding, will guard your hearts and your minds in Christ Jesus.',
+        'KJV':
+            'Be careful for nothing; but in every thing by prayer and supplication with thanksgiving let your requests be made known unto God. And the peace of God, which passeth all understanding, shall keep your hearts and minds through Christ Jesus.',
+        'NASB':
+            'Be anxious for nothing, but in everything by prayer and supplication with thanksgiving let your requests be made known to God. And the peace of God, which surpasses all comprehension, will guard your hearts and your minds in Christ Jesus.',
+        'NIV':
+            'Do not be anxious about anything, but in every situation, by prayer and petition, with thanksgiving, present your requests to God. And the peace of God, which transcends all understanding, will guard your hearts and your minds in Christ Jesus.',
+      },
     ),
     ScriptureDrop(
       id: '00000000-0000-0000-0000-000000000003',
@@ -116,6 +136,16 @@ class ContentRepository {
       ],
       ambientPreset: 'sanctuary_dawn',
       ambientLabel: 'Sanctuary Deep · 432 Hz',
+      translations: {
+        'ESV':
+            'There is therefore now no condemnation for those who are in Christ Jesus. For the law of the Spirit of life has set you free in Christ Jesus from the law of sin and death.',
+        'KJV':
+            'There is therefore now no condemnation to them which are in Christ Jesus, who walk not after the flesh, but after the Spirit. For the law of the Spirit of life in Christ Jesus hath made me free from the law of sin and death.',
+        'NASB':
+            'Therefore there is now no condemnation for those who are in Christ Jesus. For the law of the Spirit of life in Christ Jesus has set you free from the law of sin and of death.',
+        'NIV':
+            'Therefore, there is now no condemnation for those who are in Christ Jesus, because through Christ Jesus the law of the Spirit who gives life has set you free from the law of sin and death.',
+      },
     ),
     ScriptureDrop(
       id: '00000000-0000-0000-0000-000000000004',
@@ -154,6 +184,16 @@ class ContentRepository {
       ],
       ambientPreset: 'sanctuary_dune',
       ambientLabel: 'Quiet Waters · 432 Hz',
+      translations: {
+        'ESV':
+            'The Lord is my shepherd; I shall not want. He makes me lie down in green pastures. He leads me beside still waters. He restores my soul.',
+        'KJV':
+            'The Lord is my shepherd; I shall not want. He maketh me to lie down in green pastures: he leadeth me beside the still waters. He restoreth my soul: he leadeth me in the paths of righteousness for his name\'s sake.',
+        'NASB':
+            'The Lord is my shepherd, I shall not want. He makes me lie down in green pastures; He leads me beside quiet waters. He restores my soul; He guides me in the paths of righteousness For His name\'s sake.',
+        'NIV':
+            'The Lord is my shepherd, I lack nothing. He makes me lie down in green pastures, he leads me beside quiet waters, he refreshes my soul. He guides me along the right paths for his name’s sake.',
+      },
     ),
     ScriptureDrop(
       id: '00000000-0000-0000-0000-000000000005',
@@ -192,6 +232,17 @@ class ContentRepository {
       ],
       ambientPreset: 'sanctuary_dawn',
       ambientLabel: 'Heavenly Places · 432 Hz',
+      translations: {
+        'ESV':
+            'If then you have been raised with Christ, seek the things that are above, where Christ is, seated at the right hand of God. Set your minds on things that are above, not on things that are on earth. For you have died, and your life is hidden with Christ in God.',
+        'KJV':
+            'If ye then be risen with Christ, seek those things which are above, where Christ sitteth on the right hand of God. Set your affection on things above, not on the things on the earth. For ye are dead, and your life is hid with Christ in God.',
+        'NASB':
+            'Therefore if you have been raised up with Christ, keep seeking the things above, where Christ is, seated at the right hand of God. Set your mind on the things above, not on the things that are on earth. For you have died and your life is hidden with Christ in God.',
+        'NIV':
+            'Since, then, you have been raised with Christ, set your hearts on things above, where Christ is, seated at the right hand of God. Set your minds on things above, not on earthly things. For you died, and your life is now hidden with Christ in God.',
+      },
     ),
   ];
 }
+

@@ -39,6 +39,9 @@ class ScriptureDrop extends Equatable {
   final String ambientPreset;
   final String ambientLabel;
 
+  /// Multi-translation verse texts (e.g., ESV, KJV, NASB, NIV).
+  final Map<String, String>? translations;
+
   const ScriptureDrop({
     required this.id,
     required this.weekNumber,
@@ -50,6 +53,7 @@ class ScriptureDrop extends Equatable {
     required this.contextCards,
     required this.ambientPreset,
     required this.ambientLabel,
+    this.translations,
   });
 
   /// Maps a `scripture_drops` row from Supabase (Phase 1).
@@ -67,8 +71,50 @@ class ScriptureDrop extends Equatable {
             .toList(),
         ambientPreset: r['day_3_ambient_preset'] as String? ?? 'sanctuary_dawn',
         ambientLabel: r['day_3_ambient_label'] as String? ?? 'Sanctuary Dawn',
+        translations: (r['translations'] as Map?)?.cast<String, String>(),
       );
 
+  /// Returns a new [ScriptureDrop] with the verse text switched to [targetTranslation],
+  /// preserving all context cards, audio presets, and week metadata.
+  ScriptureDrop withTranslation(String targetTranslation) {
+    if (translations == null || !translations!.containsKey(targetTranslation)) {
+      return this;
+    }
+    return copyWith(
+      translation: targetTranslation,
+      verseText: translations![targetTranslation]!,
+    );
+  }
+
+  ScriptureDrop copyWith({
+    String? id,
+    int? weekNumber,
+    String? reference,
+    String? verseText,
+    String? translation,
+    String? videoUrl,
+    List<String>? encounterLines,
+    List<ContextCard>? contextCards,
+    String? ambientPreset,
+    String? ambientLabel,
+    Map<String, String>? translations,
+  }) {
+    return ScriptureDrop(
+      id: id ?? this.id,
+      weekNumber: weekNumber ?? this.weekNumber,
+      reference: reference ?? this.reference,
+      verseText: verseText ?? this.verseText,
+      translation: translation ?? this.translation,
+      videoUrl: videoUrl ?? this.videoUrl,
+      encounterLines: encounterLines ?? this.encounterLines,
+      contextCards: contextCards ?? this.contextCards,
+      ambientPreset: ambientPreset ?? this.ambientPreset,
+      ambientLabel: ambientLabel ?? this.ambientLabel,
+      translations: translations ?? this.translations,
+    );
+  }
+
   @override
-  List<Object?> get props => [id, weekNumber, reference, verseText];
+  List<Object?> get props => [id, weekNumber, reference, verseText, translation];
 }
+
