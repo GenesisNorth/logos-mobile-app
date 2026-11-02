@@ -37,6 +37,7 @@ class LiturgicalWidgetPreviewSheet extends StatefulWidget {
 class _LiturgicalWidgetPreviewSheetState extends State<LiturgicalWidgetPreviewSheet> {
   bool _isSynced = false;
   bool _isIslandExpanded = false;
+  int _platformIndex = 0;
 
   @override
   Widget build(BuildContext context) {
@@ -125,15 +126,92 @@ class _LiturgicalWidgetPreviewSheetState extends State<LiturgicalWidgetPreviewSh
                     ),
                 ],
               ),
-              const SizedBox(height: 18),
+              const SizedBox(height: 14),
+
+              // Platform Selector (iOS & Dynamic Island vs Android Material You)
+              Row(
+                children: [
+                  Expanded(
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(10),
+                      onTap: () {
+                        AudioService().selectionTick();
+                        setState(() => _platformIndex = 0);
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        decoration: BoxDecoration(
+                          color: _platformIndex == 0
+                              ? LogosColors.coral.withValues(alpha: 0.15)
+                              : Colors.transparent,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: _platformIndex == 0
+                                ? LogosColors.coral
+                                : LogosColors.taupe.withValues(alpha: 0.6),
+                          ),
+                        ),
+                        child: Center(
+                          child: Text(
+                            'iOS & Dynamic Island',
+                            style: GoogleFonts.inter(
+                              fontSize: 11.5,
+                              fontWeight: _platformIndex == 0 ? FontWeight.w700 : FontWeight.w500,
+                              color: _platformIndex == 0 ? LogosColors.coral : ink,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(10),
+                      onTap: () {
+                        AudioService().selectionTick();
+                        setState(() => _platformIndex = 1);
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        decoration: BoxDecoration(
+                          color: _platformIndex == 1
+                              ? LogosColors.coral.withValues(alpha: 0.15)
+                              : Colors.transparent,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: _platformIndex == 1
+                                ? LogosColors.coral
+                                : LogosColors.taupe.withValues(alpha: 0.6),
+                          ),
+                        ),
+                        child: Center(
+                          child: Text(
+                            'Android Material You',
+                            style: GoogleFonts.inter(
+                              fontSize: 11.5,
+                              fontWeight: _platformIndex == 1 ? FontWeight.w700 : FontWeight.w500,
+                              color: _platformIndex == 1 ? LogosColors.coral : ink,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
 
               Flexible(
                 child: ListView(
                   shrinkWrap: true,
                   children: [
-                    // 1. Dynamic Island Live Activity Preview
-                    Text('Dynamic Island (Tap to Expand)', style: LogosTypography.label(color: ink)),
-                    const SizedBox(height: 8),
+                    if (_platformIndex == 1) ...[
+                      _buildAndroidMaterialYouWidgets(data, ink),
+                    ] else ...[
+                      // 1. Dynamic Island Live Activity Preview
+                      Text('Dynamic Island (Tap to Expand)', style: LogosTypography.label(color: ink)),
+                      const SizedBox(height: 8),
                     InkWell(
                       borderRadius: BorderRadius.circular(24),
                       onTap: () {
@@ -416,8 +494,9 @@ class _LiturgicalWidgetPreviewSheetState extends State<LiturgicalWidgetPreviewSh
                       ],
                     ),
                   ],
-                ),
+                ],
               ),
+            ),
 
               const SizedBox(height: 18),
 
@@ -434,7 +513,7 @@ class _LiturgicalWidgetPreviewSheetState extends State<LiturgicalWidgetPreviewSh
                   ),
                   icon: const AppIcon(LogosIcons.syncAltRounded, size: 18),
                   label: Text(
-                    'Sync Current State to iOS Widget',
+                    'Sync Current State to Device Widget',
                     style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w700),
                   ),
                   onPressed: () async {
@@ -448,6 +527,141 @@ class _LiturgicalWidgetPreviewSheetState extends State<LiturgicalWidgetPreviewSh
           ),
         );
       },
+    );
+  }
+
+  Widget _buildAndroidMaterialYouWidgets(dynamic data, Color ink) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Android Material You Pebble Widget (4x2)', style: LogosTypography.label(color: ink)),
+        const SizedBox(height: 8),
+        Container(
+          padding: const EdgeInsets.all(18),
+          decoration: BoxDecoration(
+            color: LogosColors.purpleWhisper,
+            borderRadius: BorderRadius.circular(28),
+            border: Border.all(color: LogosColors.purpleLilac.withValues(alpha: 0.5), width: 1.5),
+            boxShadow: LogosColors.softShadow,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: LogosColors.purpleRadiant.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        AppIcon(LogosIcons.cross, size: 12, color: LogosColors.purpleDeep),
+                        SizedBox(width: 4),
+                        Text(
+                          'LOGOS IN ME',
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w800,
+                            color: LogosColors.purpleDeep,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Spacer(),
+                  Text(
+                    '${data.nextHourName} · ${data.nextHourTime}',
+                    style: GoogleFonts.inter(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: LogosColors.purpleDeep,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Text(
+                '"${data.scriptureSnippet}"',
+                style: GoogleFonts.inter(
+                  fontSize: 13.5,
+                  fontWeight: FontWeight.w600,
+                  fontStyle: FontStyle.italic,
+                  color: ink,
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: LogosColors.purpleLilac.withValues(alpha: 0.3),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      data.scriptureReference,
+                      style: GoogleFonts.inter(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: LogosColors.purpleDeep,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      '${data.streakCount} Day Streak 🔥 · Day ${data.currentStep}/4',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.end,
+                      style: GoogleFonts.inter(
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.w600,
+                        color: ink.withValues(alpha: 0.7),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 18),
+        Text('Android Lock Screen At-a-Glance Pebble', style: LogosTypography.label(color: ink)),
+        const SizedBox(height: 8),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: Colors.black.withValues(alpha: 0.85),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+          ),
+          child: Row(
+            children: [
+              const AppIcon(LogosIcons.wbSunnyRounded, size: 16, color: Colors.amber),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  '${data.nextHourName} in ${data.countdownText}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w700, color: Colors.white),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                '${data.scriptureReference} · ${data.streakCount}🔥',
+                style: GoogleFonts.inter(fontSize: 11, color: Colors.white70),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

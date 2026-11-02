@@ -132,13 +132,15 @@ class NotificationService {
     }
   }
 
-  /// Generates or registers an APNS push token, saving locally and syncing to Supabase.
+  /// Generates or registers a push token (APNS / FCM), saving locally and syncing to Supabase.
   Future<String> registerDevicePushToken({
     String? customToken,
-    String platform = 'ios',
+    String? platform,
     String environment = 'production',
   }) async {
     final prefs = await SharedPreferences.getInstance();
+    final activePlatform = platform ??
+        (defaultTargetPlatform == TargetPlatform.android ? 'android' : 'ios');
 
     final token = customToken ??
         _deviceToken ??
@@ -150,7 +152,7 @@ class NotificationService {
     // Sync to Supabase device_push_tokens table
     final synced = await SupabaseService.instance.registerPushToken(
       token: token,
-      platform: platform,
+      platform: activePlatform,
       environment: environment,
     );
 

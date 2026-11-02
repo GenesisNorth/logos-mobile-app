@@ -575,13 +575,19 @@ void main() {
       await tester.pump(const Duration(milliseconds: 300));
 
       // Tap sync button
-      final syncButton = find.text('Sync Current State to iOS Widget');
+      final syncButton = find.text('Sync Current State to Device Widget');
       expect(syncButton, findsOneWidget);
       await tester.tap(syncButton);
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 300));
 
       expect(find.text('Synced ✓'), findsOneWidget);
+
+      // Tap Android Material You tab
+      await tester.tap(find.text('Android Material You'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(find.text('Android Material You Pebble Widget (4x2)'), findsOneWidget);
 
       await tester.pumpWidget(const SizedBox());
       await tester.pump(const Duration(milliseconds: 500));
