@@ -77,16 +77,23 @@
    ├── Direct 5-Week Scripture Curriculum Cloister bottom sheet selector
    ├── Zero layout overflows on all device viewports (responsive flex headers & settings tiles)
    └── Automated Navigation & Integration Test Suite (15/15 tests passing, 0 analyzer issues)
+5. **Sensory Depth & Contemplative Stems (Completed)**
+   ├── Multi-Track Ambient Stem Engine (`AudioService` with concurrent loop synchronizer)
+   ├── Bundled Contemplative Audio Stems (`ambient_sanctuary_dawn.wav`, `ambient_gentle_rain.wav`, `ambient_gregorian_resonance.wav`)
+   ├── Sacred Soundscape Console bottom sheet with 3 independent stem sliders & master intensity
+   ├── Atmospheric Soundscape Presets: Sanctuary Dawn, Cloister Rain, Gregorian Choir
+   ├── Liturgical Haptic Feedback Engine: real-time `wordProgressTick` on speech matches, triple-cadence `sacredCelebrationHaptic`, `liturgicalHourChime`
+   └── Comprehensive Unit & Widget Test Suite (18/18 tests passing, 0 analyzer issues)
 ```
 
 ---
 
 ## 3. Next Lines of Action (Prioritized Backlog)
 
-### Priority 5: Sensory Depth & Immersive Contemplation
-- [ ] **Ambient Drone & Stillness Stems**: Multi-track ambient stems (Gentle Rain, Convent Organ, Gregorian Drone) with independent volume mix sliders.
-- [ ] **Haptic Liturgical Feedback**: Subtle physical clicks on recitation word milestones and sacred exchange burden dissolution.
-- [ ] **Production Push Notification Tuning**: APNS / FCM token registration for background midnight strike chime triggers.
+### Priority 6: Production Push Notifications & Store Deployment
+- [ ] **APNS / Background Token Registration**: Sync device tokens to Supabase `device_push_tokens` table for automated remote midnight bell strikes.
+- [ ] **Liturgical Hours Widget / Dynamic Island**: Glanceable Next Liturgical Hour and Active Streak countdown for iOS 16+.
+- [ ] **Offline Scripture Pack Downloader**: Ability to cache future 52-week curriculum audio stems for flight or cloister retreats.
 
 ---
 

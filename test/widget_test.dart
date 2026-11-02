@@ -10,7 +10,9 @@ import 'package:logos_mobile_app/features/journey/bloc/journey_bloc.dart';
 import 'package:logos_mobile_app/features/journey/bloc/journey_event.dart';
 import 'package:logos_mobile_app/features/journey/data/content_repository.dart';
 import 'package:logos_mobile_app/features/journey/data/progress_repository.dart';
+import 'package:logos_mobile_app/core/services/audio_service.dart';
 import 'package:logos_mobile_app/features/community/data/community_repository.dart';
+import 'package:logos_mobile_app/features/journey/screens/stillness_sanctuary_screen.dart';
 import 'package:logos_mobile_app/main.dart';
 
 class InMemoryProgressRepository implements ProgressRepository {
@@ -336,6 +338,87 @@ void main() {
     expect(find.text('WK 1'), findsOneWidget);
     expect(find.text('WK 2'), findsOneWidget);
     expect(find.text('WK 5'), findsOneWidget);
+  });
+
+  group('Multi-Track Ambient Stems & Liturgical Haptic Tests', () {
+    test('AudioService configures multi-track stem volumes and mute correctly', () async {
+      final audio = AudioService();
+
+      await audio.setDroneVolume(0.8);
+      expect(audio.droneVolume, equals(0.8));
+
+      await audio.setRainVolume(0.5);
+      expect(audio.rainVolume, equals(0.5));
+
+      await audio.setResonanceVolume(0.6);
+      expect(audio.resonanceVolume, equals(0.6));
+
+      audio.applyPreset('cloister_rain');
+      expect(audio.activePreset, equals('cloister_rain'));
+      expect(audio.rainVolume, equals(0.85));
+
+      audio.applyPreset('gregorian_cathedral');
+      expect(audio.activePreset, equals('gregorian_cathedral'));
+      expect(audio.resonanceVolume, equals(0.85));
+
+      final initialMute = audio.isMuted;
+      await audio.toggleMute();
+      expect(audio.isMuted, equals(!initialMute));
+      await audio.toggleMute();
+    });
+
+    test('Liturgical haptic methods execute cleanly without throwing', () async {
+      final audio = AudioService();
+      expect(() => audio.wordProgressTick(), returnsNormally);
+      expect(() => audio.triggerExchangeHaptic(), returnsNormally);
+      expect(() => audio.emberPulse(), returnsNormally);
+      expect(() => audio.breathTick(), returnsNormally);
+      expect(() => audio.selectionTick(), returnsNormally);
+      await expectLater(audio.sacredCelebrationHaptic(), completes);
+      await expectLater(audio.liturgicalHourChime(), completes);
+    });
+
+    testWidgets('StillnessSanctuaryScreen opens Sacred Soundscape Mixing Console with all stems', (WidgetTester tester) async {
+      tester.view.physicalSize = const Size(1080, 2400);
+      tester.view.devicePixelRatio = 2.0;
+      addTearDown(() {
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
+      });
+
+      const contentRepo = ContentRepository();
+      final drop = contentRepo.drops.first;
+
+      await tester.pumpWidget(
+        BlocProvider(
+          create: (_) => JourneyBloc(progressRepo: InMemoryProgressRepository()),
+          child: MaterialApp(
+            theme: LogosTheme.lightTheme(),
+            home: StillnessSanctuaryScreen(drop: drop),
+          ),
+        ),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      expect(find.byKey(const Key('soundscape_console_button')), findsOneWidget);
+      await tester.tap(find.byKey(const Key('soundscape_console_button')));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+
+      expect(find.text('Sacred Soundscape Console'), findsOneWidget);
+      expect(find.text('Convent 432 Hz Drone'), findsOneWidget);
+      expect(find.text('Cloister Rainfall'), findsOneWidget);
+      expect(find.text('Gregorian Vocal Resonance'), findsOneWidget);
+      expect(find.text('Sanctuary Dawn'), findsOneWidget);
+      expect(find.text('Cloister Rain'), findsOneWidget);
+      expect(find.text('Gregorian Choir'), findsOneWidget);
+
+      // Dismiss bottom sheet and unmount widget to dispose timers cleanly
+      await tester.tapAt(const Offset(20, 20));
+      await tester.pumpWidget(const SizedBox());
+      await tester.pump(const Duration(seconds: 2));
+    });
   });
 }
 

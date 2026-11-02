@@ -88,6 +88,12 @@ class _RecitationDialogState extends State<RecitationDialog>
 
   void _handleSpeechUpdate(SpeechUpdate update) {
     if (!mounted) return;
+    final prevCount = ScriptureVerifier.matchedWordCount(widget.verseText, _liveTranscript);
+    final newCount = ScriptureVerifier.matchedWordCount(widget.verseText, update.transcript);
+    if (newCount > prevCount) {
+      AudioService().wordProgressTick();
+    }
+
     setState(() {
       _liveTranscript = update.transcript;
       _audioLevel = update.level;

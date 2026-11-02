@@ -28,7 +28,6 @@ class _StillnessSanctuaryScreenState extends State<StillnessSanctuaryScreen>
   Timer? _timer;
   bool _isFinished = false;
   bool _isPlayingAudio = true;
-  double _ambientVolume = 0.7;
   int _lastPhaseIndex = -1;
 
   @override
@@ -79,73 +78,204 @@ class _StillnessSanctuaryScreenState extends State<StillnessSanctuaryScreen>
     }
   }
 
-  void _showVolumeSheet(BuildContext context) {
+  void _showSoundscapeConsole(BuildContext context) {
     AudioService().selectionTick();
+    final audio = AudioService();
+
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
+      isScrollControlled: true,
       builder: (ctx) {
         return StatefulBuilder(
           builder: (ctx, setSheetState) {
+            final isDark = Theme.of(ctx).brightness == Brightness.dark;
+            final surface = isDark ? LogosColors.examenSurface : Colors.white;
+            final ink = isDark ? LogosColors.examenInk : LogosColors.ink;
+
             return Container(
-              padding: const EdgeInsets.fromLTRB(24, 20, 24, 34),
+              padding: const EdgeInsets.fromLTRB(24, 18, 24, 34),
               decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                color: surface,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
                 border: Border.all(color: LogosColors.taupe),
                 boxShadow: LogosColors.softShadow,
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Container(
-                    width: 36,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: LogosColors.ink.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(2),
+                  Center(
+                    child: Container(
+                      width: 36,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: ink.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(2),
+                      ),
                     ),
                   ),
                   const SizedBox(height: 18),
                   Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const AppIcon(LogosIcons.graphicEqRounded, color: LogosColors.coral, size: 20),
-                      const SizedBox(width: 10),
-                      Text(
-                        '432 Hz Sanctuary Soundscape',
-                        style: GoogleFonts.inter(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700,
-                          color: LogosColors.ink,
+                      Expanded(
+                        child: Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(10),
+                              decoration: BoxDecoration(
+                                color: LogosColors.coral.withValues(alpha: 0.12),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: const AppIcon(LogosIcons.graphicEqRounded, color: LogosColors.coral, size: 20),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Sacred Soundscape Console',
+                                    style: LogosTypography.headline(color: ink).copyWith(fontSize: 16),
+                                  ),
+                                  Text(
+                                    'Contemplative Multi-Track Ambient Stems',
+                                    style: LogosTypography.caption(color: ink.withValues(alpha: 0.6)),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
                         ),
+                      ),
+                      IconButton(
+                        tooltip: audio.isMuted ? 'Unmute' : 'Mute',
+                        icon: AppIcon(
+                          audio.isMuted ? LogosIcons.volumeOffRounded : LogosIcons.volumeUpRounded,
+                          color: audio.isMuted ? Colors.grey : LogosColors.coral,
+                        ),
+                        onPressed: () {
+                          audio.selectionTick();
+                          audio.toggleMute();
+                          setSheetState(() {});
+                          setState(() {});
+                        },
                       ),
                     ],
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 16),
+
+                  // Preset Chips Row
+                  Text('Atmospheric Presets:', style: LogosTypography.label(color: ink)),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    children: [
+                      _buildPresetChip(
+                        label: 'Sanctuary Dawn',
+                        presetKey: 'sanctuary_dawn',
+                        activePreset: audio.activePreset,
+                        onTap: () {
+                          audio.selectionTick();
+                          audio.applyPreset('sanctuary_dawn');
+                          setSheetState(() {});
+                          setState(() {});
+                        },
+                        ink: ink,
+                      ),
+                      _buildPresetChip(
+                        label: 'Cloister Rain',
+                        presetKey: 'cloister_rain',
+                        activePreset: audio.activePreset,
+                        onTap: () {
+                          audio.selectionTick();
+                          audio.applyPreset('cloister_rain');
+                          setSheetState(() {});
+                          setState(() {});
+                        },
+                        ink: ink,
+                      ),
+                      _buildPresetChip(
+                        label: 'Gregorian Choir',
+                        presetKey: 'gregorian_cathedral',
+                        activePreset: audio.activePreset,
+                        onTap: () {
+                          audio.selectionTick();
+                          audio.applyPreset('gregorian_cathedral');
+                          setSheetState(() {});
+                          setState(() {});
+                        },
+                        ink: ink,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 18),
+
+                  // Multi-Track Stem Sliders
+                  _buildStemSlider(
+                    label: 'Convent 432 Hz Drone',
+                    description: 'Warm grounding harmonic floor',
+                    icon: LogosIcons.spaRounded,
+                    value: audio.droneVolume,
+                    activeColor: LogosColors.coral,
+                    ink: ink,
+                    onChanged: (val) {
+                      audio.setDroneVolume(val);
+                      setSheetState(() {});
+                    },
+                  ),
+                  _buildStemSlider(
+                    label: 'Cloister Rainfall',
+                    description: 'Natural soothing rainfall on sanctuary stones',
+                    icon: LogosIcons.waterDrop,
+                    value: audio.rainVolume,
+                    activeColor: const Color(0xFF0284C7),
+                    ink: ink,
+                    onChanged: (val) {
+                      audio.setRainVolume(val);
+                      setSheetState(() {});
+                    },
+                  ),
+                  _buildStemSlider(
+                    label: 'Gregorian Vocal Resonance',
+                    description: 'Celestial open-fifths sacred resonance',
+                    icon: LogosIcons.menuBook,
+                    value: audio.resonanceVolume,
+                    activeColor: const Color(0xFF8B5CF6),
+                    ink: ink,
+                    onChanged: (val) {
+                      audio.setResonanceVolume(val);
+                      setSheetState(() {});
+                    },
+                  ),
+
+                  const SizedBox(height: 6),
+
+                  // Master Intensity Slider
                   Row(
                     children: [
-                      const AppIcon(LogosIcons.volumeOffRounded, size: 18, color: LogosColors.coral),
-                      Expanded(
-                        child: Slider(
-                          value: _ambientVolume,
-                          activeColor: LogosColors.coral,
-                          inactiveColor: const Color(0xFFDDD6FE),
-                          onChanged: (val) {
-                            setSheetState(() => _ambientVolume = val);
-                            setState(() => _ambientVolume = val);
-                            AudioService().setAmbientVolume(val);
-                          },
-                        ),
+                      Text(
+                        'Master Intensity: ${(audio.masterVolume * 100).toInt()}%',
+                        style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w700, color: ink),
                       ),
-                      const AppIcon(LogosIcons.volumeUpRounded, size: 18, color: LogosColors.coral),
+                      const Spacer(),
+                      if (audio.isMuted)
+                        Text(
+                          'MUTED',
+                          style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w800, color: Colors.orange.shade800),
+                        ),
                     ],
                   ),
-                  Text(
-                    '${(_ambientVolume * 100).toInt()}% Intensity · ${widget.drop.ambientLabel}',
-                    style: GoogleFonts.inter(
-                      fontSize: 12,
-                      color: LogosColors.ink.withValues(alpha: 0.6),
-                    ),
+                  Slider(
+                    value: audio.masterVolume,
+                    activeColor: LogosColors.coral,
+                    inactiveColor: LogosColors.taupe,
+                    onChanged: (val) {
+                      audio.setAmbientVolume(val);
+                      setSheetState(() {});
+                      setState(() {});
+                    },
                   ),
                 ],
               ),
@@ -153,6 +283,98 @@ class _StillnessSanctuaryScreenState extends State<StillnessSanctuaryScreen>
           },
         );
       },
+    );
+  }
+
+  Widget _buildPresetChip({
+    required String label,
+    required String presetKey,
+    required String activePreset,
+    required VoidCallback onTap,
+    required Color ink,
+  }) {
+    final isSelected = activePreset == presetKey;
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+        decoration: BoxDecoration(
+          color: isSelected ? LogosColors.coral : ink.withValues(alpha: 0.06),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isSelected ? LogosColors.coral : LogosColors.taupe,
+          ),
+        ),
+        child: Text(
+          label,
+          style: GoogleFonts.inter(
+            fontSize: 11.5,
+            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+            color: isSelected ? Colors.white : ink,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStemSlider({
+    required String label,
+    required String description,
+    required LogosIconData icon,
+    required double value,
+    required ValueChanged<double> onChanged,
+    required Color activeColor,
+    required Color ink,
+  }) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: ink.withValues(alpha: 0.03),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: LogosColors.taupe.withValues(alpha: 0.6)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              AppIcon(icon, size: 15, color: activeColor),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  label,
+                  style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w700, color: ink),
+                ),
+              ),
+              Text(
+                '${(value * 100).toInt()}%',
+                style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w800, color: activeColor),
+              ),
+            ],
+          ),
+          const SizedBox(height: 2),
+          Text(
+            description,
+            style: GoogleFonts.inter(fontSize: 10, color: ink.withValues(alpha: 0.6)),
+          ),
+          SliderTheme(
+            data: SliderThemeData(
+              trackHeight: 3.5,
+              thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
+              overlayShape: const RoundSliderOverlayShape(overlayRadius: 12),
+              activeTrackColor: activeColor,
+              inactiveTrackColor: activeColor.withValues(alpha: 0.18),
+              thumbColor: activeColor,
+            ),
+            child: Slider(
+              value: value,
+              onChanged: onChanged,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -254,7 +476,8 @@ class _StillnessSanctuaryScreenState extends State<StillnessSanctuaryScreen>
                         },
                       ),
                       GestureDetector(
-                        onTap: () => _showVolumeSheet(context),
+                        key: const Key('soundscape_console_button'),
+                        onTap: () => _showSoundscapeConsole(context),
                         child: Container(
                           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                           decoration: BoxDecoration(
