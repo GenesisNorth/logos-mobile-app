@@ -13,6 +13,9 @@ import 'package:logos_mobile_app/features/journey/data/progress_repository.dart'
 import 'package:logos_mobile_app/core/services/audio_service.dart';
 import 'package:logos_mobile_app/features/community/data/community_repository.dart';
 import 'package:logos_mobile_app/features/journey/screens/stillness_sanctuary_screen.dart';
+import 'package:logos_mobile_app/core/services/notification_service.dart';
+import 'package:logos_mobile_app/features/journey/data/scripture_pack_repository.dart';
+import 'package:logos_mobile_app/features/journey/screens/scripture_packs_sheet.dart';
 import 'package:logos_mobile_app/main.dart';
 
 class InMemoryProgressRepository implements ProgressRepository {
@@ -416,6 +419,92 @@ void main() {
 
       // Dismiss bottom sheet and unmount widget to dispose timers cleanly
       await tester.tapAt(const Offset(20, 20));
+      await tester.pumpWidget(const SizedBox());
+      await tester.pump(const Duration(seconds: 2));
+    });
+
+    test('NotificationService registers and persists valid 64-char APNS hex token', () async {
+      SharedPreferences.setMockInitialValues({});
+      final token = await NotificationService.instance.registerDevicePushToken(
+        customToken: 'a1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f60718293a4b5c6d7e8f90',
+      );
+
+      expect(token.length, equals(64));
+      expect(NotificationService.instance.deviceToken, equals(token));
+
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.getString('logos_apns_device_token'), equals(token));
+    });
+
+    test('ScripturePackRepository handles pack lifecycle (fetch, download, delete, storage)', () async {
+      SharedPreferences.setMockInitialValues({});
+      final repo = ScripturePackRepository();
+
+      // 1. Fetch packs
+      final packs = await repo.fetchPacks();
+      expect(packs.length, equals(4));
+      expect(packs.first.isBuiltIn, isTrue);
+      expect(packs.first.isDownloaded, isTrue);
+
+      // Pack 2 is not yet downloaded
+      expect(packs[1].isDownloaded, isFalse);
+
+      // 2. Download pack 2
+      final progressValues = <double>[];
+      await repo.downloadPack(packs[1].id, onProgress: (p) => progressValues.add(p));
+
+      expect(progressValues, isNotEmpty);
+      expect(progressValues.last, equals(1.0));
+
+      final updatedPacks = await repo.fetchPacks();
+      expect(updatedPacks[1].isDownloaded, isTrue);
+
+      // 3. Storage calculation
+      final storage = await repo.totalStorageUsedMb();
+      expect(storage, isA<double>());
+      expect(storage, greaterThan(0.0));
+
+      // 4. Delete downloaded pack
+      await repo.deletePack(packs[1].id);
+      final afterDelete = await repo.fetchPacks();
+      expect(afterDelete[1].isDownloaded, isFalse);
+    });
+
+    testWidgets('ScripturePacksSheet displays packs and handles cloister download', (WidgetTester tester) async {
+      tester.view.physicalSize = const Size(1080, 2400);
+      tester.view.devicePixelRatio = 2.0;
+      addTearDown(() {
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
+      });
+
+      SharedPreferences.setMockInitialValues({});
+      final repo = ScripturePackRepository();
+
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: LogosTheme.lightTheme(),
+          home: Scaffold(
+            body: ScripturePacksSheet(repository: repo),
+          ),
+        ),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      // Verifies title and packs
+      expect(find.text('Offline Scripture Packs'), findsOneWidget);
+      expect(find.text('Foundation of Peace'), findsOneWidget);
+      expect(find.text('Heavenly Ascent'), findsOneWidget);
+      expect(find.text('Built-In Core ✓'), findsOneWidget);
+
+      // Tap download on the second pack
+      final downloadButtons = find.text('Download');
+      expect(downloadButtons, findsWidgets);
+      await tester.tap(downloadButtons.first);
+      await tester.pump();
+      await tester.pump(const Duration(seconds: 2));
+
       await tester.pumpWidget(const SizedBox());
       await tester.pump(const Duration(seconds: 2));
     });

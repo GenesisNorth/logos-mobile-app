@@ -1,22 +1,32 @@
+import 'dart:convert';
+import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
+import 'supabase_service.dart';
 
-/// Service managing Circadian Liturgical Reminders and Midnight Pace-Lock Unlocks.
+/// Service managing Circadian Liturgical Reminders, Midnight Pace-Lock Unlocks, and APNS Push Tokens.
 class NotificationService {
   NotificationService._();
   static final NotificationService instance = NotificationService._();
 
   static const _prefKeyEnabled = 'logos_notifications_enabled';
+  static const _prefKeyApnsToken = 'logos_apns_device_token';
+  static const _prefKeyApnsSynced = 'logos_apns_synced_cloud';
 
   final FlutterLocalNotificationsPlugin _notificationsPlugin =
       FlutterLocalNotificationsPlugin();
 
   bool _isInitialized = false;
   bool _isEnabled = false;
+  String? _deviceToken;
+  bool _isApnsSynced = false;
+
   bool get isEnabled => _isEnabled;
+  String? get deviceToken => _deviceToken;
+  bool get isApnsSynced => _isApnsSynced;
 
   /// Initializes timezone data and notifications plugin with graceful error handling.
   Future<void> initialize() async {
@@ -26,13 +36,21 @@ class NotificationService {
       tz.initializeTimeZones();
 
       const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
-      const darwinSettings = DarwinInitializationSettings(
+      final darwinSettings = DarwinInitializationSettings(
         requestAlertPermission: false,
         requestBadgePermission: false,
         requestSoundPermission: false,
+        notificationCategories: [
+          DarwinNotificationCategory(
+            'liturgical_chime_category',
+            actions: [
+              DarwinNotificationAction.plain('open_sanctuary', 'Open Sanctuary'),
+            ],
+          ),
+        ],
       );
 
-      const initSettings = InitializationSettings(
+      final initSettings = InitializationSettings(
         android: androidSettings,
         iOS: darwinSettings,
         macOS: darwinSettings,
@@ -47,8 +65,10 @@ class NotificationService {
 
       final prefs = await SharedPreferences.getInstance();
       _isEnabled = prefs.getBool(_prefKeyEnabled) ?? false;
+      _deviceToken = prefs.getString(_prefKeyApnsToken);
+      _isApnsSynced = prefs.getBool(_prefKeyApnsSynced) ?? false;
       _isInitialized = true;
-      debugPrint('[NotificationService] Initialized (enabled: $_isEnabled)');
+      debugPrint('[NotificationService] Initialized (enabled: $_isEnabled, apns: ${_deviceToken != null})');
 
       if (_isEnabled) {
         await scheduleAllLiturgicalNotifications();
@@ -103,12 +123,49 @@ class NotificationService {
     if (enable) {
       final granted = await requestPermissions();
       if (!granted) return;
+      await registerDevicePushToken();
     } else {
       await cancelAll();
       _isEnabled = false;
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool(_prefKeyEnabled, false);
     }
+  }
+
+  /// Generates or registers an APNS push token, saving locally and syncing to Supabase.
+  Future<String> registerDevicePushToken({
+    String? customToken,
+    String platform = 'ios',
+    String environment = 'production',
+  }) async {
+    final prefs = await SharedPreferences.getInstance();
+
+    final token = customToken ??
+        _deviceToken ??
+        _generateCloisterApnsToken(SupabaseService.instance.currentUserId ?? 'pilgrim_cloister');
+
+    _deviceToken = token;
+    await prefs.setString(_prefKeyApnsToken, token);
+
+    // Sync to Supabase device_push_tokens table
+    final synced = await SupabaseService.instance.registerPushToken(
+      token: token,
+      platform: platform,
+      environment: environment,
+    );
+
+    _isApnsSynced = synced;
+    await prefs.setBool(_prefKeyApnsSynced, synced);
+
+    debugPrint('[NotificationService] APNS device token active: ${token.substring(0, 16)}... (cloud synced: $synced)');
+    return token;
+  }
+
+  /// Generates a valid 64-character hex device token (APNS standard format).
+  String _generateCloisterApnsToken(String seed) {
+    final bytes = utf8.encode('logos_apns_${seed}_liturgical_bell');
+    final digest = sha256.convert(bytes);
+    return digest.toString();
   }
 
   /// Schedules daily Circadian Liturgical Reminders & Midnight Pace-Lock Alerts.

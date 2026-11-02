@@ -23,6 +23,7 @@ import 'core/services/supabase_service.dart';
 import 'core/services/notification_service.dart';
 import 'features/journey/data/supabase_progress_repository.dart';
 import 'features/journey/data/content_repository.dart';
+import 'features/journey/screens/scripture_packs_sheet.dart';
 import 'core/theme/logos_icons.dart';
 
 void main() async {
@@ -449,6 +450,75 @@ class _SanctuaryHomeScreenState extends State<SanctuaryHomeScreen>
                     },
                   ),
                 ),
+                const SizedBox(height: 14),
+                // APNS Cloud Sync Plaque
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: ink.withValues(alpha: 0.04),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: LogosColors.taupe.withValues(alpha: 0.6)),
+                  ),
+                  child: Row(
+                    children: [
+                      AppIcon(
+                        NotificationService.instance.isApnsSynced
+                            ? LogosIcons.cloudDoneRounded
+                            : LogosIcons.cloudQueueRounded,
+                        size: 18,
+                        color: NotificationService.instance.isApnsSynced
+                            ? LogosColors.coral
+                            : ink.withValues(alpha: 0.5),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              NotificationService.instance.deviceToken != null
+                                  ? 'APNS: ${NotificationService.instance.deviceToken!.substring(0, 14)}...'
+                                  : 'APNS: Ready on Activation',
+                              style: GoogleFonts.inter(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                                color: ink,
+                              ),
+                            ),
+                            Text(
+                              NotificationService.instance.isApnsSynced
+                                  ? 'Synced to Supabase Push Dispatcher'
+                                  : 'Local APNS Ready • Tap to sync cloud',
+                              style: GoogleFonts.inter(
+                                fontSize: 9.5,
+                                color: ink.withValues(alpha: 0.6),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: () async {
+                          await NotificationService.instance.registerDevicePushToken();
+                          setModalState(() {});
+                        },
+                        style: TextButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          minimumSize: Size.zero,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
+                        child: Text(
+                          'Sync',
+                          style: GoogleFonts.inter(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: LogosColors.coral,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ],
             ),
           );
@@ -849,6 +919,27 @@ class _SanctuaryHomeScreenState extends State<SanctuaryHomeScreen>
                   ),
                 ),
               ],
+              const SizedBox(height: 14),
+              SizedBox(
+                width: double.infinity,
+                height: 44,
+                child: OutlinedButton.icon(
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: LogosColors.coral,
+                    side: BorderSide(color: LogosColors.coral.withValues(alpha: 0.4)),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  ),
+                  icon: const AppIcon(LogosIcons.fileDownload, size: 16),
+                  label: Text(
+                    'Offline Scripture Packs (52-Week Cloister)',
+                    style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w700),
+                  ),
+                  onPressed: () {
+                    Navigator.pop(ctx);
+                    ScripturePacksSheet.show(context);
+                  },
+                ),
+              ),
             ],
           ),
         );

@@ -66,6 +66,10 @@ class LogosIcons {
   static const LogosIconData localFireDepartmentRounded = HugeIcons.strokeRoundedFire;
   static const LogosIconData eco = HugeIcons.strokeRoundedLeaf01;
   static const LogosIconData ecoRounded = HugeIcons.strokeRoundedLeaf01;
+  static const LogosIconData fileDownload = HugeIcons.strokeRoundedDownload01;
+  static const LogosIconData bookDownload = HugeIcons.strokeRoundedBookDownload;
+  static const LogosIconData cloudDoneRounded = HugeIcons.strokeRoundedCloudCheck;
+  static const LogosIconData cloudQueueRounded = HugeIcons.strokeRoundedCloud;
 
   // Audio & media
   static const LogosIconData mic = HugeIcons.strokeRoundedMic01;

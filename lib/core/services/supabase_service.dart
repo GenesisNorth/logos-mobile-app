@@ -90,4 +90,37 @@ class SupabaseService {
       return false;
     }
   }
+
+  /// Registers an APNS or FCM device push token in Supabase for remote midnight alerts.
+  Future<bool> registerPushToken({
+    required String token,
+    String platform = 'ios',
+    String environment = 'production',
+  }) async {
+    final c = client;
+    if (c == null) {
+      debugPrint('[SupabaseService] Offline cloister mode: token preserved locally.');
+      return false;
+    }
+
+    try {
+      final userId = c.auth.currentUser?.id;
+      await c.from('device_push_tokens').upsert(
+        {
+          'device_token': token,
+          'user_id': userId,
+          'platform': platform,
+          'environment': environment,
+          'is_active': true,
+          'last_registered_at': DateTime.now().toIso8601String(),
+        },
+        onConflict: 'device_token',
+      );
+      debugPrint('[SupabaseService] APNS device push token registered successfully.');
+      return true;
+    } catch (e) {
+      debugPrint('[SupabaseService] Device push token sync notice: $e');
+      return false;
+    }
+  }
 }

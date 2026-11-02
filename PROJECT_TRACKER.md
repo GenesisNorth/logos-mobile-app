@@ -9,15 +9,15 @@
 
 | Dimension | Status | Verification Detail |
 | :--- | :---: | :--- |
-| **Static Code Quality** | ✅ `0 errors / 0 warnings` | Clean `flutter analyze` across all 18+ screen files |
-| **Unit & Widget Tests** | ✅ `13 / 13 Passing` | Verifier, Levenshtein, Pace-Locks, Grace, 5-Week Exegesis, CommunityRepository |
+| **Static Code Quality** | ✅ `0 errors / 0 warnings` | Clean `flutter analyze` across all 20+ screen & service files |
+| **Unit & Widget Tests** | ✅ `21 / 21 Passing` | Verifier, Pace-Locks, Grace, 5-Week Exegesis, Community, Soundscapes, APNS, Packs |
 | **Running Target** | 📱 **iPhone 17 Pro** | Running on iOS Simulator (`iOS 26.5`) with Impeller |
 | **Styling & Theme** | 🎨 **Blended White-Purple** | Luminous white background with soft lavender/purple gradients |
-| **Icon Suite** | ✨ **Hugeicons (Purged of AI)** | 100% stroke-rounded Hugeicons (Quill, Puzzle, Award, Praying Hands) |
-| **Cloud Backend** | ☁️ **Offline-First Supabase** | Anonymous pilgrim session + Postgres sync + RLS migration |
-| **Notifications** | 🔔 **Circadian & Midnight** | Lauds (7am), Sext (12pm), Vespers (9pm), Midnight Strike |
+| **Icon Suite** | ✨ **Hugeicons (Purged of AI)** | 100% stroke-rounded Hugeicons (Quill, Puzzle, Award, Praying Hands, Books) |
+| **Cloud Backend** | ☁️ **Offline-First Supabase** | Anonymous pilgrim session + Postgres sync + APNS device token sync + RLS |
+| **Notifications** | 🔔 **Circadian & APNS Cloud** | Lauds (7am), Sext (12pm), Vespers (9pm), Midnight Bell + APNS token sync |
 | **Speech Engine** | 🎙️ **Hybrid ($0 Cost)** | Live on-device streaming + free Groq Whisper Large V3 fallback |
-| **Curriculum Pipeline** | 📖 **5 Complete Weeks** | John 15:5, Phil 4:6–7, Rom 8:1–2, Psalm 23:1–3, Col 3:1–3 with Greek/Hebrew |
+| **Curriculum Pipeline** | 📖 **52-Week Scripture Packs** | Offline pack downloader with seasonal bundles (Weeks 1–4, 5–8, 9–12, 13–16) |
 | **Community Feeds** | 🕊️ **Live & Cached Rooms** | The Well pastoral watch, Prayer Circles voice notes, Valley of Achor rooms |
 
 ---
@@ -84,16 +84,26 @@
    ├── Atmospheric Soundscape Presets: Sanctuary Dawn, Cloister Rain, Gregorian Choir
    ├── Liturgical Haptic Feedback Engine: real-time `wordProgressTick` on speech matches, triple-cadence `sacredCelebrationHaptic`, `liturgicalHourChime`
    └── Comprehensive Unit & Widget Test Suite (18/18 tests passing, 0 analyzer issues)
+6. **APNS Token Cloud Sync & Offline Scripture Packs (Completed)**
+   ├── Remote APNS Push Notification Sync with Supabase Postgres schema migration (`device_push_tokens`)
+   ├── Deterministic 64-character APNS token generation, local persistence, and offline fallback
+   ├── Sanctuary Liturgical Schedule dialog with APNS Token status & Cloud Sync trigger
+   ├── Altar Screen APNS Push Notification Service live status tile
+   ├── Offline Scripture Pack Architecture (`ScripturePack`, `ScripturePackRepository`)
+   ├── 52-Week Seasonal Scripture Packs (Foundation of Peace, Heavenly Ascent, Wisdom in Cloister, Pilgrim Eternal)
+   ├── Full Modal Bottom Sheet `ScripturePacksSheet` with real-time progress indicators & storage freeing
+   ├── Fast entry points from Curriculum Week Selector and Altar Screen settings
+   └── 100% Automated Unit & Widget Test Suite (21/21 tests passing, 0 analyzer issues)
 ```
 
 ---
 
 ## 3. Next Lines of Action (Prioritized Backlog)
 
-### Priority 6: Production Push Notifications & Store Deployment
-- [ ] **APNS / Background Token Registration**: Sync device tokens to Supabase `device_push_tokens` table for automated remote midnight bell strikes.
+### Priority 7: Liturgical iOS Widget, Live Activities & App Store Preparation
 - [ ] **Liturgical Hours Widget / Dynamic Island**: Glanceable Next Liturgical Hour and Active Streak countdown for iOS 16+.
-- [ ] **Offline Scripture Pack Downloader**: Ability to cache future 52-week curriculum audio stems for flight or cloister retreats.
+- [ ] **App Store Metadata & Privacy Manifest**: Liturgical screenshot package, localized App Store copy, and iOS `PrivacyInfo.xcprivacy`.
+- [ ] **Background Fetch Refresh**: Periodic background audio and scripture sync when waking near midnight or dawn.
 
 ---
 

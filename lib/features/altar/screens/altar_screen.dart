@@ -13,6 +13,7 @@ import '../../journey/bloc/journey_bloc.dart';
 import '../../journey/bloc/journey_event.dart';
 import '../../journey/bloc/journey_state.dart';
 import '../../journey/data/progress_repository.dart';
+import '../../journey/screens/scripture_packs_sheet.dart';
 
 class AltarScreen extends StatelessWidget {
   final ExamenController examenController;
@@ -662,6 +663,91 @@ class AltarScreen extends StatelessWidget {
                         ),
                       );
                     },
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  // Offline Scripture Packs Tile
+                  InkWell(
+                    borderRadius: BorderRadius.circular(16),
+                    onTap: () => ScripturePacksSheet.show(context),
+                    child: Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: surface,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: LogosColors.taupe),
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: LogosColors.coral.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const AppIcon(LogosIcons.fileDownload, color: LogosColors.coral, size: 20),
+                          ),
+                          const SizedBox(width: 14),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text('Offline Scripture Packs', style: LogosTypography.label(color: ink)),
+                                Text(
+                                  'Seasonal cloister downloads & 52-week curriculum',
+                                  style: LogosTypography.caption(color: ink.withValues(alpha: 0.6)),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const AppIcon(LogosIcons.chevronRight, size: 18, color: Colors.grey),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  // APNS Push Dispatcher Status Plaque
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: surface,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: LogosColors.taupe.withValues(alpha: 0.6)),
+                    ),
+                    child: Row(
+                      children: [
+                        AppIcon(
+                          NotificationService.instance.isApnsSynced
+                              ? LogosIcons.cloudDoneRounded
+                              : LogosIcons.cloudQueueRounded,
+                          size: 18,
+                          color: NotificationService.instance.isApnsSynced
+                              ? LogosColors.coral
+                              : ink.withValues(alpha: 0.5),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'APNS Push Notification Service',
+                                style: LogosTypography.label(color: ink).copyWith(fontSize: 13),
+                              ),
+                              Text(
+                                NotificationService.instance.deviceToken != null
+                                    ? 'Token: ${NotificationService.instance.deviceToken!.substring(0, 16)}... • ${NotificationService.instance.isApnsSynced ? "Synced" : "Local"}'
+                                    : 'Token awaiting permission grant',
+                                style: LogosTypography.caption(color: ink.withValues(alpha: 0.6)),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
 
                   const SizedBox(height: 100),
