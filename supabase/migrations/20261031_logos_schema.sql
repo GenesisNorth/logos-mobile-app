@@ -132,6 +132,12 @@ CREATE POLICY "Authenticated or anonymous users can share prayers"
     TO authenticated, anon
     WITH CHECK (true);
 
+CREATE POLICY "Anyone can update prayer intercession count"
+    ON public.community_prayers FOR UPDATE
+    TO authenticated, anon
+    USING (true)
+    WITH CHECK (true);
+
 -- TRIGGER: Auto-create profile on auth sign up
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
