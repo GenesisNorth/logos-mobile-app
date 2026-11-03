@@ -359,6 +359,12 @@ void main() {
       await audio.setResonanceVolume(0.6);
       expect(audio.resonanceVolume, equals(0.6));
 
+      await audio.setBreezeVolume(0.7);
+      expect(audio.breezeVolume, equals(0.7));
+
+      await audio.setBellsVolume(0.9);
+      expect(audio.bellsVolume, equals(0.9));
+
       audio.applyPreset('cloister_rain');
       expect(audio.activePreset, equals('cloister_rain'));
       expect(audio.rainVolume, equals(0.85));
@@ -366,6 +372,14 @@ void main() {
       audio.applyPreset('gregorian_cathedral');
       expect(audio.activePreset, equals('gregorian_cathedral'));
       expect(audio.resonanceVolume, equals(0.85));
+
+      audio.applyPreset('midnight_examen');
+      expect(audio.activePreset, equals('midnight_examen'));
+      expect(audio.breezeVolume, equals(0.80));
+
+      audio.applyPreset('apostolic_sabbath');
+      expect(audio.activePreset, equals('apostolic_sabbath'));
+      expect(audio.bellsVolume, equals(0.75));
 
       final initialMute = audio.isMuted;
       await audio.toggleMute();
@@ -416,13 +430,18 @@ void main() {
       expect(find.text('Convent 432 Hz Drone'), findsOneWidget);
       expect(find.text('Cloister Rainfall'), findsOneWidget);
       expect(find.text('Gregorian Vocal Resonance'), findsOneWidget);
+      expect(find.text('Night Cloister Breeze'), findsOneWidget);
+      expect(find.text('Holy Sanctuary Bells'), findsOneWidget);
       expect(find.text('Sanctuary Dawn'), findsOneWidget);
       expect(find.text('Cloister Rain'), findsOneWidget);
       expect(find.text('Gregorian Choir'), findsOneWidget);
+      expect(find.text('Midnight Examen'), findsOneWidget);
+      expect(find.text('Apostolic Sabbath'), findsOneWidget);
 
       // Dismiss bottom sheet and unmount widget to dispose timers cleanly
       await tester.tapAt(const Offset(20, 20));
       await tester.pumpWidget(const SizedBox());
+
       await tester.pump(const Duration(seconds: 2));
     });
 

@@ -89,6 +89,8 @@ class LogosIcons {
   static const LogosIconData recordVoiceOver = HugeIcons.strokeRoundedHandPrayer;
   static const LogosIconData hearing = HugeIcons.strokeRoundedEar;
   static const LogosIconData videoCallOutlined = HugeIcons.strokeRoundedVideo01;
+  static const LogosIconData slowWinds = HugeIcons.strokeRoundedSlowWinds;
+  static const LogosIconData churchBell = HugeIcons.strokeRoundedBell;
 
   // Scripture, study & reflection
   static const LogosIconData menuBook = HugeIcons.strokeRoundedBookOpen01;

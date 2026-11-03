@@ -13,11 +13,15 @@ class AudioService {
   final AudioPlayer _dronePlayer = AudioPlayer(playerId: 'stem_drone');
   final AudioPlayer _rainPlayer = AudioPlayer(playerId: 'stem_rain');
   final AudioPlayer _resonancePlayer = AudioPlayer(playerId: 'stem_resonance');
+  final AudioPlayer _breezePlayer = AudioPlayer(playerId: 'stem_breeze');
+  final AudioPlayer _bellsPlayer = AudioPlayer(playerId: 'stem_bells');
 
   // Track stem volumes (0.0 to 1.0)
   double _droneVolume = 0.70;
   double _rainVolume = 0.35;
   double _resonanceVolume = 0.45;
+  double _breezeVolume = 0.30;
+  double _bellsVolume = 0.40;
   double _masterVolume = 0.85;
   bool _isMuted = false;
   bool _isPlaying = false;
@@ -26,6 +30,8 @@ class AudioService {
   double get droneVolume => _droneVolume;
   double get rainVolume => _rainVolume;
   double get resonanceVolume => _resonanceVolume;
+  double get breezeVolume => _breezeVolume;
+  double get bellsVolume => _bellsVolume;
   double get masterVolume => _masterVolume;
   bool get isMuted => _isMuted;
   bool get isAmbientPlaying => _isPlaying;
@@ -36,6 +42,8 @@ class AudioService {
         'sanctuary_dune' => 'audio/ambient_sanctuary_dune.wav',
         'cloister_rain' => 'audio/ambient_gentle_rain.wav',
         'gregorian_cathedral' => 'audio/ambient_gregorian_resonance.wav',
+        'midnight_examen' => 'audio/ambient_night_breeze.wav',
+        'apostolic_sabbath' => 'audio/ambient_sanctuary_bells.wav',
         _ => 'audio/ambient_sanctuary_dawn.wav',
       };
 
@@ -71,12 +79,16 @@ class AudioService {
         _configureStem(_dronePlayer, 'audio/ambient_sanctuary_dawn.wav', _effectiveDroneVolume),
         _configureStem(_rainPlayer, 'audio/ambient_gentle_rain.wav', _effectiveRainVolume),
         _configureStem(_resonancePlayer, 'audio/ambient_gregorian_resonance.wav', _effectiveResonanceVolume),
+        _configureStem(_breezePlayer, 'audio/ambient_night_breeze.wav', _effectiveBreezeVolume),
+        _configureStem(_bellsPlayer, 'audio/ambient_sanctuary_bells.wav', _effectiveBellsVolume),
       ]);
 
       await Future.wait([
         _dronePlayer.resume(),
         _rainPlayer.resume(),
         _resonancePlayer.resume(),
+        _breezePlayer.resume(),
+        _bellsPlayer.resume(),
       ]).timeout(const Duration(milliseconds: 100), onTimeout: () => []);
     } catch (_) {}
   }
@@ -94,6 +106,8 @@ class AudioService {
   double get _effectiveDroneVolume => _isMuted ? 0.0 : (_droneVolume * _masterVolume).clamp(0.0, 1.0);
   double get _effectiveRainVolume => _isMuted ? 0.0 : (_rainVolume * _masterVolume).clamp(0.0, 1.0);
   double get _effectiveResonanceVolume => _isMuted ? 0.0 : (_resonanceVolume * _masterVolume).clamp(0.0, 1.0);
+  double get _effectiveBreezeVolume => _isMuted ? 0.0 : (_breezeVolume * _masterVolume).clamp(0.0, 1.0);
+  double get _effectiveBellsVolume => _isMuted ? 0.0 : (_bellsVolume * _masterVolume).clamp(0.0, 1.0);
 
   Future<void> _syncVolumes() async {
     try {
@@ -101,6 +115,8 @@ class AudioService {
         _dronePlayer.setVolume(_effectiveDroneVolume),
         _rainPlayer.setVolume(_effectiveRainVolume),
         _resonancePlayer.setVolume(_effectiveResonanceVolume),
+        _breezePlayer.setVolume(_effectiveBreezeVolume),
+        _bellsPlayer.setVolume(_effectiveBellsVolume),
       ]).timeout(const Duration(milliseconds: 200), onTimeout: () => []);
     } catch (_) {}
   }
@@ -117,6 +133,16 @@ class AudioService {
 
   Future<void> setResonanceVolume(double vol) async {
     _resonanceVolume = vol.clamp(0.0, 1.0);
+    await _syncVolumes();
+  }
+
+  Future<void> setBreezeVolume(double vol) async {
+    _breezeVolume = vol.clamp(0.0, 1.0);
+    await _syncVolumes();
+  }
+
+  Future<void> setBellsVolume(double vol) async {
+    _bellsVolume = vol.clamp(0.0, 1.0);
     await _syncVolumes();
   }
 
@@ -137,18 +163,38 @@ class AudioService {
         _droneVolume = 0.30;
         _rainVolume = 0.85;
         _resonanceVolume = 0.25;
+        _breezeVolume = 0.40;
+        _bellsVolume = 0.15;
         break;
       case 'gregorian_cathedral':
       case 'sanctuary_dune':
         _droneVolume = 0.45;
         _rainVolume = 0.15;
         _resonanceVolume = 0.85;
+        _breezeVolume = 0.20;
+        _bellsVolume = 0.50;
+        break;
+      case 'midnight_examen':
+        _droneVolume = 0.50;
+        _rainVolume = 0.25;
+        _resonanceVolume = 0.30;
+        _breezeVolume = 0.80;
+        _bellsVolume = 0.25;
+        break;
+      case 'apostolic_sabbath':
+        _droneVolume = 0.65;
+        _rainVolume = 0.35;
+        _resonanceVolume = 0.65;
+        _breezeVolume = 0.45;
+        _bellsVolume = 0.75;
         break;
       case 'sanctuary_dawn':
       default:
         _droneVolume = 0.70;
-        _rainVolume = 0.35;
+        _rainVolume = 0.20;
         _resonanceVolume = 0.45;
+        _breezeVolume = 0.30;
+        _bellsVolume = 0.40;
         break;
     }
     _syncVolumes();
@@ -161,6 +207,8 @@ class AudioService {
         _dronePlayer.pause(),
         _rainPlayer.pause(),
         _resonancePlayer.pause(),
+        _breezePlayer.pause(),
+        _bellsPlayer.pause(),
       ]).timeout(const Duration(milliseconds: 200), onTimeout: () => []);
     } catch (_) {}
   }
@@ -172,9 +220,12 @@ class AudioService {
         _dronePlayer.stop(),
         _rainPlayer.stop(),
         _resonancePlayer.stop(),
+        _breezePlayer.stop(),
+        _bellsPlayer.stop(),
       ]).timeout(const Duration(milliseconds: 200), onTimeout: () => []);
     } catch (_) {}
   }
+
 
   // --- Liturgical Tactile Haptic Engine ---
 

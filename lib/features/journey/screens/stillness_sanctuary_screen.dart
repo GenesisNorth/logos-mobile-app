@@ -171,6 +171,7 @@ class _StillnessSanctuaryScreenState extends State<StillnessSanctuaryScreen>
                   const SizedBox(height: 8),
                   Wrap(
                     spacing: 8,
+                    runSpacing: 8,
                     children: [
                       _buildPresetChip(
                         label: 'Sanctuary Dawn',
@@ -208,49 +209,109 @@ class _StillnessSanctuaryScreenState extends State<StillnessSanctuaryScreen>
                         },
                         ink: ink,
                       ),
+                      _buildPresetChip(
+                        label: 'Midnight Examen',
+                        presetKey: 'midnight_examen',
+                        activePreset: audio.activePreset,
+                        onTap: () {
+                          audio.selectionTick();
+                          audio.applyPreset('midnight_examen');
+                          setSheetState(() {});
+                          setState(() {});
+                        },
+                        ink: ink,
+                      ),
+                      _buildPresetChip(
+                        label: 'Apostolic Sabbath',
+                        presetKey: 'apostolic_sabbath',
+                        activePreset: audio.activePreset,
+                        onTap: () {
+                          audio.selectionTick();
+                          audio.applyPreset('apostolic_sabbath');
+                          setSheetState(() {});
+                          setState(() {});
+                        },
+                        ink: ink,
+                      ),
                     ],
                   ),
-                  const SizedBox(height: 18),
+                  const SizedBox(height: 16),
 
-                  // Multi-Track Stem Sliders
-                  _buildStemSlider(
-                    label: 'Convent 432 Hz Drone',
-                    description: 'Warm grounding harmonic floor',
-                    icon: LogosIcons.spaRounded,
-                    value: audio.droneVolume,
-                    activeColor: LogosColors.coral,
-                    ink: ink,
-                    onChanged: (val) {
-                      audio.setDroneVolume(val);
-                      setSheetState(() {});
-                    },
-                  ),
-                  _buildStemSlider(
-                    label: 'Cloister Rainfall',
-                    description: 'Natural soothing rainfall on sanctuary stones',
-                    icon: LogosIcons.waterDrop,
-                    value: audio.rainVolume,
-                    activeColor: const Color(0xFF0284C7),
-                    ink: ink,
-                    onChanged: (val) {
-                      audio.setRainVolume(val);
-                      setSheetState(() {});
-                    },
-                  ),
-                  _buildStemSlider(
-                    label: 'Gregorian Vocal Resonance',
-                    description: 'Celestial open-fifths sacred resonance',
-                    icon: LogosIcons.menuBook,
-                    value: audio.resonanceVolume,
-                    activeColor: const Color(0xFF8B5CF6),
-                    ink: ink,
-                    onChanged: (val) {
-                      audio.setResonanceVolume(val);
-                      setSheetState(() {});
-                    },
+                  // Multi-Track Stem Sliders (Scrollable container)
+                  ConstrainedBox(
+                    constraints: BoxConstraints(
+                      maxHeight: MediaQuery.of(ctx).size.height * 0.42,
+                    ),
+                    child: SingleChildScrollView(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          _buildStemSlider(
+                            label: 'Convent 432 Hz Drone',
+                            description: 'Warm grounding harmonic floor',
+                            icon: LogosIcons.spaRounded,
+                            value: audio.droneVolume,
+                            activeColor: LogosColors.coral,
+                            ink: ink,
+                            onChanged: (val) {
+                              audio.setDroneVolume(val);
+                              setSheetState(() {});
+                            },
+                          ),
+                          _buildStemSlider(
+                            label: 'Cloister Rainfall',
+                            description: 'Natural soothing rainfall on sanctuary stones',
+                            icon: LogosIcons.waterDrop,
+                            value: audio.rainVolume,
+                            activeColor: const Color(0xFF0284C7),
+                            ink: ink,
+                            onChanged: (val) {
+                              audio.setRainVolume(val);
+                              setSheetState(() {});
+                            },
+                          ),
+                          _buildStemSlider(
+                            label: 'Gregorian Vocal Resonance',
+                            description: 'Celestial open-fifths sacred resonance',
+                            icon: LogosIcons.menuBook,
+                            value: audio.resonanceVolume,
+                            activeColor: const Color(0xFF8B5CF6),
+                            ink: ink,
+                            onChanged: (val) {
+                              audio.setResonanceVolume(val);
+                              setSheetState(() {});
+                            },
+                          ),
+                          _buildStemSlider(
+                            label: 'Night Cloister Breeze',
+                            description: 'Gentle atmospheric wind through cloister arches',
+                            icon: LogosIcons.slowWinds,
+                            value: audio.breezeVolume,
+                            activeColor: const Color(0xFF0D9488),
+                            ink: ink,
+                            onChanged: (val) {
+                              audio.setBreezeVolume(val);
+                              setSheetState(() {});
+                            },
+                          ),
+                          _buildStemSlider(
+                            label: 'Holy Sanctuary Bells',
+                            description: 'Distant periodic bronze chimes in 432 Hz resonance',
+                            icon: LogosIcons.churchBell,
+                            value: audio.bellsVolume,
+                            activeColor: const Color(0xFFD97706),
+                            ink: ink,
+                            onChanged: (val) {
+                              audio.setBellsVolume(val);
+                              setSheetState(() {});
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
 
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 8),
 
                   // Master Intensity Slider
                   Row(
@@ -283,6 +344,7 @@ class _StillnessSanctuaryScreenState extends State<StillnessSanctuaryScreen>
           },
         );
       },
+
     );
   }
 
