@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
+import 'package:uuid/uuid.dart';
 import '../../../core/services/supabase_service.dart';
 import '../models/community_prayer.dart';
 
@@ -161,7 +162,7 @@ class CommunityRepository {
     String? voiceNoteUrl,
   }) async {
     final newPrayer = CommunityPrayer(
-      id: 'prayer-${DateTime.now().millisecondsSinceEpoch}',
+      id: const Uuid().v4(),
       userId: SupabaseService.instance.currentUserId,
       authorName: authorName ?? 'Beloved Pilgrim',
       room: room,
@@ -205,11 +206,24 @@ class CommunityRepository {
       final index = list.indexWhere((p) => p.id == prayerId);
       if (index != -1) {
         final existing = list[index];
-        list[index] = existing.copyWith(prayedCount: existing.prayedCount + 1);
+        final updated = existing.copyWith(prayedCount: existing.prayedCount + 1);
+        list[index] = updated;
         if (_controllers.containsKey(room) && !_controllers[room]!.isClosed) {
           _controllers[room]!.add(list);
+        }
+
+        final client = SupabaseService.instance.client;
+        if (client != null) {
+          try {
+            await client.from('community_prayers').update({
+              'prayed_count': updated.prayedCount,
+            }).eq('id', prayerId);
+          } catch (e) {
+            debugPrint('[CommunityRepository] PrayFor cloud sync warning: $e');
+          }
         }
       }
     }
   }
 }
+

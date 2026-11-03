@@ -57,9 +57,14 @@ class CommunityPrayer extends Equatable {
       'title': title,
       'content': content,
       if (voiceNoteUrl != null) 'voice_note_url': voiceNoteUrl,
+      if (pastorName != null) 'pastor_name': pastorName,
+      if (pastorResponse != null) 'pastor_response': pastorResponse,
+      'prayed_count': prayedCount,
+      'is_answered': isAnswered,
       'created_at': createdAt.toIso8601String(),
     };
   }
+
 
   CommunityPrayer copyWith({
     String? id,

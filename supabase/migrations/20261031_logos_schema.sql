@@ -31,6 +31,7 @@ CREATE TABLE IF NOT EXISTS public.journey_progress (
     user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
     week_index INT NOT NULL DEFAULT 0,
     active_day INT NOT NULL DEFAULT 1,
+    preferred_translation TEXT NOT NULL DEFAULT 'ESV',
     day_completion JSONB NOT NULL DEFAULT '{"1": false, "2": false, "3": false, "4": false}'::jsonb,
     day_completed_at JSONB NOT NULL DEFAULT '{}'::jsonb,
     day_recitation_count JSONB NOT NULL DEFAULT '{"1": 0, "2": 0, "3": 0, "4": 0}'::jsonb,
@@ -60,8 +61,13 @@ CREATE TABLE IF NOT EXISTS public.community_prayers (
     title TEXT NOT NULL,
     content TEXT NOT NULL,
     voice_note_url TEXT,
+    pastor_name TEXT,
+    pastor_response TEXT,
+    prayed_count INT DEFAULT 0,
+    is_answered BOOLEAN DEFAULT false,
     created_at TIMESTAMPTZ DEFAULT now()
 );
+
 
 -- ENABLE ROW LEVEL SECURITY
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;

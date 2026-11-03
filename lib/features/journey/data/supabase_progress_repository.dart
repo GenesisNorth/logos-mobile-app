@@ -104,6 +104,7 @@ class SupabaseProgressRepository implements ProgressRepository {
         final remoteData = <String, dynamic>{
           'weekIndex': row['week_index'] as int? ?? 0,
           'activeDay': row['active_day'] as int? ?? 1,
+          'preferredTranslation': row['preferred_translation'] as String? ?? 'ESV',
           'dayCompletion': row['day_completion'] as Map<String, dynamic>? ?? {},
           'dayCompletedAt': row['day_completed_at'] as Map<String, dynamic>? ?? {},
           'dayRecitationCount': row['day_recitation_count'] as Map<String, dynamic>? ?? {},
@@ -134,12 +135,14 @@ class SupabaseProgressRepository implements ProgressRepository {
         'user_id': uid,
         'week_index': data['weekIndex'] ?? 0,
         'active_day': data['activeDay'] ?? 1,
+        'preferred_translation': data['preferredTranslation'] ?? 'ESV',
         'day_completion': data['dayCompletion'] ?? {},
         'day_completed_at': data['dayCompletedAt'] ?? {},
         'day_recitation_count': data['dayRecitationCount'] ?? {},
         'is_exchange_completed': data['isExchangeCompleted'] ?? false,
         'updated_at': DateTime.now().toIso8601String(),
       });
+
     } catch (e) {
       debugPrint('[SupabaseProgressRepository] Journey cloud sync warning: $e');
     }

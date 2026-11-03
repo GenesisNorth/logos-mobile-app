@@ -10,11 +10,11 @@
 | Dimension | Status | Verification Detail |
 | :--- | :---: | :--- |
 | **Static Code Quality** | ✅ `0 errors / 0 warnings` | Clean `flutter analyze` across all 22+ screen & service files |
-| **Unit & Widget Tests** | ✅ `26 / 26 Passing` | Verifier, Pace-Locks, Grace, Exegesis, Community, Soundscapes, APNS, Packs, Widgets, Multi-Translation |
+| **Unit & Integration Tests** | ✅ `37 / 37 Passing` | Verifier, Pace-Locks, Grace, Exegesis, Community, Soundscapes, APNS, Packs, Widgets, Multi-Translation, Backend E2E |
 | **Running Target** | 📱 **iPhone 17 Pro** | Running on iOS Simulator (`iOS 26.5`) with Impeller |
 | **Styling & Theme** | 🎨 **Blended White-Purple** | Luminous white background with soft lavender/purple gradients |
 | **Icon Suite** | ✨ **Hugeicons (Purged of AI)** | 100% stroke-rounded Hugeicons (Quill, Puzzle, Award, Praying Hands, Books) |
-| **Cloud Backend** | ☁️ **Offline-First Supabase** | Anonymous pilgrim session + Postgres sync + APNS device token sync + RLS |
+| **Cloud Backend** | ☁️ **Offline-First Supabase** | Anonymous pilgrim session + Postgres sync + APNS device token sync + RLS + RFC 4122 UUIDs |
 | **Notifications** | 🔔 **Circadian & APNS Cloud** | Lauds (7am), Sext (12pm), Vespers (9pm), Midnight Bell + APNS token sync |
 | **iOS Widgets & Island**| 📲 **Live Activity Ready** | Dynamic Island pill + 2x2 Small + 4x2 Medium + Lock Screen preview & sync |
 | **Translations** | 📖 **ESV, KJV, NASB, NIV** | Multi-translation bridge with live recitation target switching |
@@ -118,6 +118,15 @@
    ├── 5 Atmospheric Presets: Sanctuary Dawn, Cloister Rain, Gregorian Choir, Midnight Examen, and Apostolic Sabbath
    ├── Upgraded `StillnessSanctuaryScreen` Soundscape Console sheet with adaptive scroll view, custom stem colors, and Hugeicons
    └── Full automated unit & widget test coverage for all 5 stems, volume controls, and presets
+10. **Backend End-to-End Verification & Supabase Synchronization (Completed)**
+   ├── Complete PostgreSQL Schema & Migration audit (`20261031_logos_schema.sql`) across all 6 core tables
+   ├── Added `preferred_translation` column to `public.journey_progress` table and client sync logic
+   ├── Added `pastor_name`, `pastor_response`, `prayed_count`, and `is_answered` to `public.community_prayers` table
+   ├── Replaced ad-hoc string prayer IDs with RFC 4122 UUIDs (`Uuid().v4()`) to prevent Postgres type errors
+   ├── Implemented direct remote intercession counter increment sync via `client.from('community_prayers').update`
+   ├── Dual-layer offline-first cloister fallback: flawless local cache (`SharedPreferences`) when Supabase credentials absent
+   ├── Verified APNS 64-character hex device token generation, local persistence, and remote cloud registration
+   └── Dedicated comprehensive test suite `test/backend_end_to_end_test.dart` (11/11 passing, project total 37/37 passing)
 ```
 
 ---
