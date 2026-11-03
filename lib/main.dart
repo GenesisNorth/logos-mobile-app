@@ -1555,29 +1555,35 @@ class _SanctuaryHomeScreenState extends State<SanctuaryHomeScreen>
                                         ),
                                       ),
                                     ),
-                                    Row(
-                                      children: [
-                                        Text(
-                                          drop.reference,
-                                          style: LogosTypography.scriptureCitation(
-                                            color: LogosColors.coral,
-                                          ),
-                                        ),
-                                        const SizedBox(width: 8),
-                                        IconButton(
-                                          constraints: const BoxConstraints(),
-                                          padding: EdgeInsets.zero,
-                                          icon: AppIcon(LogosIcons.shareOutlined, size: 16, color: ink.withValues(alpha: 0.5)),
-                                          onPressed: () {
-                                            SharePlus.instance.share(
-                                              ShareParams(
-                                                text: '“${drop.verseText}” — ${drop.reference} (LOGOS IN ME)',
-                                                subject: 'Scripture of the Week',
+                                    Flexible(
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Flexible(
+                                            child: Text(
+                                              drop.reference,
+                                              style: LogosTypography.scriptureCitation(
+                                                color: LogosColors.coral,
                                               ),
-                                            );
-                                          },
-                                        ),
-                                      ],
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 8),
+                                          IconButton(
+                                            constraints: const BoxConstraints(),
+                                            padding: EdgeInsets.zero,
+                                            icon: AppIcon(LogosIcons.shareOutlined, size: 16, color: ink.withValues(alpha: 0.5)),
+                                            onPressed: () {
+                                              SharePlus.instance.share(
+                                                ShareParams(
+                                                  text: '“${drop.verseText}” — ${drop.reference} (LOGOS IN ME)',
+                                                  subject: 'Scripture of the Week',
+                                                ),
+                                              );
+                                            },
+                                          ),
+                                        ],
+                                      ),
                                     ),
                                   ],
                                 ),

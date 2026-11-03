@@ -432,10 +432,15 @@ LOGOS IN ME
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                'Mastered Scripture (Drag Upward)',
-                style: LogosTypography.label(color: LogosColors.coral),
+              Expanded(
+                child: Text(
+                  'Mastered Scripture (Drag Upward)',
+                  style: LogosTypography.label(color: LogosColors.coral),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
+              const SizedBox(width: 8),
               const AppIcon(LogosIcons.dragIndicator, color: LogosColors.coral),
             ],
           ),

@@ -49,8 +49,8 @@ class AudioService {
 
   Future<void> _playSfx(String asset) async {
     try {
-      await _sfx.stop();
-      await _sfx.play(AssetSource(asset), volume: 0.9);
+      _sfx.stop();
+      _sfx.play(AssetSource(asset), volume: 0.9);
     } catch (_) {
       // Audio is non-critical; haptics still fire.
     }
@@ -58,13 +58,13 @@ class AudioService {
 
   /// Played when a recitation passes the 80% threshold.
   Future<void> playAmenChime() async {
-    await sacredCelebrationHaptic();
-    await _playSfx('audio/amen_chime.wav');
+    sacredCelebrationHaptic();
+    _playSfx('audio/amen_chime.wav');
   }
 
   Future<void> playSanctuaryChime() async {
-    await liturgicalHourChime();
-    await _playSfx('audio/sanctuary_chime.wav');
+    liturgicalHourChime();
+    _playSfx('audio/sanctuary_chime.wav');
   }
 
   /// Starts or resumes multi-track ambient soundscapes.

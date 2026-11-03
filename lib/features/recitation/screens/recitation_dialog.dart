@@ -151,7 +151,7 @@ class _RecitationDialogState extends State<RecitationDialog>
     final passed = similarity >= ScriptureVerifier.passingThreshold;
 
     if (passed) {
-      await AudioService().playAmenChime();
+      AudioService().playAmenChime();
     }
 
     if (mounted) {
@@ -324,12 +324,16 @@ class _RecitationDialogState extends State<RecitationDialog>
                                 color: isSelected ? LogosColors.coral : ink.withValues(alpha: 0.5),
                               ),
                               const SizedBox(width: 4),
-                              Text(
-                                mode.label,
-                                style: GoogleFonts.inter(
-                                  fontSize: 11,
-                                  fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                                  color: isSelected ? ink : ink.withValues(alpha: 0.6),
+                              Flexible(
+                                child: Text(
+                                  mode.label,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: GoogleFonts.inter(
+                                    fontSize: 11,
+                                    fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                                    color: isSelected ? ink : ink.withValues(alpha: 0.6),
+                                  ),
                                 ),
                               ),
                             ],

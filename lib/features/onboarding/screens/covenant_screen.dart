@@ -62,13 +62,13 @@ class _CovenantScreenState extends State<CovenantScreen>
     super.dispose();
   }
 
-  void _onSignAndEnter() async {
+  void _onSignAndEnter() {
     final name = _nameController.text.trim();
     if (name.isEmpty) return;
 
     AudioService().selectionTick();
-    await _sealController.forward(from: 0.0);
-    await AudioService().playAmenChime();
+    _sealController.forward(from: 0.0);
+    AudioService().playAmenChime();
 
     if (mounted) {
       context.read<JourneyBloc>().add(SignCovenant(name));
@@ -299,6 +299,7 @@ class _CovenantScreenState extends State<CovenantScreen>
 
                   // Primary Magnetic Action Button
                   GestureDetector(
+                    behavior: HitTestBehavior.opaque,
                     onTap: () {
                       if (_step < 2) {
                         AudioService().selectionTick();
@@ -706,12 +707,16 @@ class _CovenantScreenState extends State<CovenantScreen>
                       ),
                     ),
                     const SizedBox(width: 6),
-                    Text(
-                      '· $title',
-                      style: GoogleFonts.inter(
-                        fontSize: 12.5,
-                        fontWeight: FontWeight.w700,
-                        color: LogosColors.ink,
+                    Expanded(
+                      child: Text(
+                        '· $title',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: GoogleFonts.inter(
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w700,
+                          color: LogosColors.ink,
+                        ),
                       ),
                     ),
                   ],
