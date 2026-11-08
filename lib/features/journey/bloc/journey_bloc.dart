@@ -75,8 +75,11 @@ class JourneyBloc extends Bloc<JourneyEvent, JourneyState> {
       4: countsRaw['4'] as int? ?? 0,
     };
 
-    final streak = journeyData['currentStreak'] as int? ?? 4;
-    final roots = journeyData['rootsPlanted'] as int? ?? 12;
+    final lastPracticeRaw = journeyData['lastPracticeDate'] as String?;
+    final lastPracticeDate = lastPracticeRaw != null ? DateTime.tryParse(lastPracticeRaw) : null;
+    // Raw streak as of [lastPracticeDate]; `activeStreak()` decides if it is still alive.
+    final streak = journeyData['currentStreak'] as int? ?? 0;
+    final roots = journeyData['rootsPlanted'] as int? ?? 0;
     final graceTokens = journeyData['graceTokensBalance'] as int? ?? 3;
     final isExchangeCompleted = journeyData['isExchangeCompleted'] as bool? ?? false;
     final activeDay = journeyData['activeDay'] as int? ?? 1;
@@ -88,6 +91,7 @@ class JourneyBloc extends Bloc<JourneyEvent, JourneyState> {
       dayCompletedAt: dayCompletedAt,
       dayRecitationCount: recitationCounts,
       currentStreak: streak,
+      lastPracticeDate: lastPracticeDate,
       rootsPlanted: roots,
       graceTokensBalance: graceTokens,
       isExchangeCompleted: isExchangeCompleted,
@@ -155,12 +159,12 @@ class JourneyBloc extends Bloc<JourneyEvent, JourneyState> {
       }
     }
 
-    final newState = state.copyWith(
+    final newState = _withPracticeToday(state.copyWith(
       dayRecitationCount: updatedCounts,
       dayRecitationScores: updatedScores,
       dayCompletionStatus: updatedStatus,
       dayCompletedAt: updatedCompletedAt,
-    );
+    ));
 
     emit(newState);
     await _persistJourneyData(newState);
@@ -176,10 +180,10 @@ class JourneyBloc extends Bloc<JourneyEvent, JourneyState> {
     updatedStatus[3] = true;
     updatedCompletedAt[3] = _clock.now();
 
-    final newState = state.copyWith(
+    final newState = _withPracticeToday(state.copyWith(
       dayCompletionStatus: updatedStatus,
       dayCompletedAt: updatedCompletedAt,
-    );
+    ));
 
     emit(newState);
     await _persistJourneyData(newState);
@@ -210,14 +214,13 @@ class JourneyBloc extends Bloc<JourneyEvent, JourneyState> {
     await _progressRepo.saveTearSheet(tearSheet);
     final updatedSheets = List<TearSheetData>.from(state.savedTearSheets)..add(tearSheet);
 
-    final newState = state.copyWith(
+    final newState = _withPracticeToday(state.copyWith(
       isExchangeCompleted: true,
       dayCompletionStatus: updatedStatus,
       dayCompletedAt: updatedCompletedAt,
       rootsPlanted: state.rootsPlanted + 1,
-      currentStreak: state.currentStreak + 1,
       savedTearSheets: updatedSheets,
-    );
+    ));
 
     emit(newState);
     await _persistJourneyData(newState);
@@ -241,6 +244,8 @@ class JourneyBloc extends Bloc<JourneyEvent, JourneyState> {
       graceTokensBalance: state.graceTokensBalance - 1,
       dayCompletionStatus: updatedStatus,
       dayCompletedAt: updatedCompletedAt,
+      // Grace covers a single missed day so the streak continues today.
+      lastPracticeDate: state.isStreakRecoverable(now: _clock.now()) ? yesterday : null,
     );
 
     emit(newState);
@@ -294,6 +299,21 @@ class JourneyBloc extends Bloc<JourneyEvent, JourneyState> {
     await _persistJourneyData(newState);
   }
 
+  /// Records practice for today: extends the streak if the last practice was
+  /// yesterday, keeps it if already counted today, otherwise starts at 1.
+  JourneyState _withPracticeToday(JourneyState s) {
+    final today = _clock.now();
+    final last = s.lastPracticeDate;
+    final int streak;
+    if (last == null) {
+      streak = 1;
+    } else {
+      final gap = today.calendarDaysSince(last);
+      streak = gap <= 0 ? (s.currentStreak == 0 ? 1 : s.currentStreak) : (gap == 1 ? s.currentStreak + 1 : 1);
+    }
+    return s.copyWith(currentStreak: streak, lastPracticeDate: today);
+  }
+
   Future<void> _persistJourneyData(JourneyState state) async {
     final weekIndex = _contentRepo.drops.indexWhere((d) => d.id == state.activeDrop.id);
     final safeWeekIndex = weekIndex >= 0 ? weekIndex : 0;
@@ -302,6 +322,7 @@ class JourneyBloc extends Bloc<JourneyEvent, JourneyState> {
       'preferredTranslation': state.activeDrop.translation,
       'activeDay': state.activeDay,
       'currentStreak': state.currentStreak,
+      'lastPracticeDate': state.lastPracticeDate?.toIso8601String(),
       'rootsPlanted': state.rootsPlanted,
       'graceTokensBalance': state.graceTokensBalance,
       'isExchangeCompleted': state.isExchangeCompleted,

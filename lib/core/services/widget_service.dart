@@ -39,7 +39,7 @@ class LiturgicalWidgetService {
       countdownText: hourInfo.countdown,
       scriptureReference: drop.reference,
       scriptureSnippet: snippet,
-      streakCount: state.currentStreak,
+      streakCount: state.activeStreak(),
       rootsPlanted: state.rootsPlanted,
       graceTokens: state.graceTokensBalance,
       currentStep: state.activeDay,

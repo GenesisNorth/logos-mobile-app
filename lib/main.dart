@@ -720,7 +720,7 @@ class _SanctuaryHomeScreenState extends State<SanctuaryHomeScreen>
                         final buffer = StringBuffer();
                         buffer.writeln('✝ LOGOS IN ME · PILGRIM RELIC JOURNAL');
                         buffer.writeln('Pilgrim: ${profile.displayName} (@${profile.username})');
-                        buffer.writeln('Active Streak: ${state.currentStreak} Days');
+                        buffer.writeln('Active Streak: ${state.activeStreak()} ${state.activeStreak() == 1 ? 'Day' : 'Days'}');
                         buffer.writeln('Roots Planted: ${state.rootsPlanted} Verses');
                         buffer.writeln('Grace Tokens: ${state.graceTokensBalance}');
                         if (state.savedTearSheets.isNotEmpty) {
@@ -1314,7 +1314,7 @@ class _SanctuaryHomeScreenState extends State<SanctuaryHomeScreen>
                           _buildPill(
                             icon: LogosIcons.localFireDepartmentRounded,
                             iconColor: LogosColors.coral,
-                            label: '${state.currentStreak} Day Streak',
+                            label: '${state.activeStreak()} Day Streak',
                             surface: surface,
                             ink: ink,
                           ),
@@ -1658,14 +1658,23 @@ class _SanctuaryHomeScreenState extends State<SanctuaryHomeScreen>
                                         context.read<JourneyBloc>().add(SelectDay(day));
                                       }
                                     : () {
-                                        final hours = durationUntilUnlock != null ? durationUntilUnlock.inHours : 0;
-                                        final mins = durationUntilUnlock != null ? (durationUntilUnlock.inMinutes % 60) : 0;
+                                        final String message;
+                                        if (durationUntilUnlock != null) {
+                                          final hours = durationUntilUnlock.inHours;
+                                          final mins = durationUntilUnlock.inMinutes % 60;
+                                          message =
+                                              'Pace-locked: Day $day unlocks at midnight ($hours hr $mins min remaining). Rest and meditate on today\'s word.';
+                                        } else {
+                                          // An earlier day is still unfinished.
+                                          final pending = [1, 2, 3].firstWhere(
+                                            (d) => d < day && state.dayCompletionStatus[d] != true,
+                                            orElse: () => day - 1,
+                                          );
+                                          message =
+                                              'Day $day opens after you complete Day $pending. One step at a time — return to today\'s word.';
+                                        }
                                         ScaffoldMessenger.of(context).showSnackBar(
-                                          SnackBar(
-                                            content: Text(
-                                              'Pace-locked: Day $day unlocks at midnight ($hours hr $mins min remaining). Rest and meditate on today\'s word.',
-                                            ),
-                                          ),
+                                          SnackBar(content: Text(message)),
                                         );
                                       },
                                 child: AnimatedContainer(

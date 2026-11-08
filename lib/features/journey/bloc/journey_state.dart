@@ -11,6 +11,9 @@ class JourneyState extends Equatable {
   final Map<int, int> dayRecitationCount;
   final Map<int, List<double>> dayRecitationScores;
   final int currentStreak;
+
+  /// Last calendar day the pilgrim completed any practice (drives the daily streak).
+  final DateTime? lastPracticeDate;
   final int rootsPlanted;
   final int graceTokensBalance;
   final bool isExchangeCompleted;
@@ -26,6 +29,7 @@ class JourneyState extends Equatable {
     required this.dayRecitationCount,
     required this.dayRecitationScores,
     required this.currentStreak,
+    this.lastPracticeDate,
     required this.rootsPlanted,
     required this.graceTokensBalance,
     required this.isExchangeCompleted,
@@ -42,11 +46,11 @@ class JourneyState extends Equatable {
       dayCompletedAt: const {1: null, 2: null, 3: null, 4: null},
       dayRecitationCount: const {1: 0, 2: 0, 3: 0, 4: 0},
       dayRecitationScores: const {1: [], 2: [], 3: [], 4: []},
-      currentStreak: 1,
+      currentStreak: 0,
       rootsPlanted: 0,
       graceTokensBalance: 3,
       isExchangeCompleted: false,
-      profile: const UserProfileData(username: 'pilgrim', displayName: 'Genesis A.'),
+      profile: const UserProfileData(username: 'pilgrim', displayName: UserProfileData.defaultDisplayName),
       savedTearSheets: const [],
       isLoading: false,
     );
@@ -60,6 +64,7 @@ class JourneyState extends Equatable {
     Map<int, int>? dayRecitationCount,
     Map<int, List<double>>? dayRecitationScores,
     int? currentStreak,
+    DateTime? lastPracticeDate,
     int? rootsPlanted,
     int? graceTokensBalance,
     bool? isExchangeCompleted,
@@ -75,6 +80,7 @@ class JourneyState extends Equatable {
       dayRecitationCount: dayRecitationCount ?? this.dayRecitationCount,
       dayRecitationScores: dayRecitationScores ?? this.dayRecitationScores,
       currentStreak: currentStreak ?? this.currentStreak,
+      lastPracticeDate: lastPracticeDate ?? this.lastPracticeDate,
       rootsPlanted: rootsPlanted ?? this.rootsPlanted,
       graceTokensBalance: graceTokensBalance ?? this.graceTokensBalance,
       isExchangeCompleted: isExchangeCompleted ?? this.isExchangeCompleted,
@@ -82,6 +88,21 @@ class JourneyState extends Equatable {
       savedTearSheets: savedTearSheets ?? this.savedTearSheets,
       isLoading: isLoading ?? this.isLoading,
     );
+  }
+
+  /// Streak to display: the stored streak while practice was today or
+  /// yesterday, otherwise 0 (broken).
+  int activeStreak({DateTime? now}) {
+    final last = lastPracticeDate;
+    if (last == null) return 0;
+    return (now ?? DateTime.now()).calendarDaysSince(last) <= 1 ? currentStreak : 0;
+  }
+
+  /// Exactly one day was missed, so a grace token can restore the streak.
+  bool isStreakRecoverable({DateTime? now}) {
+    final last = lastPracticeDate;
+    if (last == null || currentStreak == 0) return false;
+    return (now ?? DateTime.now()).calendarDaysSince(last) == 2;
   }
 
   /// Whether a day is unlocked according to midnight pace-lock.
@@ -128,6 +149,7 @@ class JourneyState extends Equatable {
         dayRecitationCount,
         dayRecitationScores,
         currentStreak,
+        lastPracticeDate,
         rootsPlanted,
         graceTokensBalance,
         isExchangeCompleted,

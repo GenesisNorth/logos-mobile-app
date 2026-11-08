@@ -198,9 +198,9 @@ void main() {
     });
 
     test('fetchPrayers returns cached pastoral and community petitions', () async {
+      // The Well starts empty (private petitions are never seeded).
       final wellPrayers = await communityRepo.fetchPrayers(room: 'the_well');
-      expect(wellPrayers.isNotEmpty, isTrue);
-      expect(wellPrayers.any((p) => p.pastorResponse != null), isTrue);
+      expect(wellPrayers.any((p) => p.pastorResponse != null), isFalse);
 
       final valleyPrayers = await communityRepo.fetchPrayers(room: 'valley');
       expect(valleyPrayers.isNotEmpty, isTrue);
@@ -547,7 +547,7 @@ void main() {
       expect(snapshot.nextHourTime, equals('12:00 PM'));
       expect(snapshot.countdownText, equals('3h 30m'));
       expect(snapshot.scriptureReference, equals('John 15:5'));
-      expect(snapshot.streakCount, equals(1));
+      expect(snapshot.streakCount, equals(0)); // fresh pilgrim has no streak yet
 
       // Test sync to SharedPreferences
       await service.syncWidgetData(state: state, now: testMorning);

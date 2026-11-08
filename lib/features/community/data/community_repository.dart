@@ -10,34 +10,8 @@ class CommunityRepository {
   CommunityRepository._internal();
 
   final Map<String, List<CommunityPrayer>> _cache = {
-    'the_well': [
-      CommunityPrayer(
-        id: 'well-seed-1',
-        authorName: 'Genesis A.',
-        room: 'the_well',
-        title: 'Ministry Burnout & Exhaustion',
-        content: 'Navigating severe burnout in ministry and loneliness. Struggling to pray.',
-        pastorName: 'Pastor Thomas M.',
-        pastorResponse:
-            'Beloved Genesis, I carried your name to the altar this morning. Remember: your labor is not what justifies you; your abiding in Christ is your life. Rest your soul today.',
-        prayedCount: 14,
-        isAnswered: true,
-        createdAt: DateTime.now().subtract(const Duration(hours: 18)),
-      ),
-      CommunityPrayer(
-        id: 'well-seed-2',
-        authorName: 'Sister Miriam',
-        room: 'the_well',
-        title: 'Waiting in Chronic Illness',
-        content: 'Facing another month of unknown diagnostic tests. Needing peace to stay grounded in Colossians 3.',
-        pastorName: 'Pastor Ruth C.',
-        pastorResponse:
-            'Miriam, your life is hidden with Christ in God. Disease touches the outer frame, but your eternal temple is untouched. We intercede for peace that transcends understanding.',
-        prayedCount: 22,
-        isAnswered: true,
-        createdAt: DateTime.now().subtract(const Duration(days: 2)),
-      ),
-    ],
+    // Private pastoral petitions: only the pilgrim's own, never seeded.
+    'the_well': [],
     'prayer_circles': [
       CommunityPrayer(
         id: 'circle-seed-1',

@@ -117,6 +117,13 @@ void main() {
       final sealButton = find.text('Sign & Seal the Covenant');
       expect(sealButton, findsOneWidget);
 
+      // Name starts empty; sealing without a name is blocked with a prompt.
+      await tester.tap(sealButton);
+      await tester.pump();
+      expect(completed, isFalse);
+      expect(find.text('Write your name to sign the covenant.'), findsOneWidget);
+
+      await tester.enterText(find.byType(TextField), 'Test Pilgrim');
       await tester.tap(sealButton);
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 300));

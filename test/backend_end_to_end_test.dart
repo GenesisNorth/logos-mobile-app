@@ -144,9 +144,9 @@ void main() {
       final circlePrayers = await repo.fetchPrayers(room: 'prayer_circles');
       final valleyPrayers = await repo.fetchPrayers(room: 'valley');
 
-      expect(wellPrayers, isNotEmpty);
+      // The Well holds only the pilgrim's own private petitions — never seeded.
       expect(wellPrayers.every((p) => p.room == 'the_well'), isTrue);
-      expect(wellPrayers.first.pastorResponse, isNotNull);
+      expect(wellPrayers.where((p) => p.id.startsWith('well-seed')), isEmpty);
 
       expect(circlePrayers, isNotEmpty);
       expect(circlePrayers.every((p) => p.room == 'prayer_circles'), isTrue);

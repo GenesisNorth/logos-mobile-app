@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/utils/pilgrim_name.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../core/services/audio_service.dart';
 import '../../../core/services/supabase_service.dart';
@@ -37,7 +38,7 @@ class _TheWellScreenState extends State<TheWellScreen> {
         room: 'the_well',
         title: 'Pastoral Petition',
         content: text,
-        authorName: 'Genesis A.',
+        authorName: pilgrimName(context),
       );
 
       _requestController.clear();

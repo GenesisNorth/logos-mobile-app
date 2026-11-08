@@ -18,8 +18,7 @@ class CovenantScreen extends StatefulWidget {
 
 class _CovenantScreenState extends State<CovenantScreen>
     with TickerProviderStateMixin {
-  final TextEditingController _nameController =
-      TextEditingController(text: 'Genesis A.');
+  final TextEditingController _nameController = TextEditingController();
   int _step = 0; // 0: Manifesto, 1: 4-Day Rhythm, 2: The Covenant Signature
 
   late AnimationController _ambientController;
@@ -64,7 +63,12 @@ class _CovenantScreenState extends State<CovenantScreen>
 
   void _onSignAndEnter() {
     final name = _nameController.text.trim();
-    if (name.isEmpty) return;
+    if (name.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Write your name to sign the covenant.')),
+      );
+      return;
+    }
 
     AudioService().selectionTick();
     _sealController.forward(from: 0.0);

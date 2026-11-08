@@ -1,7 +1,9 @@
 import 'dart:async';
 import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+
 import '../../../core/services/audio_service.dart';
 import '../../../core/services/speech/speech_recognizer.dart';
 import '../../../core/theme/logos_theme.dart';
@@ -58,6 +60,12 @@ class _RecitationDialogState extends State<RecitationDialog>
   bool _passed = false;
   String? _errorMessage;
 
+  /// True once the current attempt has been scored (prevents double scoring
+  /// when both the engine's auto-finish and the stop button fire).
+  bool _attemptScored = false;
+  bool _stopRequested = false;
+  bool _passReported = false;
+
   late AnimationController _pulseController;
   final TextEditingController _textFallbackController = TextEditingController();
 
@@ -86,25 +94,59 @@ class _RecitationDialogState extends State<RecitationDialog>
     super.dispose();
   }
 
+  int get _targetWordCount =>
+      ScriptureVerifier.normalize(widget.verseText)
+          .split(' ')
+          .where((w) => w.isNotEmpty)
+          .length;
+
   void _handleSpeechUpdate(SpeechUpdate update) {
     if (!mounted) return;
-    final prevCount = ScriptureVerifier.matchedWordCount(widget.verseText, _liveTranscript);
-    final newCount = ScriptureVerifier.matchedWordCount(widget.verseText, update.transcript);
+
+    // Engine failed (permission, unavailable, network…): reset to idle, don't score.
+    if (update.phase == SpeechPhase.error) {
+      setState(() {
+        _isListening = false;
+        _isEvaluating = false;
+        _errorMessage = update.error;
+        if (update.transcript.isNotEmpty) _liveTranscript = update.transcript;
+      });
+      return;
+    }
+
+    final prevCount = ScriptureVerifier.matchedWordCount(
+      widget.verseText,
+      _liveTranscript,
+    );
+    final newCount = ScriptureVerifier.matchedWordCount(
+      widget.verseText,
+      update.transcript,
+    );
     if (newCount > prevCount) {
       AudioService().wordProgressTick();
     }
 
     setState(() {
-      _liveTranscript = update.transcript;
+      if (update.transcript.isNotEmpty || update.phase == SpeechPhase.done) {
+        _liveTranscript = update.transcript;
+      }
       _audioLevel = update.level;
-      if (update.error != null) {
-        _errorMessage = update.error;
-      }
-      if (update.isFinal || update.phase == SpeechPhase.done) {
-        _isListening = false;
-        _evaluateTranscript(_liveTranscript);
-      }
     });
+
+    // Engine finished on its own (session limit) while user hadn't pressed stop.
+    if (update.phase == SpeechPhase.done && !_stopRequested && _isListening) {
+      setState(() => _isListening = false);
+      _evaluateTranscript(_liveTranscript);
+      return;
+    }
+
+    // Auto-stop as soon as every word of the verse has been heard.
+    if (_isListening &&
+        !_stopRequested &&
+        _targetWordCount > 0 &&
+        newCount >= _targetWordCount) {
+      _stopListening();
+    }
   }
 
   Future<void> _startListening() async {
@@ -115,19 +157,25 @@ class _RecitationDialogState extends State<RecitationDialog>
       _passed = false;
       _errorMessage = null;
       _liveTranscript = '';
+      _attemptScored = false;
+      _stopRequested = false;
     });
 
     try {
       await _recognizer.start();
     } catch (e) {
+      if (!mounted) return;
+      final msg = e is StateError ? e.message : e.toString();
       setState(() {
         _isListening = false;
-        _errorMessage = 'Microphone permission or engine issue: $e';
+        _errorMessage = msg;
       });
     }
   }
 
   Future<void> _stopListening() async {
+    if (_stopRequested) return;
+    _stopRequested = true;
     AudioService().selectionTick();
     setState(() {
       _isListening = false;
@@ -136,11 +184,31 @@ class _RecitationDialogState extends State<RecitationDialog>
 
     final finalTranscript = await _recognizer.stop();
     await _evaluateTranscript(
-        finalTranscript.isNotEmpty ? finalTranscript : _liveTranscript);
+      finalTranscript.isNotEmpty ? finalTranscript : _liveTranscript,
+    );
   }
 
-  Future<void> _evaluateTranscript(String transcript) async {
-    setState(() => _isEvaluating = true);
+  Future<void> _evaluateTranscript(
+    String transcript, {
+    bool manual = false,
+  }) async {
+    if (_attemptScored && !manual) return;
+    _attemptScored = true;
+    if (!mounted) return;
+
+    if (transcript.trim().isEmpty) {
+      setState(() {
+        _isEvaluating = false;
+        _errorMessage = 'No speech was heard. Hold the phone closer, tap the mic and recite again — or use the keyboard.';
+      });
+      return;
+    }
+
+    setState(() {
+      _isEvaluating = true;
+      _liveTranscript = transcript;
+      _errorMessage = null; // A transcript arrived, so any earlier "no speech" error is stale.
+    });
     await Future.delayed(const Duration(milliseconds: 350));
 
     final similarity = ScriptureVerifier.calculateSimilarity(
@@ -161,7 +229,8 @@ class _RecitationDialogState extends State<RecitationDialog>
         _passed = passed;
       });
 
-      if (passed) {
+      if (passed && !_passReported) {
+        _passReported = true;
         widget.onPassed(similarity);
       }
     }
@@ -174,7 +243,10 @@ class _RecitationDialogState extends State<RecitationDialog>
       builder: (ctx) => AlertDialog(
         backgroundColor: surface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text('Manual Speech Input', style: LogosTypography.label(color: ink)),
+        title: Text(
+          'Manual Speech Input',
+          style: LogosTypography.label(color: ink),
+        ),
         content: TextField(
           controller: _textFallbackController,
           maxLines: 3,
@@ -193,7 +265,7 @@ class _RecitationDialogState extends State<RecitationDialog>
             style: ElevatedButton.styleFrom(backgroundColor: LogosColors.coral),
             onPressed: () {
               Navigator.pop(ctx);
-              _evaluateTranscript(_textFallbackController.text);
+              _evaluateTranscript(_textFallbackController.text, manual: true);
             },
             child: const Text('Verify', style: TextStyle(color: Colors.white)),
           ),
@@ -228,8 +300,10 @@ class _RecitationDialogState extends State<RecitationDialog>
     final surface = isDark ? LogosColors.examenSurface : LogosColors.surface;
 
     final words = widget.verseText.split(' ');
-    final matchedCount =
-        ScriptureVerifier.matchedWordCount(widget.verseText, _liveTranscript);
+    final matchedCount = ScriptureVerifier.matchedWordCount(
+      widget.verseText,
+      _liveTranscript,
+    );
 
     return Scaffold(
       backgroundColor: isDark ? LogosColors.examenBg : LogosColors.sand,
@@ -262,14 +336,19 @@ class _RecitationDialogState extends State<RecitationDialog>
             const SizedBox(height: 2),
             Text(
               widget.reference,
-              style: LogosTypography.scriptureCitation(color: ink.withValues(alpha: 0.65)),
+              style: LogosTypography.scriptureCitation(
+                color: ink.withValues(alpha: 0.65),
+              ),
             ),
           ],
         ),
         actions: [
           IconButton(
             tooltip: 'Type recitation manually',
-            icon: AppIcon(LogosIcons.keyboardAltOutlined, color: ink.withValues(alpha: 0.6)),
+            icon: AppIcon(
+              LogosIcons.keyboardAltOutlined,
+              color: ink.withValues(alpha: 0.6),
+            ),
             onPressed: () => _showFallbackInput(context, surface, ink),
           ),
         ],
@@ -286,7 +365,9 @@ class _RecitationDialogState extends State<RecitationDialog>
                 decoration: BoxDecoration(
                   color: ink.withValues(alpha: 0.05),
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: LogosColors.taupe.withValues(alpha: 0.6)),
+                  border: Border.all(
+                    color: LogosColors.taupe.withValues(alpha: 0.6),
+                  ),
                 ),
                 child: Row(
                   children: ScaffoldingMode.values.map((mode) {
@@ -302,13 +383,17 @@ class _RecitationDialogState extends State<RecitationDialog>
                           padding: const EdgeInsets.symmetric(vertical: 7),
                           decoration: BoxDecoration(
                             color: isSelected
-                                ? (isDark ? const Color(0xFF2E2620) : Colors.white)
+                                ? (isDark
+                                      ? const Color(0xFF2E2620)
+                                      : Colors.white)
                                 : Colors.transparent,
                             borderRadius: BorderRadius.circular(16),
                             boxShadow: isSelected
                                 ? [
                                     BoxShadow(
-                                      color: Colors.black.withValues(alpha: 0.05),
+                                      color: Colors.black.withValues(
+                                        alpha: 0.05,
+                                      ),
                                       blurRadius: 8,
                                       offset: const Offset(0, 2),
                                     ),
@@ -321,7 +406,9 @@ class _RecitationDialogState extends State<RecitationDialog>
                               AppIcon(
                                 mode.icon,
                                 size: 13,
-                                color: isSelected ? LogosColors.coral : ink.withValues(alpha: 0.5),
+                                color: isSelected
+                                    ? LogosColors.coral
+                                    : ink.withValues(alpha: 0.5),
                               ),
                               const SizedBox(width: 4),
                               Flexible(
@@ -331,8 +418,12 @@ class _RecitationDialogState extends State<RecitationDialog>
                                   overflow: TextOverflow.ellipsis,
                                   style: GoogleFonts.inter(
                                     fontSize: 11,
-                                    fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                                    color: isSelected ? ink : ink.withValues(alpha: 0.6),
+                                    fontWeight: isSelected
+                                        ? FontWeight.w700
+                                        : FontWeight.w500,
+                                    color: isSelected
+                                        ? ink
+                                        : ink.withValues(alpha: 0.6),
                                   ),
                                 ),
                               ),
@@ -360,69 +451,96 @@ class _RecitationDialogState extends State<RecitationDialog>
                     ),
                     boxShadow: LogosColors.relicShadow,
                   ),
-                  child: Center(
-                    child: SingleChildScrollView(
-                      physics: const BouncingScrollPhysics(),
-                      child: _scaffoldingMode == ScaffoldingMode.memory && !_passed
-                          ? Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Container(
-                                  width: 60,
-                                  height: 60,
-                                  decoration: BoxDecoration(
-                                    color: LogosColors.coral.withValues(alpha: 0.15),
-                                    shape: BoxShape.circle,
-                                    border: Border.all(
-                                      color: LogosColors.coral.withValues(alpha: 0.4),
+                  // Scale the verse down to fit the card so no words are ever clipped
+                  // when the transcript, error and score rows take vertical space.
+                  child: LayoutBuilder(
+                    builder: (context, constraints) => Center(
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: SizedBox(
+                          width: constraints.maxWidth,
+                          child:
+                              _scaffoldingMode == ScaffoldingMode.memory &&
+                                  !_passed
+                              ? Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Container(
+                                      width: 60,
+                                      height: 60,
+                                      decoration: BoxDecoration(
+                                        color: LogosColors.coral.withValues(
+                                          alpha: 0.15,
+                                        ),
+                                        shape: BoxShape.circle,
+                                        border: Border.all(
+                                          color: LogosColors.coral.withValues(
+                                            alpha: 0.4,
+                                          ),
+                                        ),
+                                      ),
+                                      child: const AppIcon(
+                                        LogosIcons.favoriteRounded,
+                                        color: LogosColors.coral,
+                                        size: 28,
+                                      ),
                                     ),
-                                  ),
-                                  child: const AppIcon(
-                                    LogosIcons.favoriteRounded,
-                                    color: LogosColors.coral,
-                                    size: 28,
-                                  ),
-                                ),
-                                const SizedBox(height: 16),
-                                Text(
-                                  'Sacred Heart Recall',
-                                  style: LogosTypography.sacredHeader(color: ink),
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  'The Word is veiled. Close your eyes and recite from deep within your memory.',
+                                    const SizedBox(height: 16),
+                                    Text(
+                                      'Sacred Heart Recall',
+                                      style: LogosTypography.sacredHeader(
+                                        color: ink,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      'The Word is veiled. Close your eyes and recite from deep within your memory.',
+                                      textAlign: TextAlign.center,
+                                      style: LogosTypography.body(
+                                        color: ink.withValues(alpha: 0.68),
+                                      ),
+                                    ),
+                                  ],
+                                )
+                              : RichText(
                                   textAlign: TextAlign.center,
-                                  style: LogosTypography.body(
-                                    color: ink.withValues(alpha: 0.68),
+                                  text: TextSpan(
+                                    children: List.generate(words.length, (i) {
+                                      final isSpoken = i < matchedCount;
+                                      final formattedWord =
+                                          _formatScaffoldedWord(
+                                            words[i],
+                                            i,
+                                            _scaffoldingMode,
+                                          );
+
+                                      return TextSpan(
+                                        text: '$formattedWord ',
+                                        style:
+                                            LogosTypography.scriptureHero(
+                                              color: isSpoken
+                                                  ? (isDark
+                                                        ? const Color(
+                                                            0xFFFDE8DF,
+                                                          )
+                                                        : LogosColors.ink)
+                                                  : ink.withValues(alpha: 0.32),
+                                            ).copyWith(
+                                              fontSize: 22,
+                                              fontWeight: isSpoken
+                                                  ? FontWeight.w700
+                                                  : FontWeight.w400,
+                                              backgroundColor: isSpoken
+                                                  ? LogosColors.coral
+                                                        .withValues(alpha: 0.14)
+                                                  : null,
+                                            ),
+                                      );
+                                    }),
                                   ),
                                 ),
-                              ],
-                            )
-                          : RichText(
-                              textAlign: TextAlign.center,
-                              text: TextSpan(
-                                children: List.generate(words.length, (i) {
-                                  final isSpoken = i < matchedCount;
-                                  final formattedWord =
-                                      _formatScaffoldedWord(words[i], i, _scaffoldingMode);
-
-                                  return TextSpan(
-                                    text: '$formattedWord ',
-                                    style: LogosTypography.scriptureHero(
-                                      color: isSpoken
-                                          ? (isDark ? const Color(0xFFFDE8DF) : LogosColors.ink)
-                                          : ink.withValues(alpha: 0.32),
-                                    ).copyWith(
-                                      fontSize: 22,
-                                      fontWeight: isSpoken ? FontWeight.w700 : FontWeight.w400,
-                                      backgroundColor: isSpoken
-                                          ? LogosColors.coral.withValues(alpha: 0.14)
-                                          : null,
-                                    ),
-                                  );
-                                }),
-                              ),
-                            ),
+                        ),
+                      ),
                     ),
                   ),
                 ),
@@ -434,7 +552,10 @@ class _RecitationDialogState extends State<RecitationDialog>
               if (_liveTranscript.isNotEmpty)
                 Center(
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
                     decoration: BoxDecoration(
                       color: LogosColors.coral.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(20),
@@ -445,7 +566,11 @@ class _RecitationDialogState extends State<RecitationDialog>
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const AppIcon(LogosIcons.graphicEq, size: 16, color: LogosColors.coral),
+                        const AppIcon(
+                          LogosIcons.graphicEq,
+                          size: 16,
+                          color: LogosColors.coral,
+                        ),
                         const SizedBox(width: 8),
                         Flexible(
                           child: Text(
@@ -479,7 +604,10 @@ class _RecitationDialogState extends State<RecitationDialog>
                         AnimatedBuilder(
                           animation: _pulseController,
                           builder: (context, _) {
-                            final scale = 1.0 + (_pulseController.value * 0.3) + (_audioLevel * 0.4);
+                            final scale =
+                                1.0 +
+                                (_pulseController.value * 0.3) +
+                                (_audioLevel * 0.4);
                             return Transform.scale(
                               scale: scale,
                               child: Container(
@@ -489,7 +617,9 @@ class _RecitationDialogState extends State<RecitationDialog>
                                   shape: BoxShape.circle,
                                   border: Border.all(
                                     color: LogosColors.coral.withValues(
-                                      alpha: (0.4 - _pulseController.value * 0.2).clamp(0.05, 0.4),
+                                      alpha:
+                                          (0.4 - _pulseController.value * 0.2)
+                                              .clamp(0.05, 0.4),
                                     ),
                                     width: 1.5,
                                   ),
@@ -501,7 +631,10 @@ class _RecitationDialogState extends State<RecitationDialog>
                         AnimatedBuilder(
                           animation: _pulseController,
                           builder: (context, _) {
-                            final scale = 1.15 + (_pulseController.value * 0.15) + (_audioLevel * 0.2);
+                            final scale =
+                                1.15 +
+                                (_pulseController.value * 0.15) +
+                                (_audioLevel * 0.2);
                             return Transform.scale(
                               scale: scale,
                               child: Container(
@@ -510,7 +643,9 @@ class _RecitationDialogState extends State<RecitationDialog>
                                 decoration: BoxDecoration(
                                   shape: BoxShape.circle,
                                   color: LogosColors.coral.withValues(
-                                    alpha: (0.12 - _pulseController.value * 0.06).clamp(0.02, 0.15),
+                                    alpha:
+                                        (0.12 - _pulseController.value * 0.06)
+                                            .clamp(0.02, 0.15),
                                   ),
                                 ),
                               ),
@@ -534,8 +669,14 @@ class _RecitationDialogState extends State<RecitationDialog>
                                 ? LogosColors.purpleGradient
                                 : LinearGradient(
                                     colors: isDark
-                                        ? [const Color(0xFF241445), const Color(0xFF160B30)]
-                                        : [Colors.white, const Color(0xFFFAF5FF)],
+                                        ? [
+                                            const Color(0xFF241445),
+                                            const Color(0xFF160B30),
+                                          ]
+                                        : [
+                                            Colors.white,
+                                            const Color(0xFFFAF5FF),
+                                          ],
                                   ),
                             border: Border.all(
                               color: _isListening
@@ -546,7 +687,8 @@ class _RecitationDialogState extends State<RecitationDialog>
                             boxShadow: _isListening
                                 ? [
                                     BoxShadow(
-                                      color: const Color(0xFF7C3AED).withValues(alpha: 0.5),
+                                      color: const Color(0xFF7C3AED)
+                                          .withValues(alpha: 0.5),
                                       blurRadius: 24,
                                       spreadRadius: 4,
                                     ),
@@ -554,9 +696,13 @@ class _RecitationDialogState extends State<RecitationDialog>
                                 : LogosColors.softShadow,
                           ),
                           child: AppIcon(
-                            _isListening ? LogosIcons.stopRounded : LogosIcons.micRounded,
+                            _isListening
+                                ? LogosIcons.stopRounded
+                                : LogosIcons.micRounded,
                             size: 38,
-                            color: _isListening ? Colors.white : LogosColors.coral,
+                            color: _isListening
+                                ? Colors.white
+                                : LogosColors.coral,
                           ),
                         ),
                       ),
@@ -572,8 +718,8 @@ class _RecitationDialogState extends State<RecitationDialog>
                   _isListening
                       ? 'Listening... speak the verse aloud'
                       : (_isEvaluating
-                          ? 'Measuring sacred neural match...'
-                          : 'Tap microphone and speak aloud'),
+                            ? 'Measuring sacred neural match...'
+                            : 'Tap microphone and speak aloud'),
                   style: GoogleFonts.inter(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
@@ -598,14 +744,19 @@ class _RecitationDialogState extends State<RecitationDialog>
               if (_score != null) ...[
                 const SizedBox(height: 12),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
                   decoration: BoxDecoration(
                     color: _passed
                         ? const Color(0xFF10B981).withValues(alpha: 0.12)
                         : Colors.amber.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
-                      color: _passed ? Colors.green.shade400 : Colors.amber.shade400,
+                      color: _passed
+                          ? Colors.green.shade400
+                          : Colors.amber.shade400,
                       width: 1,
                     ),
                   ),
@@ -613,7 +764,9 @@ class _RecitationDialogState extends State<RecitationDialog>
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       AppIcon(
-                        _passed ? LogosIcons.checkCircleRounded : LogosIcons.refreshRounded,
+                        _passed
+                            ? LogosIcons.checkCircleRounded
+                            : LogosIcons.refreshRounded,
                         color: _passed ? Colors.green : Colors.amber.shade800,
                         size: 22,
                       ),
@@ -623,7 +776,9 @@ class _RecitationDialogState extends State<RecitationDialog>
                         style: GoogleFonts.inter(
                           fontSize: 13,
                           fontWeight: FontWeight.w700,
-                          color: _passed ? Colors.green.shade900 : Colors.amber.shade900,
+                          color: _passed
+                              ? Colors.green.shade900
+                              : Colors.amber.shade900,
                         ),
                       ),
                     ],
@@ -651,10 +806,14 @@ class _RecitationDialogState extends State<RecitationDialog>
                 height: 52,
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: _passed ? LogosColors.coral : ink.withValues(alpha: 0.08),
+                    backgroundColor: _passed
+                        ? LogosColors.coral
+                        : ink.withValues(alpha: 0.08),
                     foregroundColor: _passed ? Colors.white : ink,
                     elevation: 0,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
                   ),
                   onPressed: () {
                     AudioService().selectionTick();

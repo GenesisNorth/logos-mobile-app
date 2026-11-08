@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/utils/date_format.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:share_plus/share_plus.dart';
@@ -82,7 +83,7 @@ class AltarScreen extends StatelessWidget {
     buffer.writeln('✝ LOGOS IN ME · PILGRIM RELIC JOURNAL');
     buffer.writeln('========================================');
     buffer.writeln('Pilgrim: ${profile.displayName} (@${profile.username})');
-    buffer.writeln('Active Streak: ${state.currentStreak} Days');
+    buffer.writeln('Active Streak: ${state.activeStreak()} ${state.activeStreak() == 1 ? 'Day' : 'Days'}');
     buffer.writeln('Roots Planted: ${state.rootsPlanted} Verses');
     buffer.writeln('Grace Tokens Balance: ${state.graceTokensBalance}');
     if (profile.covenantSignature != null) {
@@ -314,9 +315,7 @@ class AltarScreen extends StatelessWidget {
       builder: (context, state) {
         final profile = state.profile;
         final signedDate = profile.covenantSignedAt;
-        final dateStr = signedDate != null
-            ? '${signedDate.day}/${signedDate.month}/${signedDate.year}'
-            : '22/10/2026';
+        final dateStr = signedDate != null ? formatLogosDate(signedDate) : null;
 
         return Scaffold(
           backgroundColor: isDark ? LogosColors.examenBg : LogosColors.sand,
@@ -412,14 +411,21 @@ class AltarScreen extends StatelessWidget {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text(
-                              'Signed on $dateStr',
-                              style: LogosTypography.caption(color: ink.withValues(alpha: 0.7)),
+                            Flexible(
+                              child: Text(
+                                dateStr != null ? 'Signed on $dateStr' : 'Covenant not yet signed',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: LogosTypography.caption(color: ink.withValues(alpha: 0.7)),
+                              ),
                             ),
-                            Text(
-                              'SHA-256 Verified',
-                              style: LogosTypography.caption(color: LogosColors.coral),
-                            ),
+                            if (profile.covenantSignature != null) ...[
+                              const SizedBox(width: 8),
+                              Text(
+                                'SHA-256 Verified',
+                                style: LogosTypography.caption(color: LogosColors.coral),
+                              ),
+                            ],
                           ],
                         ),
                       ],
@@ -477,7 +483,7 @@ class AltarScreen extends StatelessWidget {
                           icon: LogosIcons.localFireDepartment,
                           iconColor: LogosColors.coral,
                           label: 'Daily Streak',
-                          value: '${state.currentStreak} Days',
+                          value: '${state.activeStreak()} ${state.activeStreak() == 1 ? 'Day' : 'Days'}',
                           surface: surface,
                           ink: ink,
                         ),
@@ -832,7 +838,7 @@ class AltarScreen extends StatelessWidget {
 
   Widget _buildTearSheetCard(TearSheetData sheet, Color surface, Color ink) {
     final d = sheet.completedAt;
-    final dateStr = '${d.day}/${d.month}/${d.year}';
+    final dateStr = formatLogosDate(d);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),

@@ -2,6 +2,9 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class UserProfileData {
+  /// Shown until the pilgrim signs the covenant with their own name.
+  static const defaultDisplayName = 'Pilgrim';
+
   final String username;
   final String displayName;
   final String? covenantSignature;
@@ -111,7 +114,7 @@ class LocalProgressRepository implements ProgressRepository {
     if (raw == null) {
       return const UserProfileData(
         username: 'pilgrim',
-        displayName: 'Genesis A.',
+        displayName: UserProfileData.defaultDisplayName,
       );
     }
     try {
@@ -119,7 +122,7 @@ class LocalProgressRepository implements ProgressRepository {
     } catch (_) {
       return const UserProfileData(
         username: 'pilgrim',
-        displayName: 'Genesis A.',
+        displayName: UserProfileData.defaultDisplayName,
       );
     }
   }

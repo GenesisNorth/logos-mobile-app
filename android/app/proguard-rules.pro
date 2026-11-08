@@ -19,6 +19,17 @@
 # Record Plugin
 -keep class com.llfbandit.record.** { *; }
 
+# Speech to Text (on-device recitation recognition)
+-keep class com.csdcorp.speech_to_text.** { *; }
+
+# Gson (used by flutter_local_notifications for scheduled notifications)
+-keep class com.google.gson.reflect.TypeToken { *; }
+-keep class * extends com.google.gson.reflect.TypeToken
+-dontwarn com.google.errorprone.annotations.**
+
 # Supabase & JSON serialization
 -keepattributes *Annotation*,Signature,InnerClasses,EnclosingMethod
 -keepclassmembers enum * { *; }
+
+# Flutter engine references Play Core deferred components (unused by this app)
+-dontwarn com.google.android.play.core.**

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/utils/pilgrim_name.dart';
 import '../../../core/theme/logos_theme.dart';
 import '../../../core/theme/logos_typography.dart';
 import '../../../core/theme/logos_icons.dart';
@@ -14,7 +15,7 @@ class _StudyPodsScreenState extends State<StudyPodsScreen> {
   final TextEditingController _reflectionController = TextEditingController();
 
   final List<Map<String, dynamic>> _members = [
-    {'name': 'Genesis A.', 'role': 'You', 'progress': 'Day 2', 'status': 'Abiding', 'isYou': true},
+    {'name': 'You', 'role': 'You', 'progress': 'Day 2', 'status': 'Abiding', 'isYou': true},
     {'name': 'Sarah K.', 'role': 'Member', 'progress': 'Day 3', 'status': 'In Stillness', 'isYou': false},
     {'name': 'David M.', 'role': 'Member', 'progress': 'Day 2', 'status': 'Studying Context', 'isYou': false},
     {'name': 'Hannah L.', 'role': 'Member', 'progress': 'Day 1', 'status': 'Reciting', 'isYou': false},
@@ -60,7 +61,7 @@ class _StudyPodsScreenState extends State<StudyPodsScreen> {
 
     setState(() {
       _reflections.insert(0, {
-        'author': 'Genesis A.',
+        'author': pilgrimName(context),
         'time': 'Just now',
         'text': text,
       });
@@ -180,13 +181,13 @@ class _StudyPodsScreenState extends State<StudyPodsScreen> {
                                 radius: 18,
                                 backgroundColor: LogosColors.studyPods.withValues(alpha: 0.2),
                                 child: Text(
-                                  (m['name'] as String)[0],
+                                  (m['isYou'] == true ? pilgrimName(context) : m['name'] as String)[0],
                                   style: TextStyle(fontWeight: FontWeight.bold, color: ink, fontSize: 13),
                                 ),
                               ),
                               const SizedBox(height: 6),
                               Text(
-                                m['name'] as String,
+                                m['isYou'] == true ? pilgrimName(context) : m['name'] as String,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
