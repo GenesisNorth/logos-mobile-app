@@ -81,6 +81,7 @@ class _StudyPodsScreenState extends State<StudyPodsScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
+          tooltip: 'Back',
           icon: AppIcon(LogosIcons.arrowBack, color: ink),
           onPressed: () => Navigator.pop(context),
         ),
@@ -330,6 +331,7 @@ class _StudyPodsScreenState extends State<StudyPodsScreen> {
                   ),
                   const SizedBox(width: 8),
                   IconButton(
+                    tooltip: 'Send',
                     icon: const AppIcon(LogosIcons.send, color: LogosColors.studyPods),
                     onPressed: _postReflection,
                   ),

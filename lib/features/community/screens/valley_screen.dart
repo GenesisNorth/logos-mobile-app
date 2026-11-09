@@ -3,6 +3,8 @@ import '../../../core/theme/logos_theme.dart';
 import '../../../core/theme/logos_typography.dart';
 import '../../../core/theme/logos_icons.dart';
 import '../data/community_repository.dart';
+import '../data/moderation_store.dart';
+import '../widgets/crisis_notice.dart';
 
 class ValleyScreen extends StatefulWidget {
   const ValleyScreen({super.key});
@@ -13,6 +15,51 @@ class ValleyScreen extends StatefulWidget {
 
 class _ValleyScreenState extends State<ValleyScreen> {
   int _selectedRoomIndex = 0;
+  final ModerationStore _moderation = ModerationStore();
+  Set<String> _hidden = {};
+
+  @override
+  void initState() {
+    super.initState();
+    _moderation.hiddenIds().then((ids) {
+      if (mounted) setState(() => _hidden = ids);
+    });
+  }
+
+  Future<void> _hidePost(String id) async {
+    await _moderation.hide(id);
+    if (!mounted) return;
+    setState(() => _hidden = {..._hidden, id});
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Post hidden.')));
+  }
+
+  Future<void> _reportPost(String id) async {
+    final reason = await showModalBottomSheet<String>(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Padding(
+              padding: EdgeInsets.fromLTRB(20, 20, 20, 8),
+              child: Text('Why are you reporting this?', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700)),
+            ),
+            for (final r in reportReasons)
+              ListTile(title: Text(r), onTap: () => Navigator.pop(ctx, r)),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+    if (reason == null) return;
+    await _moderation.report(id, reason);
+    if (!mounted) return;
+    setState(() => _hidden = {..._hidden, id});
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+      content: Text('Thank you. The post is hidden and will be reviewed.'),
+    ));
+  }
 
   final List<Map<String, String>> _rooms = [
     {
@@ -32,12 +79,16 @@ class _ValleyScreenState extends State<ValleyScreen> {
   final List<List<Map<String, String>>> _postsByRoom = [
     [
       {
+        'id': 'valley-sample-1',
+        'isSample': 'true',
         'author': 'Pilgrim in Austin',
         'fixedPhrase': 'The Lord is near to the brokenhearted',
         'body': 'Lost my father three weeks ago. Sitting in Psalm 34 today. Just knowing I don’t have to perform faith right now is carrying me.',
         'time': '3 hours ago',
       },
       {
+        'id': 'valley-sample-2',
+        'isSample': 'true',
         'author': 'Brother in Nairobi',
         'fixedPhrase': 'Even though I walk through the valley',
         'body': 'I thought weeping was a sign of weak faith. The Psalms taught me that lament is worship.',
@@ -46,6 +97,8 @@ class _ValleyScreenState extends State<ValleyScreen> {
     ],
     [
       {
+        'id': 'valley-sample-3',
+        'isSample': 'true',
         'author': 'Sister in London',
         'fixedPhrase': 'Not by might, nor by power, but by my Spirit',
         'body': 'Facing severe restructuring at work. Choosing not to gossip or spiral into panic, but resting as a branch in Christ.',
@@ -54,6 +107,8 @@ class _ValleyScreenState extends State<ValleyScreen> {
     ],
     [
       {
+        'id': 'valley-sample-4',
+        'isSample': 'true',
         'author': 'Seeker in Toronto',
         'fixedPhrase': 'Be still, and know that I am God',
         'body': 'Uninstalled all feeds. The 60-second stillness in Day 3 was the first true silence my mind has felt in months.',
@@ -93,9 +148,11 @@ class _ValleyScreenState extends State<ValleyScreen> {
               Text('Pour Out Your Heart', style: LogosTypography.headline(color: LogosColors.ink)),
               const SizedBox(height: 6),
               Text(
-                'Posts are anonymous and covenant-moderated for peace.',
+                'Posts are anonymous. Please be gentle — posts that break our community guidelines are removed.',
                 style: LogosTypography.caption(color: LogosColors.ink.withValues(alpha: 0.6)),
               ),
+              const SizedBox(height: 12),
+              const CrisisNotice(compact: true),
               const SizedBox(height: 14),
               const Text('Anchor Scripture Phrase:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
               const SizedBox(height: 6),
@@ -132,7 +189,8 @@ class _ValleyScreenState extends State<ValleyScreen> {
                   if (text.isEmpty) return;
                   setState(() {
                     _postsByRoom[_selectedRoomIndex].insert(0, {
-                      'author': 'Pilgrim (You)',
+                      'id': 'valley-own-${DateTime.now().millisecondsSinceEpoch}',
+                      'author': 'You',
                       'fixedPhrase': selectedPhrase,
                       'body': text,
                       'time': 'Just now',
@@ -146,7 +204,7 @@ class _ValleyScreenState extends State<ValleyScreen> {
                   );
                   Navigator.pop(ctx);
                 },
-                child: const Text('Post to Sanctuary Room', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                child: const Text('Post anonymously', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
               ),
             ],
           ),
@@ -160,7 +218,7 @@ class _ValleyScreenState extends State<ValleyScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final ink = isDark ? LogosColors.examenInk : LogosColors.ink;
     final surface = isDark ? LogosColors.examenSurface : LogosColors.surface;
-    final posts = _postsByRoom[_selectedRoomIndex];
+    final posts = _postsByRoom[_selectedRoomIndex].where((p) => !_hidden.contains(p['id'])).toList();
 
     return Scaffold(
       backgroundColor: isDark ? LogosColors.examenBg : LogosColors.sand,
@@ -168,13 +226,14 @@ class _ValleyScreenState extends State<ValleyScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
+          tooltip: 'Back',
           icon: AppIcon(LogosIcons.arrowBack, color: ink),
           onPressed: () => Navigator.pop(context),
         ),
         title: Column(
           children: [
             const Text('In the Valley', style: TextStyle(color: LogosColors.valleyRooms, fontWeight: FontWeight.bold, fontSize: 16)),
-            Text('Themed Quiet Rooms', style: LogosTypography.caption(color: ink.withValues(alpha: 0.6))),
+            Text('Quiet rooms of lament', style: LogosTypography.caption(color: ink.withValues(alpha: 0.6))),
           ],
         ),
         centerTitle: true,
@@ -237,10 +296,14 @@ class _ValleyScreenState extends State<ValleyScreen> {
 
             Expanded(
               child: ListView.builder(
-                padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 8.0),
-                itemCount: posts.length,
+                padding: const EdgeInsets.fromLTRB(20, 8, 20, 96),
+                itemCount: posts.length + 1,
                 itemBuilder: (context, idx) {
+                  if (idx == posts.length) {
+                    return const Padding(padding: EdgeInsets.only(top: 6), child: CrisisNotice(compact: true));
+                  }
                   final p = posts[idx];
+                  final isSample = p['isSample'] == 'true';
                   return Container(
                     margin: const EdgeInsets.only(bottom: 14),
                     padding: const EdgeInsets.all(18),
@@ -255,8 +318,23 @@ class _ValleyScreenState extends State<ValleyScreen> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text(p['author']!, style: LogosTypography.caption(color: ink.withValues(alpha: 0.6))),
+                            Expanded(
+                              child: Text(
+                                isSample ? '${p['author']!} · Example' : p['author']!,
+                                style: LogosTypography.caption(color: ink.withValues(alpha: 0.6)),
+                              ),
+                            ),
                             Text(p['time']!, style: LogosTypography.caption(color: ink.withValues(alpha: 0.4))),
+                            if (p['author'] != 'You')
+                              PopupMenuButton<String>(
+                                tooltip: 'Post options',
+                                icon: AppIcon(LogosIcons.more, size: 18, color: ink.withValues(alpha: 0.5)),
+                                onSelected: (v) => v == 'hide' ? _hidePost(p['id']!) : _reportPost(p['id']!),
+                                itemBuilder: (_) => const [
+                                  PopupMenuItem(value: 'report', child: Text('Report post')),
+                                  PopupMenuItem(value: 'hide', child: Text('Hide post')),
+                                ],
+                              ),
                           ],
                         ),
                         const SizedBox(height: 8),
@@ -279,17 +357,6 @@ class _ValleyScreenState extends State<ValleyScreen> {
                         Text(
                           p['body']!,
                           style: LogosTypography.body(color: ink).copyWith(height: 1.45),
-                        ),
-                        const SizedBox(height: 12),
-                        Row(
-                          children: [
-                            const AppIcon(LogosIcons.shieldOutlined, size: 12, color: Colors.green),
-                            const SizedBox(width: 4),
-                            Text(
-                              'Covenant Protected · Pastoral Oversight',
-                              style: TextStyle(fontSize: 10, color: Colors.green.shade800),
-                            ),
-                          ],
                         ),
                       ],
                     ),

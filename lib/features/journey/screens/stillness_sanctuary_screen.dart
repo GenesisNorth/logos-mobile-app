@@ -247,7 +247,7 @@ class _StillnessSanctuaryScreenState extends State<StillnessSanctuaryScreen>
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           _buildStemSlider(
-                            label: 'Convent 432 Hz Drone',
+                            label: 'Convent Drone',
                             description: 'Warm grounding harmonic floor',
                             icon: LogosIcons.spaRounded,
                             value: audio.droneVolume,
@@ -296,7 +296,7 @@ class _StillnessSanctuaryScreenState extends State<StillnessSanctuaryScreen>
                           ),
                           _buildStemSlider(
                             label: 'Holy Sanctuary Bells',
-                            description: 'Distant periodic bronze chimes in 432 Hz resonance',
+                            description: 'Distant, occasional bronze chimes',
                             icon: LogosIcons.churchBell,
                             value: audio.bellsVolume,
                             activeColor: const Color(0xFFD97706),
@@ -531,6 +531,7 @@ class _StillnessSanctuaryScreenState extends State<StillnessSanctuaryScreen>
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       IconButton(
+                        tooltip: 'Close',
                         icon: const AppIcon(LogosIcons.closeRounded, color: LogosColors.ink),
                         onPressed: () {
                           AudioService().selectionTick();
@@ -566,6 +567,7 @@ class _StillnessSanctuaryScreenState extends State<StillnessSanctuaryScreen>
                         ),
                       ),
                       IconButton(
+                        tooltip: 'Background sound',
                         icon: AppIcon(
                           _isPlayingAudio ? LogosIcons.volumeUpRounded : LogosIcons.volumeOffRounded,
                           color: LogosColors.ink,

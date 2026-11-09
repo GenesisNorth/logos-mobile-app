@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
@@ -15,6 +16,14 @@ class NotificationService {
   static const _prefKeyEnabled = 'logos_notifications_enabled';
   static const _prefKeyApnsToken = 'logos_apns_device_token';
   static const _prefKeyApnsSynced = 'logos_apns_synced_cloud';
+  static const _prefKeyReminderMinutes = 'logos_reminder_minutes_of_day';
+  static const _prefKeyEvening = 'logos_evening_reflection_enabled';
+
+  /// Default daily reminder: 7:00 AM.
+  static const defaultReminderMinutes = 7 * 60;
+
+  /// Evening reflection reminder time: 9:00 PM.
+  static const eveningMinutes = 21 * 60;
 
   final FlutterLocalNotificationsPlugin _notificationsPlugin =
       FlutterLocalNotificationsPlugin();
@@ -24,7 +33,14 @@ class NotificationService {
   String? _deviceToken;
   bool _isApnsSynced = false;
 
+  int _reminderMinutes = defaultReminderMinutes;
+  bool _eveningReflection = true;
+
   bool get isEnabled => _isEnabled;
+
+  /// Minutes after local midnight for the daily practice reminder.
+  int get reminderMinutes => _reminderMinutes;
+  bool get eveningReflection => _eveningReflection;
   String? get deviceToken => _deviceToken;
   bool get isApnsSynced => _isApnsSynced;
 
@@ -34,6 +50,13 @@ class NotificationService {
 
     try {
       tz.initializeTimeZones();
+      // Schedule in the device's own time zone (tz.local defaults to UTC).
+      try {
+        final zone = await FlutterTimezone.getLocalTimezone();
+        tz.setLocalLocation(tz.getLocation(zone.identifier));
+      } catch (e) {
+        debugPrint('[NotificationService] Could not resolve local time zone: $e');
+      }
 
       const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
       final darwinSettings = DarwinInitializationSettings(
@@ -67,6 +90,8 @@ class NotificationService {
       _isEnabled = prefs.getBool(_prefKeyEnabled) ?? false;
       _deviceToken = prefs.getString(_prefKeyApnsToken);
       _isApnsSynced = prefs.getBool(_prefKeyApnsSynced) ?? false;
+      _reminderMinutes = prefs.getInt(_prefKeyReminderMinutes) ?? defaultReminderMinutes;
+      _eveningReflection = prefs.getBool(_prefKeyEvening) ?? true;
       _isInitialized = true;
       debugPrint('[NotificationService] Initialized (enabled: $_isEnabled, apns: ${_deviceToken != null})');
 
@@ -121,9 +146,8 @@ class NotificationService {
   /// Toggles notifications on or off.
   Future<void> toggleNotifications(bool enable) async {
     if (enable) {
-      final granted = await requestPermissions();
-      if (!granted) return;
-      await registerDevicePushToken();
+      // Remote push (FCM/APNs) arrives with the backend; local reminders need no token.
+      await requestPermissions();
     } else {
       await cancelAll();
       _isEnabled = false;
@@ -170,48 +194,46 @@ class NotificationService {
     return digest.toString();
   }
 
-  /// Schedules daily Circadian Liturgical Reminders & Midnight Pace-Lock Alerts.
+  /// Changes the daily reminder time and reschedules if reminders are on.
+  Future<void> setReminderMinutes(int minutesOfDay) async {
+    _reminderMinutes = minutesOfDay.clamp(0, 24 * 60 - 1);
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(_prefKeyReminderMinutes, _reminderMinutes);
+    if (_isEnabled) await scheduleAllLiturgicalNotifications();
+  }
+
+  Future<void> setEveningReflection(bool enabled) async {
+    _eveningReflection = enabled;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_prefKeyEvening, enabled);
+    if (_isEnabled) await scheduleAllLiturgicalNotifications();
+  }
+
+  /// Schedules the daily practice reminder and the optional evening reflection.
+  /// (No midnight alert: a new step simply waits for the morning reminder.)
   Future<void> scheduleAllLiturgicalNotifications() async {
     try {
       await cancelAll();
 
-      // 1. Morning Lauds (7:00 AM)
       await _scheduleDailyAtTime(
         id: 101,
-        hour: 7,
-        minute: 0,
-        title: 'Morning Lauds · Awaken in the Word',
-        body: 'Begin your dawn dwell with Christ. Open your sacred verse.',
+        hour: _reminderMinutes ~/ 60,
+        minute: _reminderMinutes % 60,
+        title: 'Your verse is waiting',
+        body: 'Take a few unhurried minutes with today’s step.',
       );
 
-      // 2. Noonday Sext (12:00 PM)
-      await _scheduleDailyAtTime(
-        id: 102,
-        hour: 12,
-        minute: 0,
-        title: 'Noonday Sext · Midday Sanctuary Rest',
-        body: 'Step away from the noise and recite your sacred verse.',
-      );
+      if (_eveningReflection) {
+        await _scheduleDailyAtTime(
+          id: 103,
+          hour: eveningMinutes ~/ 60,
+          minute: eveningMinutes % 60,
+          title: 'Evening reflection',
+          body: 'Where did you sense Christ today? Rest in His word before sleep.',
+        );
+      }
 
-      // 3. Evening Vespers & Examen (9:00 PM)
-      await _scheduleDailyAtTime(
-        id: 103,
-        hour: 21,
-        minute: 0,
-        title: 'Evening Vespers · Rest & Examen',
-        body: 'Dwell in peace. Review your day and rest your thoughts in Him.',
-      );
-
-      // 4. Midnight Pace Unlock (12:01 AM)
-      await _scheduleDailyAtTime(
-        id: 104,
-        hour: 0,
-        minute: 1,
-        title: 'The Midnight Bell Has Struck 🔔',
-        body: 'A new sacred rhythm step has unlocked in the Sanctuary. Come dwell.',
-      );
-
-      debugPrint('[NotificationService] All 4 liturgical alarms scheduled successfully.');
+      debugPrint('[NotificationService] Reminders scheduled (daily ${_reminderMinutes ~/ 60}:${(_reminderMinutes % 60).toString().padLeft(2, '0')}, evening: $_eveningReflection).');
     } catch (e) {
       debugPrint('[NotificationService] Scheduling warning: $e');
     }
@@ -261,11 +283,11 @@ class NotificationService {
 
     const details = NotificationDetails(
       android: AndroidNotificationDetails(
-        'logos_liturgical_chimes',
-        'Liturgical Hours & Chimes',
-        channelDescription: 'Circadian sacred hours and pace-lock notifications',
-        importance: Importance.high,
-        priority: Priority.high,
+        'logos_daily_reminders',
+        'Daily reminders',
+        channelDescription: 'Your daily practice reminder and evening reflection',
+        importance: Importance.defaultImportance,
+        priority: Priority.defaultPriority,
       ),
       iOS: DarwinNotificationDetails(
         presentAlert: true,
@@ -280,7 +302,7 @@ class NotificationService {
       body: body,
       scheduledDate: scheduledDate,
       notificationDetails: details,
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
       matchDateTimeComponents: DateTimeComponents.time,
     );
   }

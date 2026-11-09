@@ -10,6 +10,8 @@ import '../../../core/theme/logos_theme.dart';
 import '../../../core/theme/logos_typography.dart';
 import '../../../core/utils/scripture_verifier.dart';
 import '../../../core/theme/logos_icons.dart';
+import '../../../core/services/verse_reader.dart';
+import '../../../core/widgets/logos_dialog.dart';
 
 enum ScaffoldingMode {
   full('Full Text', LogosIcons.visibilityOutlined),
@@ -87,6 +89,7 @@ class _RecitationDialogState extends State<RecitationDialog>
 
   @override
   void dispose() {
+    VerseReader.instance.stop();
     _pulseController.dispose();
     _speechSub?.cancel();
     _recognizer.dispose();
@@ -150,6 +153,7 @@ class _RecitationDialogState extends State<RecitationDialog>
   }
 
   Future<void> _startListening() async {
+    await VerseReader.instance.stop();
     AudioService().selectionTick();
     setState(() {
       _isListening = true;
@@ -236,42 +240,49 @@ class _RecitationDialogState extends State<RecitationDialog>
     }
   }
 
-  void _showFallbackInput(BuildContext context, Color surface, Color ink) {
+  Future<void> _showFallbackInput(
+    BuildContext context,
+    Color surface,
+    Color ink,
+  ) async {
     _textFallbackController.text = _liveTranscript;
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: surface,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text(
-          'Manual Speech Input',
-          style: LogosTypography.label(color: ink),
+    final text = await showLogosDialog<String>(
+      context,
+      title: 'Type your recitation',
+      message: 'If speaking aloud isn’t possible right now, type the verse from memory.',
+      content: TextField(
+        controller: _textFallbackController,
+        autofocus: true,
+        maxLines: 4,
+        minLines: 3,
+        style: LogosTypography.body(color: ink),
+        decoration: InputDecoration(
+          hintText: 'Type the verse…',
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         ),
-        content: TextField(
-          controller: _textFallbackController,
-          maxLines: 3,
-          style: LogosTypography.body(color: ink),
-          decoration: const InputDecoration(
-            hintText: 'Type what was recited...',
-            border: OutlineInputBorder(),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: LogosColors.coral),
-            onPressed: () {
-              Navigator.pop(ctx);
-              _evaluateTranscript(_textFallbackController.text, manual: true);
-            },
-            child: const Text('Verify', style: TextStyle(color: Colors.white)),
-          ),
-        ],
       ),
+      confirmLabel: 'Check',
+      onConfirm: () => _textFallbackController.text,
     );
+    if (text != null && text.trim().isNotEmpty) {
+      _evaluateTranscript(text, manual: true);
+    }
+  }
+
+  Future<void> _toggleHearVerse() async {
+    final reader = VerseReader.instance;
+    if (reader.isReading(widget.verseText)) {
+      await reader.stop();
+      return;
+    }
+    if (_isListening) return; // don't let the speaker feed the microphone
+    if (!await reader.speak(widget.verseText) && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No reading voice is available on this phone.'),
+        ),
+      );
+    }
   }
 
   String _formatScaffoldedWord(String word, int index, ScaffoldingMode mode) {
@@ -311,6 +322,7 @@ class _RecitationDialogState extends State<RecitationDialog>
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
+          tooltip: 'Close',
           icon: AppIcon(LogosIcons.closeRounded, color: ink),
           onPressed: () => Navigator.of(context).pop(),
         ),
@@ -343,8 +355,24 @@ class _RecitationDialogState extends State<RecitationDialog>
           ],
         ),
         actions: [
+          ListenableBuilder(
+            listenable: VerseReader.instance,
+            builder: (context, _) {
+              final reading = VerseReader.instance.isReading(widget.verseText);
+              return IconButton(
+                tooltip: reading ? 'Stop reading' : 'Hear the verse',
+                icon: AppIcon(
+                  reading ? LogosIcons.stopRounded : LogosIcons.volumeUpRounded,
+                  color: reading
+                      ? LogosColors.coral
+                      : ink.withValues(alpha: 0.6),
+                ),
+                onPressed: _toggleHearVerse,
+              );
+            },
+          ),
           IconButton(
-            tooltip: 'Type recitation manually',
+            tooltip: 'Type your recitation',
             icon: AppIcon(
               LogosIcons.keyboardAltOutlined,
               color: ink.withValues(alpha: 0.6),
@@ -655,54 +683,62 @@ class _RecitationDialogState extends State<RecitationDialog>
                       ],
 
                       // Core Mic Button
-                      GestureDetector(
-                        onTap: _isEvaluating
-                            ? null
-                            : (_isListening ? _stopListening : _startListening),
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 300),
-                          width: 84,
-                          height: 84,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            gradient: _isListening
-                                ? LogosColors.purpleGradient
-                                : LinearGradient(
-                                    colors: isDark
-                                        ? [
-                                            const Color(0xFF241445),
-                                            const Color(0xFF160B30),
-                                          ]
-                                        : [
-                                            Colors.white,
-                                            const Color(0xFFFAF5FF),
-                                          ],
-                                  ),
-                            border: Border.all(
-                              color: _isListening
-                                  ? Colors.white.withValues(alpha: 0.8)
-                                  : LogosColors.taupe,
-                              width: 1.5,
-                            ),
-                            boxShadow: _isListening
-                                ? [
-                                    BoxShadow(
-                                      color: const Color(0xFF7C3AED)
-                                          .withValues(alpha: 0.5),
-                                      blurRadius: 24,
-                                      spreadRadius: 4,
+                      Semantics(
+                        button: true,
+                        label: _isListening
+                            ? 'Stop and check recitation'
+                            : 'Start reciting',
+                        child: GestureDetector(
+                          onTap: _isEvaluating
+                              ? null
+                              : (_isListening
+                                    ? _stopListening
+                                    : _startListening),
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 300),
+                            width: 84,
+                            height: 84,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              gradient: _isListening
+                                  ? LogosColors.purpleGradient
+                                  : LinearGradient(
+                                      colors: isDark
+                                          ? [
+                                              const Color(0xFF241445),
+                                              const Color(0xFF160B30),
+                                            ]
+                                          : [
+                                              Colors.white,
+                                              const Color(0xFFFAF5FF),
+                                            ],
                                     ),
-                                  ]
-                                : LogosColors.softShadow,
-                          ),
-                          child: AppIcon(
-                            _isListening
-                                ? LogosIcons.stopRounded
-                                : LogosIcons.micRounded,
-                            size: 38,
-                            color: _isListening
-                                ? Colors.white
-                                : LogosColors.coral,
+                              border: Border.all(
+                                color: _isListening
+                                    ? Colors.white.withValues(alpha: 0.8)
+                                    : LogosColors.taupe,
+                                width: 1.5,
+                              ),
+                              boxShadow: _isListening
+                                  ? [
+                                      BoxShadow(
+                                        color: const Color(0xFF7C3AED)
+                                            .withValues(alpha: 0.5),
+                                        blurRadius: 24,
+                                        spreadRadius: 4,
+                                      ),
+                                    ]
+                                  : LogosColors.softShadow,
+                            ),
+                            child: AppIcon(
+                              _isListening
+                                  ? LogosIcons.stopRounded
+                                  : LogosIcons.micRounded,
+                              size: 38,
+                              color: _isListening
+                                  ? Colors.white
+                                  : LogosColors.coral,
+                            ),
                           ),
                         ),
                       ),
@@ -718,7 +754,7 @@ class _RecitationDialogState extends State<RecitationDialog>
                   _isListening
                       ? 'Listening... speak the verse aloud'
                       : (_isEvaluating
-                            ? 'Measuring sacred neural match...'
+                            ? 'Checking your recitation…'
                             : 'Tap microphone and speak aloud'),
                   style: GoogleFonts.inter(
                     fontSize: 13,
@@ -791,7 +827,7 @@ class _RecitationDialogState extends State<RecitationDialog>
               // Engine & Pass Rules
               Center(
                 child: Text(
-                  '${_recognizer.engineLabel} · 80% Levenshtein threshold',
+                  'Recite at least 80% of the verse correctly to pass',
                   style: GoogleFonts.inter(
                     fontSize: 10.5,
                     color: ink.withValues(alpha: 0.4),

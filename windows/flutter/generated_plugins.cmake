@@ -5,6 +5,8 @@
 list(APPEND FLUTTER_PLUGIN_LIST
   app_links
   audioplayers_windows
+  flutter_timezone
+  flutter_tts
   record_windows
   share_plus
   speech_to_text_windows

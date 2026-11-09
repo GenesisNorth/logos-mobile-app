@@ -1,12 +1,18 @@
 import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
+
 import '../../../core/services/audio_service.dart';
 import '../../../core/theme/logos_theme.dart';
 import '../../journey/bloc/journey_bloc.dart';
 import '../../journey/bloc/journey_event.dart';
 import '../../../core/theme/logos_icons.dart';
+import '../../../core/services/notification_service.dart';
+import '../../journey/data/bible_translations.dart';
+import '../../journey/data/content_repository.dart';
+import '../../journey/screens/translation_picker_sheet.dart';
 
 class CovenantScreen extends StatefulWidget {
   final VoidCallback onCompleted;
@@ -19,7 +25,14 @@ class CovenantScreen extends StatefulWidget {
 class _CovenantScreenState extends State<CovenantScreen>
     with TickerProviderStateMixin {
   final TextEditingController _nameController = TextEditingController();
-  int _step = 0; // 0: Manifesto, 1: 4-Day Rhythm, 2: The Covenant Signature
+  // 0: Welcome, 1: The 4-day rhythm, 2: Your practice, 3: Covenant signature
+  int _step = 0;
+  static const _lastStep = 3;
+  static const _practiceStep = 2;
+
+  String _translation = 'ESV';
+  bool _remind = true;
+  int _reminderMinutes = NotificationService.defaultReminderMinutes;
 
   late AnimationController _ambientController;
   late AnimationController _sealController;
@@ -59,6 +72,36 @@ class _CovenantScreenState extends State<CovenantScreen>
     _sealController.dispose();
     _nameController.dispose();
     super.dispose();
+  }
+
+  /// Leaving "Your practice": apply the translation and, if wanted, ask for
+  /// notification permission now that the user knows why.
+  Future<void> _applyPractice() async {
+    context.read<JourneyBloc>().add(SelectTranslation(_translation));
+    if (_remind) {
+      await NotificationService.instance.setReminderMinutes(_reminderMinutes);
+      await NotificationService.instance.toggleNotifications(true);
+    }
+  }
+
+  Future<void> _next() async {
+    AudioService().selectionTick();
+    if (_step == _practiceStep) await _applyPractice();
+    if (mounted) setState(() => _step++);
+  }
+
+  Future<void> _pickReminderTime() async {
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay(
+        hour: _reminderMinutes ~/ 60,
+        minute: _reminderMinutes % 60,
+      ),
+      helpText: 'Daily reminder',
+    );
+    if (picked != null) {
+      setState(() => _reminderMinutes = picked.hour * 60 + picked.minute);
+    }
   }
 
   void _onSignAndEnter() {
@@ -155,7 +198,10 @@ class _CovenantScreenState extends State<CovenantScreen>
           // Foreground Content
           SafeArea(
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 26.0, vertical: 16.0),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 26.0,
+                vertical: 16.0,
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -173,7 +219,8 @@ class _CovenantScreenState extends State<CovenantScreen>
                               shape: BoxShape.circle,
                               boxShadow: [
                                 BoxShadow(
-                                  color: const Color(0xFF7C3AED).withValues(alpha: 0.35),
+                                  color: const Color(0xFF7C3AED)
+                                      .withValues(alpha: 0.35),
                                   blurRadius: 10,
                                   offset: const Offset(0, 2),
                                 ),
@@ -203,7 +250,7 @@ class _CovenantScreenState extends State<CovenantScreen>
                                 ),
                               ),
                               Text(
-                                'Covenant Initiation · Step ${_step + 1} of 3',
+                                'Getting started · Step ${_step + 1} of ${_lastStep + 1}',
                                 style: GoogleFonts.inter(
                                   fontSize: 10.5,
                                   fontWeight: FontWeight.w600,
@@ -214,11 +261,11 @@ class _CovenantScreenState extends State<CovenantScreen>
                           ),
                         ],
                       ),
-                      if (_step < 2)
+                      if (_step < _practiceStep)
                         TextButton(
                           onPressed: () {
                             AudioService().selectionTick();
-                            setState(() => _step = 2);
+                            setState(() => _step = _practiceStep);
                           },
                           child: Text(
                             'Skip',
@@ -232,46 +279,49 @@ class _CovenantScreenState extends State<CovenantScreen>
                     ],
                   ),
 
-                  const Spacer(flex: 1),
-
-                  // Animated Step Content Transition
-                  AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 400),
-                    switchInCurve: Curves.easeOutCubic,
-                    switchOutCurve: Curves.easeInCubic,
-                    transitionBuilder: (child, animation) {
-                      return FadeTransition(
-                        opacity: animation,
-                        child: SlideTransition(
-                          position: Tween<Offset>(
-                            begin: const Offset(0.04, 0),
-                            end: Offset.zero,
-                          ).animate(animation),
-                          child: child,
+                  // Animated Step Content Transition (scrolls on small screens / with keyboard)
+                  Expanded(
+                    child: Center(
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        child: AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 400),
+                          switchInCurve: Curves.easeOutCubic,
+                          switchOutCurve: Curves.easeInCubic,
+                          transitionBuilder: (child, animation) {
+                            return FadeTransition(
+                              opacity: animation,
+                              child: SlideTransition(
+                                position: Tween<Offset>(
+                                  begin: const Offset(0.04, 0),
+                                  end: Offset.zero,
+                                ).animate(animation),
+                                child: child,
+                              ),
+                            );
+                          },
+                          child: _buildCurrentStep(),
                         ),
-                      );
-                    },
-                    child: _buildCurrentStep(),
+                      ),
+                    ),
                   ),
-
-                  const Spacer(flex: 2),
 
                   // Step Progression Pill Indicator
                   Center(
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 6,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(24),
-                        border: Border.all(
-                          color: LogosColors.taupe,
-                          width: 1,
-                        ),
+                        border: Border.all(color: LogosColors.taupe, width: 1),
                         boxShadow: LogosColors.softShadow,
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
-                        children: List.generate(3, (index) {
+                        children: List.generate(_lastStep + 1, (index) {
                           final isActive = _step == index;
                           return AnimatedContainer(
                             duration: const Duration(milliseconds: 300),
@@ -280,13 +330,16 @@ class _CovenantScreenState extends State<CovenantScreen>
                             width: isActive ? 26 : 8,
                             height: 6,
                             decoration: BoxDecoration(
-                              gradient: isActive ? LogosColors.purpleGradient : null,
+                              gradient: isActive
+                                  ? LogosColors.purpleGradient
+                                  : null,
                               color: isActive ? null : LogosColors.taupe,
                               borderRadius: BorderRadius.circular(4),
                               boxShadow: isActive
                                   ? [
                                       BoxShadow(
-                                        color: const Color(0xFF7C3AED).withValues(alpha: 0.45),
+                                        color: const Color(0xFF7C3AED)
+                                            .withValues(alpha: 0.45),
                                         blurRadius: 8,
                                         spreadRadius: 1,
                                       ),
@@ -305,9 +358,8 @@ class _CovenantScreenState extends State<CovenantScreen>
                   GestureDetector(
                     behavior: HitTestBehavior.opaque,
                     onTap: () {
-                      if (_step < 2) {
-                        AudioService().selectionTick();
-                        setState(() => _step++);
+                      if (_step < _lastStep) {
+                        _next();
                       } else {
                         _onSignAndEnter();
                       }
@@ -319,7 +371,8 @@ class _CovenantScreenState extends State<CovenantScreen>
                         borderRadius: BorderRadius.circular(29),
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFF7C3AED).withValues(alpha: 0.35),
+                            color: const Color(0xFF7C3AED)
+                                .withValues(alpha: 0.35),
                             blurRadius: 20,
                             offset: const Offset(0, 8),
                           ),
@@ -329,7 +382,7 @@ class _CovenantScreenState extends State<CovenantScreen>
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
-                            _step < 2 ? 'Continue' : 'Sign & Seal the Covenant',
+                            _step < _lastStep ? 'Continue' : 'Sign & begin',
                             style: GoogleFonts.inter(
                               fontSize: 16,
                               fontWeight: FontWeight.w700,
@@ -339,7 +392,9 @@ class _CovenantScreenState extends State<CovenantScreen>
                           ),
                           const SizedBox(width: 8),
                           AppIcon(
-                            _step < 2 ? LogosIcons.arrowForwardRounded : LogosIcons.lockOutlineRounded,
+                            _step < _lastStep
+                                ? LogosIcons.arrowForwardRounded
+                                : LogosIcons.checkCircleRounded,
                             size: 18,
                             color: Colors.white,
                           ),
@@ -367,21 +422,26 @@ class _CovenantScreenState extends State<CovenantScreen>
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 5,
+                ),
                 decoration: BoxDecoration(
                   color: LogosColors.coralLight,
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: LogosColors.taupe,
-                  ),
+                  border: Border.all(color: LogosColors.taupe),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const AppIcon(LogosIcons.autoAwesome, size: 13, color: LogosColors.coral),
+                    const AppIcon(
+                      LogosIcons.autoAwesome,
+                      size: 13,
+                      color: LogosColors.coral,
+                    ),
                     const SizedBox(width: 6),
                     Text(
-                      'THE LITURGICAL MANIFESTO',
+                      'WELCOME',
                       style: GoogleFonts.inter(
                         fontSize: 10,
                         fontWeight: FontWeight.w800,
@@ -394,7 +454,7 @@ class _CovenantScreenState extends State<CovenantScreen>
               ),
               const SizedBox(height: 20),
               Text(
-                'One Verse.\nFour Sacred Days.',
+                'One verse.\nFour unhurried days.',
                 style: GoogleFonts.sourceSerif4(
                   fontSize: 38,
                   fontWeight: FontWeight.w700,
@@ -405,7 +465,7 @@ class _CovenantScreenState extends State<CovenantScreen>
               ),
               const SizedBox(height: 16),
               Text(
-                'Not an endless scroll. Not a skimming app.\nA digital cloister designed to carve eternal Scripture into your neural pathways and soul.',
+                'Not an endless feed. Each week you live with one passage of Scripture — hearing it, understanding it, resting in it, and carrying it by heart.',
                 style: GoogleFonts.inter(
                   fontSize: 15.5,
                   height: 1.55,
@@ -416,7 +476,10 @@ class _CovenantScreenState extends State<CovenantScreen>
               const SizedBox(height: 24),
               // White Card Pill
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 14,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(18),
@@ -425,11 +488,15 @@ class _CovenantScreenState extends State<CovenantScreen>
                 ),
                 child: Row(
                   children: [
-                    const AppIcon(LogosIcons.shieldOutlined, color: Color(0xFFF59E0B), size: 20),
+                    const AppIcon(
+                      LogosIcons.shieldOutlined,
+                      color: Color(0xFFF59E0B),
+                      size: 20,
+                    ),
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(
-                        'Pace-locked: One step per calendar day to protect true contemplation.',
+                        'One step opens each day, so the Word has time to take root.',
                         style: GoogleFonts.inter(
                           fontSize: 12,
                           color: LogosColors.ink,
@@ -451,7 +518,7 @@ class _CovenantScreenState extends State<CovenantScreen>
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'The 4-Day Rhythm',
+                'The 4-day rhythm',
                 style: GoogleFonts.sourceSerif4(
                   fontSize: 34,
                   fontWeight: FontWeight.w700,
@@ -461,7 +528,7 @@ class _CovenantScreenState extends State<CovenantScreen>
               ),
               const SizedBox(height: 8),
               Text(
-                'A scientifically structured spiritual cadence for eternal neural imprint:',
+                'Every week follows the same gentle pattern:',
                 style: GoogleFonts.inter(
                   fontSize: 13.5,
                   color: LogosColors.inkSecondary,
@@ -471,32 +538,32 @@ class _CovenantScreenState extends State<CovenantScreen>
               _buildRhythmCard(
                 icon: LogosIcons.playCircleFillRounded,
                 day: 'Day 1',
-                title: 'Encounter & Oral Recitation',
-                desc: 'Cinematic visual immersion & first 2 spoken recitation passes.',
+                title: 'Encounter',
+                desc: 'Meet the verse and recite it aloud twice.',
                 accentColor: const Color(0xFF7C3AED),
               ),
               const SizedBox(height: 10),
               _buildRhythmCard(
                 icon: LogosIcons.autoStoriesRounded,
                 day: 'Day 2',
-                title: 'Exegesis & Context',
-                desc: 'Greek/Hebrew root depth & historical background cards.',
+                title: 'Context',
+                desc: 'Discover its background and the original words.',
                 accentColor: const Color(0xFF8B5CF6),
               ),
               const SizedBox(height: 10),
               _buildRhythmCard(
                 icon: LogosIcons.spaRounded,
                 day: 'Day 3',
-                title: 'Stillness & Lectio Divina',
-                desc: '60-second breathing sanctuary with 432 Hz ambient pad.',
+                title: 'Stillness',
+                desc: 'Rest with the verse in a guided minute of quiet.',
                 accentColor: const Color(0xFF9333EA),
               ),
               const SizedBox(height: 10),
               _buildRhythmCard(
                 icon: LogosIcons.localFireDepartmentRounded,
                 day: 'Day 4',
-                title: 'Master Recitation & The Exchange',
-                desc: 'Memory verification & burden dissolution into the Light.',
+                title: 'The Exchange',
+                desc: 'Recite from memory and lay a burden down.',
                 accentColor: const Color(0xFF5B21B6),
               ),
             ],
@@ -504,14 +571,20 @@ class _CovenantScreenState extends State<CovenantScreen>
         );
 
       case 2:
-      default:
         return KeyedSubtree(
           key: const ValueKey(2),
+          child: _buildPracticeStep(),
+        );
+
+      case 3:
+      default:
+        return KeyedSubtree(
+          key: const ValueKey(3),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'The Sacred Covenant',
+                'Your covenant',
                 style: GoogleFonts.sourceSerif4(
                   fontSize: 34,
                   fontWeight: FontWeight.w700,
@@ -521,7 +594,7 @@ class _CovenantScreenState extends State<CovenantScreen>
               ),
               const SizedBox(height: 8),
               Text(
-                'Before entering the cloister, seal your pledge before God to walk unhurried.',
+                'A simple promise before you begin.',
                 style: GoogleFonts.inter(
                   fontSize: 13.5,
                   color: LogosColors.inkSecondary,
@@ -535,10 +608,7 @@ class _CovenantScreenState extends State<CovenantScreen>
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(22),
-                  border: Border.all(
-                    color: LogosColors.taupe,
-                    width: 1.2,
-                  ),
+                  border: Border.all(color: LogosColors.taupe, width: 1.2),
                   boxShadow: LogosColors.softShadow,
                 ),
                 child: Column(
@@ -548,7 +618,7 @@ class _CovenantScreenState extends State<CovenantScreen>
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          'PLEDGE OF THE DISCIPLE',
+                          'MY PROMISE',
                           style: GoogleFonts.inter(
                             fontSize: 10,
                             fontWeight: FontWeight.w800,
@@ -556,44 +626,36 @@ class _CovenantScreenState extends State<CovenantScreen>
                             color: LogosColors.coral,
                           ),
                         ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                          decoration: BoxDecoration(
-                            color: LogosColors.coralLight,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            'Immutable',
-                            style: GoogleFonts.inter(
-                              fontSize: 10,
-                              color: LogosColors.coral,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ),
                       ],
                     ),
                     const SizedBox(height: 12),
-                    _buildCommitmentBullet('I will speak the Word aloud with reverence.'),
-                    _buildCommitmentBullet('I will honor the midnight pace-lock.'),
-                    _buildCommitmentBullet('I will surrender heavy burdens into Christ.'),
+                    _buildCommitmentBullet(
+                      'I will speak the Word aloud with reverence.',
+                    ),
+                    _buildCommitmentBullet(
+                      'I will take one step each day, unhurried.',
+                    ),
+                    _buildCommitmentBullet(
+                      'I will bring my burdens to Christ.',
+                    ),
                     const SizedBox(height: 18),
 
                     // Signature Pad in Purple Lilac Tint
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 6,
+                      ),
                       decoration: BoxDecoration(
                         color: const Color(0xFFFAF5FF),
                         borderRadius: BorderRadius.circular(14),
-                        border: Border.all(
-                          color: LogosColors.taupe,
-                        ),
+                        border: Border.all(color: LogosColors.taupe),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Your Name (Sacred Signature)',
+                            'Sign with your name',
                             style: GoogleFonts.inter(
                               fontSize: 11,
                               fontWeight: FontWeight.w600,
@@ -609,47 +671,20 @@ class _CovenantScreenState extends State<CovenantScreen>
                             ),
                             decoration: InputDecoration(
                               isDense: true,
-                              contentPadding: const EdgeInsets.symmetric(vertical: 4),
+                              contentPadding: const EdgeInsets.symmetric(
+                                vertical: 4,
+                              ),
                               border: InputBorder.none,
-                              hintText: 'Type your name...',
+                              hintText: 'Your name',
                               hintStyle: GoogleFonts.caveat(
                                 fontSize: 24,
-                                color: const Color(0xFFC084FC).withValues(alpha: 0.5),
+                                color: const Color(0xFFC084FC)
+                                    .withValues(alpha: 0.5),
                               ),
                             ),
                           ),
                         ],
                       ),
-                    ),
-                    const SizedBox(height: 12),
-
-                    // Monastic Seal Badge
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Row(
-                          children: [
-                            const AppIcon(LogosIcons.verifiedOutlined, size: 14, color: Color(0xFFF59E0B)),
-                            const SizedBox(width: 5),
-                            Text(
-                              'SHA-256 Cloister Seal',
-                              style: GoogleFonts.inter(
-                                fontSize: 11,
-                                color: const Color(0xFFF59E0B),
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
-                        ),
-                        Text(
-                          'Day 1 Ready',
-                          style: GoogleFonts.inter(
-                            fontSize: 11,
-                            color: LogosColors.inkSecondary,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
                     ),
                   ],
                 ),
@@ -658,6 +693,165 @@ class _CovenantScreenState extends State<CovenantScreen>
           ),
         );
     }
+  }
+
+  Widget _buildPracticeStep() {
+    final translation = translationByKey(_translation);
+    final timeLabel = MaterialLocalizations.of(context).formatTimeOfDay(
+      TimeOfDay(hour: _reminderMinutes ~/ 60, minute: _reminderMinutes % 60),
+    );
+    final firstWeek = const ContentRepository().drops.first;
+    final cardDecoration = BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(18),
+      border: Border.all(color: LogosColors.taupe),
+      boxShadow: LogosColors.softShadow,
+    );
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Your practice',
+          style: GoogleFonts.sourceSerif4(
+            fontSize: 34,
+            fontWeight: FontWeight.w700,
+            letterSpacing: -0.5,
+            color: LogosColors.ink,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          'You can change these any time in Settings.',
+          style: GoogleFonts.inter(
+            fontSize: 14,
+            color: LogosColors.inkSecondary,
+          ),
+        ),
+        const SizedBox(height: 18),
+        InkWell(
+          borderRadius: BorderRadius.circular(18),
+          onTap: () => showTranslationPicker(
+            context,
+            current: _translation,
+            previews: firstWeek.translations,
+            onSelected: (key) => setState(() => _translation = key),
+          ),
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: cardDecoration,
+            child: Row(
+              children: [
+                const AppIcon(
+                  LogosIcons.bookOpen,
+                  color: LogosColors.coral,
+                  size: 24,
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Bible translation',
+                        style: GoogleFonts.inter(
+                          fontSize: 13,
+                          color: LogosColors.inkSecondary,
+                        ),
+                      ),
+                      Text(
+                        translation?.name ?? _translation,
+                        style: GoogleFonts.inter(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: LogosColors.ink,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Text(
+                  'Change',
+                  style: GoogleFonts.inter(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: LogosColors.coral,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: cardDecoration,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const AppIcon(
+                    LogosIcons.notificationsActive,
+                    color: LogosColors.coral,
+                    size: 24,
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Text(
+                      'Daily reminder',
+                      style: GoogleFonts.inter(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: LogosColors.ink,
+                      ),
+                    ),
+                  ),
+                  Switch.adaptive(
+                    value: _remind,
+                    activeTrackColor: LogosColors.coral,
+                    onChanged: (v) => setState(() => _remind = v),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 6),
+              Text(
+                'One gentle nudge a day so the rhythm isn’t lost. Your phone will ask for permission next.',
+                style: GoogleFonts.inter(
+                  fontSize: 13,
+                  height: 1.4,
+                  color: LogosColors.inkSecondary,
+                ),
+              ),
+              if (_remind) ...[
+                const SizedBox(height: 10),
+                OutlinedButton.icon(
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: LogosColors.coral,
+                    side: BorderSide(
+                      color: LogosColors.coral.withValues(alpha: 0.4),
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  icon: const AppIcon(
+                    LogosIcons.clock,
+                    size: 18,
+                    color: LogosColors.coral,
+                  ),
+                  label: Text(
+                    'Remind me at $timeLabel',
+                    style: GoogleFonts.inter(fontWeight: FontWeight.w700),
+                  ),
+                  onPressed: _pickReminderTime,
+                ),
+              ],
+            ],
+          ),
+        ),
+      ],
+    );
   }
 
   Widget _buildRhythmCard({
@@ -672,10 +866,7 @@ class _CovenantScreenState extends State<CovenantScreen>
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: LogosColors.taupe,
-          width: 1,
-        ),
+        border: Border.all(color: LogosColors.taupe, width: 1),
         boxShadow: LogosColors.softShadow,
       ),
       child: Row(
@@ -714,10 +905,8 @@ class _CovenantScreenState extends State<CovenantScreen>
                     Expanded(
                       child: Text(
                         '· $title',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
                         style: GoogleFonts.inter(
-                          fontSize: 12.5,
+                          fontSize: 14,
                           fontWeight: FontWeight.w700,
                           color: LogosColors.ink,
                         ),
@@ -728,10 +917,8 @@ class _CovenantScreenState extends State<CovenantScreen>
                 const SizedBox(height: 2),
                 Text(
                   desc,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
                   style: GoogleFonts.inter(
-                    fontSize: 11,
+                    fontSize: 13,
                     color: LogosColors.inkSecondary,
                   ),
                 ),
@@ -749,13 +936,17 @@ class _CovenantScreenState extends State<CovenantScreen>
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const AppIcon(LogosIcons.checkCircleRounded, size: 15, color: LogosColors.coral),
+          const AppIcon(
+            LogosIcons.checkCircleRounded,
+            size: 15,
+            color: LogosColors.coral,
+          ),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
               text,
               style: GoogleFonts.inter(
-                fontSize: 12.5,
+                fontSize: 14,
                 fontWeight: FontWeight.w500,
                 color: LogosColors.ink,
               ),
@@ -803,7 +994,12 @@ class _MotePainter extends CustomPainter {
 
       final paint = Paint()
         ..color = const Color(0xFF8B5CF6).withValues(
-          alpha: (mote.opacity * (0.4 + 0.3 * math.sin((progress * 4 * math.pi) + mote.phase))).clamp(0.05, 0.5),
+          alpha:
+              (mote.opacity *
+                      (0.4 +
+                          0.3 *
+                              math.sin((progress * 4 * math.pi) + mote.phase)))
+                  .clamp(0.05, 0.5),
         )
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 1.2);
 

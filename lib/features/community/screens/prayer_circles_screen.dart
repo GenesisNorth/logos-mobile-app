@@ -81,7 +81,8 @@ class _PrayerCirclesScreenState extends State<PrayerCirclesScreen> {
     ..._myNotes.map((n) {
       final left =
           VoiceNoteStore.lifetime - DateTime.now().difference(n.createdAt);
-      final days = (left.inMinutes / (24 * 60)).ceil(); // a fresh note reads "7 days"
+      final days = (left.inMinutes / (24 * 60))
+          .ceil(); // a fresh note reads "7 days"
       return {
         'id': n.id,
         'author': '${n.authorName} (You)',
@@ -271,6 +272,7 @@ class _PrayerCirclesScreenState extends State<PrayerCirclesScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
+          tooltip: 'Back',
           icon: AppIcon(LogosIcons.arrowBack, color: ink),
           onPressed: () => Navigator.pop(context),
         ),
@@ -520,6 +522,7 @@ class _PrayerCirclesScreenState extends State<PrayerCirclesScreen> {
                             child: Row(
                               children: [
                                 IconButton(
+                                  tooltip: 'Play or pause prayer',
                                   icon: AppIcon(
                                     isPlaying
                                         ? LogosIcons.pauseCircleFilled
@@ -621,32 +624,38 @@ class _PrayerCirclesScreenState extends State<PrayerCirclesScreen> {
                       ],
                     ),
                   ),
-                  GestureDetector(
-                    onTap: _toggleRecording,
-                    child: Container(
-                      width: 52,
-                      height: 52,
-                      decoration: BoxDecoration(
-                        color: _isRecording
-                            ? Colors.redAccent
-                            : LogosColors.prayerCircles,
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color:
-                                (_isRecording
-                                        ? Colors.redAccent
-                                        : LogosColors.prayerCircles)
-                                    .withValues(alpha: 0.35),
-                            blurRadius: 10,
-                            spreadRadius: 2,
-                          ),
-                        ],
-                      ),
-                      child: AppIcon(
-                        _isRecording ? LogosIcons.stop : LogosIcons.mic,
-                        color: Colors.white,
-                        size: 26,
+                  Semantics(
+                    button: true,
+                    label: _isRecording
+                        ? 'Stop recording'
+                        : 'Record a voice prayer',
+                    child: GestureDetector(
+                      onTap: _toggleRecording,
+                      child: Container(
+                        width: 52,
+                        height: 52,
+                        decoration: BoxDecoration(
+                          color: _isRecording
+                              ? Colors.redAccent
+                              : LogosColors.prayerCircles,
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color:
+                                  (_isRecording
+                                          ? Colors.redAccent
+                                          : LogosColors.prayerCircles)
+                                      .withValues(alpha: 0.35),
+                              blurRadius: 10,
+                              spreadRadius: 2,
+                            ),
+                          ],
+                        ),
+                        child: AppIcon(
+                          _isRecording ? LogosIcons.stop : LogosIcons.mic,
+                          color: Colors.white,
+                          size: 26,
+                        ),
                       ),
                     ),
                   ),

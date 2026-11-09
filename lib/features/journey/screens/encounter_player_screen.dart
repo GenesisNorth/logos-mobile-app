@@ -107,6 +107,7 @@ class _EncounterPlayerScreenState extends State<EncounterPlayerScreen> {
                       ),
                     ),
                     IconButton(
+                      tooltip: 'Close',
                       icon: const AppIcon(LogosIcons.close, color: LogosColors.ink),
                       onPressed: () => Navigator.pop(context),
                     ),
@@ -184,6 +185,7 @@ class _EncounterPlayerScreenState extends State<EncounterPlayerScreen> {
                   children: [
                     if (_currentLineIndex > 0)
                       IconButton(
+                        tooltip: 'Previous',
                         icon: const AppIcon(LogosIcons.arrowBackIos, color: LogosColors.ink, size: 20),
                         onPressed: _prev,
                       )

@@ -9,6 +9,8 @@ import 'journey_event.dart';
 import 'journey_state.dart';
 
 class JourneyBloc extends Bloc<JourneyEvent, JourneyState> {
+  static const maxGraceTokens = 3;
+
   final ProgressRepository _progressRepo;
   final ContentRepository _contentRepo;
   final Clock _clock;
@@ -31,6 +33,7 @@ class JourneyBloc extends Bloc<JourneyEvent, JourneyState> {
     on<AdvanceToNextWeek>(_onAdvanceToNextWeek);
     on<SelectWeek>(_onSelectWeek);
     on<SelectTranslation>(_onSelectTranslation);
+    on<UpdateDisplayName>(_onUpdateDisplayName);
   }
 
   Future<void> _onLoadJourneyProgress(
@@ -84,7 +87,8 @@ class JourneyBloc extends Bloc<JourneyEvent, JourneyState> {
     final isExchangeCompleted = journeyData['isExchangeCompleted'] as bool? ?? false;
     final activeDay = journeyData['activeDay'] as int? ?? 1;
 
-    emit(state.copyWith(
+    // Start from a clean state so nothing from a previous (e.g. erased) session leaks in.
+    emit(JourneyState.initial(activeDrop).copyWith(
       activeDrop: activeDrop,
       activeDay: activeDay,
       dayCompletionStatus: dayCompletion,
@@ -219,6 +223,8 @@ class JourneyBloc extends Bloc<JourneyEvent, JourneyState> {
       dayCompletionStatus: updatedStatus,
       dayCompletedAt: updatedCompletedAt,
       rootsPlanted: state.rootsPlanted + 1,
+      // Finishing a full rhythm earns back one grace token.
+      graceTokensBalance: (state.graceTokensBalance + 1).clamp(0, maxGraceTokens),
       savedTearSheets: updatedSheets,
     ));
 
@@ -230,22 +236,13 @@ class JourneyBloc extends Bloc<JourneyEvent, JourneyState> {
     RedeemGraceToken event,
     Emitter<JourneyState> emit,
   ) async {
-    if (state.graceTokensBalance <= 0) return;
+    final now = _clock.now();
+    if (state.graceTokensBalance <= 0 || !state.isStreakRecoverable(now: now)) return;
 
-    final updatedStatus = Map<int, bool>.from(state.dayCompletionStatus);
-    final updatedCompletedAt = Map<int, DateTime?>.from(state.dayCompletedAt);
-
-    updatedStatus[event.dayToRecover] = true;
-    // Set timestamp to yesterday so today is unlocked immediately
-    final yesterday = _clock.now().subtract(const Duration(days: 1));
-    updatedCompletedAt[event.dayToRecover] = yesterday;
-
+    // Treat yesterday as practised so today's practice continues the streak.
     final newState = state.copyWith(
       graceTokensBalance: state.graceTokensBalance - 1,
-      dayCompletionStatus: updatedStatus,
-      dayCompletedAt: updatedCompletedAt,
-      // Grace covers a single missed day so the streak continues today.
-      lastPracticeDate: state.isStreakRecoverable(now: _clock.now()) ? yesterday : null,
+      lastPracticeDate: now.subtract(const Duration(days: 1)),
     );
 
     emit(newState);
@@ -282,9 +279,17 @@ class JourneyBloc extends Bloc<JourneyEvent, JourneyState> {
     SelectWeek event,
     Emitter<JourneyState> emit,
   ) async {
+    if (!state.canChangeWeek) return;
     final currentTranslation = state.activeDrop.translation;
     final drop = _contentRepo.dropForWeekIndex(event.weekIndex).withTranslation(currentTranslation);
-    final newState = state.copyWith(activeDrop: drop);
+    final newState = state.copyWith(
+      activeDrop: drop,
+      activeDay: 1,
+      dayCompletionStatus: const {1: false, 2: false, 3: false, 4: false},
+      dayCompletedAt: const {1: null, 2: null, 3: null, 4: null},
+      dayRecitationCount: const {1: 0, 2: 0, 3: 0, 4: 0},
+      isExchangeCompleted: false,
+    );
     emit(newState);
     await _persistJourneyData(newState);
   }
@@ -312,6 +317,25 @@ class JourneyBloc extends Bloc<JourneyEvent, JourneyState> {
       streak = gap <= 0 ? (s.currentStreak == 0 ? 1 : s.currentStreak) : (gap == 1 ? s.currentStreak + 1 : 1);
     }
     return s.copyWith(currentStreak: streak, lastPracticeDate: today);
+  }
+
+  Future<void> _onUpdateDisplayName(
+    UpdateDisplayName event,
+    Emitter<JourneyState> emit,
+  ) async {
+    final name = event.name.trim();
+    if (name.isEmpty) return;
+    final p = state.profile;
+    final updated = UserProfileData(
+      username: p.username,
+      displayName: name,
+      covenantSignature: p.covenantSignature,
+      covenantSignedAt: p.covenantSignedAt,
+      birthMonth: p.birthMonth,
+      birthDay: p.birthDay,
+    );
+    await _progressRepo.saveProfile(updated);
+    emit(state.copyWith(profile: updated));
   }
 
   Future<void> _persistJourneyData(JourneyState state) async {

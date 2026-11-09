@@ -87,7 +87,7 @@ void main() {
       clock.advance(const Duration(days: 1));
       await recite(); // streak 2
       clock.advance(const Duration(days: 2));
-      bloc.add(const RedeemGraceToken(dayToRecover: 2));
+      bloc.add(const RedeemGraceToken());
       await _settle();
       expect(bloc.state.graceTokensBalance, 2);
       expect(bloc.state.activeStreak(now: clock.now()), 2);

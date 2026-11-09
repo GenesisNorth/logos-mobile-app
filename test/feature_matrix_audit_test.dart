@@ -98,7 +98,7 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 300));
 
-      expect(find.text('THE LITURGICAL MANIFESTO'), findsOneWidget);
+      expect(find.text('WELCOME'), findsOneWidget);
       expect(find.text('Continue'), findsOneWidget);
 
       // Advance to step 1
@@ -106,15 +106,25 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 300));
 
-      expect(find.text('The 4-Day Rhythm'), findsOneWidget);
+      expect(find.text('The 4-day rhythm'), findsOneWidget);
 
-      // Advance to step 2 (Signature)
+      // Step 3: Your practice (translation + reminder). Turn reminders off so
+      // the test does not request notification permission.
+      await tester.tap(find.text('Continue'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(find.text('Your practice'), findsOneWidget);
+      expect(find.text('Bible translation'), findsOneWidget);
+      await tester.tap(find.byType(Switch));
+      await tester.pump();
+
+      // Step 4: Covenant signature
       await tester.tap(find.text('Continue'));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 300));
 
-      expect(find.text('The Sacred Covenant'), findsOneWidget);
-      final sealButton = find.text('Sign & Seal the Covenant');
+      expect(find.text('Your covenant'), findsOneWidget);
+      final sealButton = find.text('Sign & begin');
       expect(sealButton, findsOneWidget);
 
       // Name starts empty; sealing without a name is blocked with a prompt.
@@ -201,7 +211,7 @@ void main() {
       expect(find.text('Day 1 · Recitation 1 of 2'), findsOneWidget);
 
       // Toggle to manual text entry mode
-      final keyboardIcon = find.byTooltip('Type recitation manually');
+      final keyboardIcon = find.byTooltip('Type your recitation');
       expect(keyboardIcon, findsOneWidget);
       await tester.tap(keyboardIcon);
       await tester.pump();
@@ -215,7 +225,7 @@ void main() {
       await tester.pump(const Duration(milliseconds: 200));
 
       // Tap Verify
-      await tester.tap(find.text('Verify'));
+      await tester.tap(find.text('Check'));
       await tester.pump();
       await tester.pump(const Duration(seconds: 2));
 
@@ -271,13 +281,13 @@ void main() {
       await tester.pump(const Duration(milliseconds: 500));
 
       expect(find.text('Sacred Soundscape Console'), findsOneWidget);
-      expect(find.text('Convent 432 Hz Drone'), findsOneWidget);
+      expect(find.text('Convent Drone'), findsOneWidget);
       expect(find.text('Cloister Rainfall'), findsOneWidget);
       expect(find.text('Holy Sanctuary Bells'), findsOneWidget);
       expect(find.text('Night Cloister Breeze'), findsOneWidget);
 
       // Verify preset pills
-      expect(find.text('Sanctuary Dawn'), findsOneWidget);
+      expect(find.text('Sanctuary Dawn'), findsAtLeastNWidgets(1));
       expect(find.text('Midnight Examen'), findsOneWidget);
 
       // Tap preset
@@ -312,7 +322,7 @@ void main() {
             verseText: drop.verseText,
             reference: drop.reference,
             weekNumber: 1,
-            onExchangeCompleted: () => exchangeCompleted = true,
+            onExchangeCompleted: (_) => exchangeCompleted = true,
           ),
         ),
       );
@@ -320,8 +330,14 @@ void main() {
       await tester.pump(const Duration(milliseconds: 300));
 
       expect(find.text('The Exchange'), findsOneWidget);
-      expect(find.text('Your Burden:'), findsOneWidget);
-      expect(find.text('↓ Drop Scripture Here to Dissolve ↓'), findsOneWidget);
+      expect(find.text('What I am carrying'), findsOneWidget);
+      expect(find.text('↓ Drop the verse here ↓'), findsOneWidget);
+      expect(find.text('Lay it down'), findsOneWidget);
+
+      // An empty burden cannot be laid down.
+      await tester.tap(find.text('Lay it down'));
+      await tester.pump();
+      expect(exchangeCompleted, isFalse);
       expect(find.byType(DragTarget<String>), findsOneWidget);
       expect(exchangeCompleted, isFalse);
     });
@@ -360,7 +376,8 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 500));
 
-      expect(find.text('Scripture Translation Bridge'), findsOneWidget);
+      expect(find.text('Bible translation'), findsOneWidget);
+      await tester.scrollUntilVisible(find.text('King James Version'), 150, scrollable: find.byType(Scrollable).last);
       expect(find.text('King James Version'), findsOneWidget);
 
       // Select KJV
@@ -406,7 +423,7 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 500));
 
-      expect(find.text('Weekly Scripture Cloister'), findsOneWidget);
+      expect(find.text('Weekly verses'), findsOneWidget);
       expect(find.text('WK 2'), findsOneWidget);
       expect(find.text('Philippians 4:6-7'), findsOneWidget);
 
@@ -485,14 +502,17 @@ void main() {
       await tester.pump(const Duration(milliseconds: 500));
 
       expect(find.text('The Well'), findsOneWidget);
-      expect(find.text('4-HOUR PASTORAL CARE SLA'), findsOneWidget);
-      expect(find.text('Bring to The Well'), findsOneWidget);
+      expect(find.text('PRIVATE · SEEN ONLY BY OUR PASTORAL TEAM'), findsOneWidget);
+      expect(find.text('Send request'), findsOneWidget);
+      // Honest copy: no guaranteed reply time; crisis help is always visible.
+      expect(find.textContaining('4 hours'), findsNothing);
+      expect(find.textContaining('not an emergency service'), findsOneWidget);
     });
 
     // --------------------------------------------------------------------------
     // Feature 11: Prayer Altar, Relic Journal & Cloud Account
     // --------------------------------------------------------------------------
-    testWidgets('[Feature 11: Prayer Altar & Cloud Account] displays covenant and cloud recovery', (tester) async {
+    testWidgets('[Feature 11: Prayer Altar & Settings] shows progress and opens settings', (tester) async {
       tester.view.physicalSize = const Size(1080, 2400);
       tester.view.devicePixelRatio = 2.0;
       addTearDown(() {
@@ -508,19 +528,24 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 500));
 
-      expect(find.text('Prayer Altar & Covenant'), findsOneWidget);
+      expect(find.text('Prayer Altar'), findsOneWidget);
       expect(find.text('Genesis A.'), findsOneWidget);
-      expect(find.text('Cloud Recovery'), findsOneWidget);
-      expect(find.text('Export Relics'), findsOneWidget);
+      expect(find.text('Current streak'), findsOneWidget);
+      expect(find.text('Tear Sheets'), findsOneWidget);
+      // No developer diagnostics in the user's view.
+      expect(find.textContaining('APNS'), findsNothing);
+      expect(find.textContaining('SHA-256'), findsNothing);
 
-      // Open Cloud Recovery Dialog
-      await tester.tap(find.text('Cloud Recovery'));
+      // Settings holds preferences, data and legal.
+      await tester.tap(find.byTooltip('Settings'));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 500));
-
-      expect(find.text('Link Email to Anonymous Session:'), findsOneWidget);
-      expect(find.text('Email Address'), findsOneWidget);
-      expect(find.text('Password (Minimum 6 characters)'), findsOneWidget);
+      expect(find.text('Settings'), findsOneWidget);
+      expect(find.text('Bible translation'), findsOneWidget);
+      expect(find.text('Daily reminder'), findsOneWidget);
+      await tester.scrollUntilVisible(find.text('Erase data on this phone'), 200);
+      expect(find.text('Export my journal'), findsOneWidget);
+      expect(find.text('Translation notices'), findsOneWidget);
     });
 
     // --------------------------------------------------------------------------

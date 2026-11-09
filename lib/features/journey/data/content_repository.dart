@@ -1,4 +1,5 @@
 import '../models/scripture_drop.dart';
+import 'open_translation_texts.dart';
 
 /// Bundled weekly content for Phase 0 (offline). Mirrors `seed.sql`.
 /// In Phase 1 this is replaced by a Supabase-backed source with local cache.
@@ -9,7 +10,7 @@ class ContentRepository {
 
   ScriptureDrop dropForWeekIndex(int index) => _drops[index % _drops.length];
 
-  static const _drops = <ScriptureDrop>[
+  static final _drops = <ScriptureDrop>[
     ScriptureDrop(
       id: '00000000-0000-0000-0000-000000000001',
       weekNumber: 1,
@@ -18,14 +19,14 @@ class ContentRepository {
           'I am the vine; you are the branches. Whoever abides in me and I in him, he it is that bears much fruit, for apart from me you can do nothing.',
       translation: 'ESV',
       videoUrl: 'https://assets.logosinme.com/videos/week1_encounter_hd.mp4',
-      encounterLines: [
+      encounterLines: const [
         'The night before the cross,',
         'Jesus walked with His friends past the vineyards.',
         'He did not hand them a task.',
         'He offered them a place to stay.',
         '“Abide in me.”',
       ],
-      contextCards: [
+      contextCards: const [
         ContextCard(
           title: 'The True Vine',
           subtitle: 'Ancient Near East Metaphor',
@@ -46,12 +47,11 @@ class ContentRepository {
         ),
       ],
       ambientPreset: 'sanctuary_dawn',
-      ambientLabel: 'Sanctuary Dawn · 432 Hz',
+      ambientLabel: 'Sanctuary Dawn',
       translations: {
+        ...openTranslationTexts['John 15:5']!,
         'ESV':
             'I am the vine; you are the branches. Whoever abides in me and I in him, he it is that bears much fruit, for apart from me you can do nothing.',
-        'KJV':
-            'I am the vine, ye are the branches: He that abideth in me, and I in him, the same bringeth forth much fruit: for without me ye can do nothing.',
         'NASB':
             'I am the vine, you are the branches; he who abides in Me and I in him, he bears much fruit, for apart from Me you can do nothing.',
         'NIV':
@@ -66,13 +66,13 @@ class ContentRepository {
           'Do not be anxious about anything, but in everything by prayer and supplication with thanksgiving let your requests be made known to God. And the peace of God, which surpasses all understanding, will guard your hearts and your minds in Christ Jesus.',
       translation: 'ESV',
       videoUrl: 'https://assets.logosinme.com/videos/week2_encounter_hd.mp4',
-      encounterLines: [
+      encounterLines: const [
         'Paul wrote these words in chains.',
         'Not from comfort, but from a Roman prison.',
         'And still he spoke of peace',
         'standing guard over the heart.',
       ],
-      contextCards: [
+      contextCards: const [
         ContextCard(
           title: 'The Roman Garrison',
           subtitle: 'Historical Context in Philippi',
@@ -87,12 +87,11 @@ class ContentRepository {
         ),
       ],
       ambientPreset: 'sanctuary_dune',
-      ambientLabel: 'Sanctuary Dune · 432 Hz',
+      ambientLabel: 'Sanctuary Dune',
       translations: {
+        ...openTranslationTexts['Philippians 4:6-7']!,
         'ESV':
             'Do not be anxious about anything, but in everything by prayer and supplication with thanksgiving let your requests be made known to God. And the peace of God, which surpasses all understanding, will guard your hearts and your minds in Christ Jesus.',
-        'KJV':
-            'Be careful for nothing; but in every thing by prayer and supplication with thanksgiving let your requests be made known unto God. And the peace of God, which passeth all understanding, shall keep your hearts and minds through Christ Jesus.',
         'NASB':
             'Be anxious for nothing, but in everything by prayer and supplication with thanksgiving let your requests be made known to God. And the peace of God, which surpasses all comprehension, will guard your hearts and your minds in Christ Jesus.',
         'NIV':
@@ -107,14 +106,14 @@ class ContentRepository {
           'There is therefore now no condemnation for those who are in Christ Jesus. For the law of the Spirit of life has set you free in Christ Jesus from the law of sin and death.',
       translation: 'ESV',
       videoUrl: 'https://assets.logosinme.com/videos/week3_encounter_hd.mp4',
-      encounterLines: [
+      encounterLines: const [
         'The gavel has fallen in the courts of eternity.',
         'Not by your striving, but by His covenant blood.',
         'The verdict is written in indelible grace:',
         'No condemnation. None.',
         '“You are free in Christ Jesus.”',
       ],
-      contextCards: [
+      contextCards: const [
         ContextCard(
           title: 'Katakrima: The Annulled Verdict',
           subtitle: 'Greek Judicial Term',
@@ -135,12 +134,11 @@ class ContentRepository {
         ),
       ],
       ambientPreset: 'sanctuary_dawn',
-      ambientLabel: 'Sanctuary Deep · 432 Hz',
+      ambientLabel: 'Sanctuary Deep',
       translations: {
+        ...openTranslationTexts['Romans 8:1-2']!,
         'ESV':
             'There is therefore now no condemnation for those who are in Christ Jesus. For the law of the Spirit of life has set you free in Christ Jesus from the law of sin and death.',
-        'KJV':
-            'There is therefore now no condemnation to them which are in Christ Jesus, who walk not after the flesh, but after the Spirit. For the law of the Spirit of life in Christ Jesus hath made me free from the law of sin and death.',
         'NASB':
             'Therefore there is now no condemnation for those who are in Christ Jesus. For the law of the Spirit of life in Christ Jesus has set you free from the law of sin and of death.',
         'NIV':
@@ -152,17 +150,17 @@ class ContentRepository {
       weekNumber: 4,
       reference: 'Psalm 23:1-3',
       verseText:
-          'The Lord is my shepherd; I shall not want. He makes me lie down in green pastures. He leads me beside still waters. He restores my soul.',
+          'The LORD is my shepherd; I shall not want. He makes me lie down in green pastures. He leads me beside still waters. He restores my soul. He leads me in paths of righteousness for his name’s sake.',
       translation: 'ESV',
       videoUrl: 'https://assets.logosinme.com/videos/week4_encounter_hd.mp4',
-      encounterLines: [
+      encounterLines: const [
         'David was a shepherd in the Judean wilderness.',
         'He knew sheep cannot lie down while anxious or afraid.',
         'Your Shepherd has prepared quiet waters.',
         'Breathe deeply. In Him, you lack nothing.',
         '“He restores my soul.”',
       ],
-      contextCards: [
+      contextCards: const [
         ContextCard(
           title: 'Yahweh Rohi: The Lord My Shepherd',
           subtitle: 'Hebrew Covenant Name',
@@ -183,16 +181,15 @@ class ContentRepository {
         ),
       ],
       ambientPreset: 'sanctuary_dune',
-      ambientLabel: 'Quiet Waters · 432 Hz',
+      ambientLabel: 'Quiet Waters',
       translations: {
+        ...openTranslationTexts['Psalm 23:1-3']!,
         'ESV':
-            'The Lord is my shepherd; I shall not want. He makes me lie down in green pastures. He leads me beside still waters. He restores my soul.',
-        'KJV':
-            'The Lord is my shepherd; I shall not want. He maketh me to lie down in green pastures: he leadeth me beside the still waters. He restoreth my soul: he leadeth me in the paths of righteousness for his name\'s sake.',
+            'The LORD is my shepherd; I shall not want. He makes me lie down in green pastures. He leads me beside still waters. He restores my soul. He leads me in paths of righteousness for his name’s sake.',
         'NASB':
-            'The Lord is my shepherd, I shall not want. He makes me lie down in green pastures; He leads me beside quiet waters. He restores my soul; He guides me in the paths of righteousness For His name\'s sake.',
+            'The LORD is my shepherd, I shall not want. He makes me lie down in green pastures; He leads me beside quiet waters. He restores my soul; He guides me in the paths of righteousness For His name\'s sake.',
         'NIV':
-            'The Lord is my shepherd, I lack nothing. He makes me lie down in green pastures, he leads me beside quiet waters, he refreshes my soul. He guides me along the right paths for his name’s sake.',
+            'The LORD is my shepherd, I lack nothing. He makes me lie down in green pastures, he leads me beside quiet waters, he refreshes my soul. He guides me along the right paths for his name’s sake.',
       },
     ),
     ScriptureDrop(
@@ -203,14 +200,14 @@ class ContentRepository {
           'If then you have been raised with Christ, seek the things that are above, where Christ is, seated at the right hand of God. Set your minds on things that are above, not on things that are on earth. For you have died, and your life is hidden with Christ in God.',
       translation: 'ESV',
       videoUrl: 'https://assets.logosinme.com/videos/week5_encounter_hd.mp4',
-      encounterLines: [
+      encounterLines: const [
         'Your earthly anxieties do not hold your true identity.',
         'You have been co-raised into heavenly places.',
         'Your life is not exposed, fragile, or abandoned.',
         'It is safely hidden inside the Father’s heart.',
         '“Set your minds on things above.”',
       ],
-      contextCards: [
+      contextCards: const [
         ContextCard(
           title: 'Synēgerthēte: Co-Resurrected',
           subtitle: 'Greek Spiritual Union',
@@ -231,12 +228,11 @@ class ContentRepository {
         ),
       ],
       ambientPreset: 'sanctuary_dawn',
-      ambientLabel: 'Heavenly Places · 432 Hz',
+      ambientLabel: 'Heavenly Places',
       translations: {
+        ...openTranslationTexts['Colossians 3:1-3']!,
         'ESV':
             'If then you have been raised with Christ, seek the things that are above, where Christ is, seated at the right hand of God. Set your minds on things that are above, not on things that are on earth. For you have died, and your life is hidden with Christ in God.',
-        'KJV':
-            'If ye then be risen with Christ, seek those things which are above, where Christ sitteth on the right hand of God. Set your affection on things above, not on the things on the earth. For ye are dead, and your life is hid with Christ in God.',
         'NASB':
             'Therefore if you have been raised up with Christ, keep seeking the things above, where Christ is, seated at the right hand of God. Set your mind on the things above, not on the things that are on earth. For you have died and your life is hidden with Christ in God.',
         'NIV':

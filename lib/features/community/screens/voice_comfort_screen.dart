@@ -110,6 +110,7 @@ class _VoiceComfortScreenState extends State<VoiceComfortScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
+          tooltip: 'Back',
           icon: AppIcon(LogosIcons.arrowBack, color: ink),
           onPressed: () => Navigator.pop(context),
         ),
@@ -210,6 +211,7 @@ class _VoiceComfortScreenState extends State<VoiceComfortScreen> {
                         Row(
                           children: [
                             IconButton(
+                              tooltip: 'Play or pause prayer',
                               icon: AppIcon(
                                 isPlaying ? LogosIcons.pauseCircleFilled : LogosIcons.playCircleFilled,
                                 color: LogosColors.voiceComfort,

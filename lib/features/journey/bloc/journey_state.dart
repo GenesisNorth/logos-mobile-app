@@ -105,6 +105,15 @@ class JourneyState extends Equatable {
     return (now ?? DateTime.now()).calendarDaysSince(last) == 2;
   }
 
+  /// The verse can only change before this week's rhythm has started or
+  /// after it is finished, so progress never mixes between verses.
+  bool get canChangeWeek {
+    final started = dayRecitationCount.values.any((c) => c > 0) ||
+        dayCompletionStatus.values.any((done) => done);
+    final finished = dayCompletionStatus[4] == true || isExchangeCompleted;
+    return !started || finished;
+  }
+
   /// Whether a day is unlocked according to midnight pace-lock.
   bool isDayUnlocked(int day, {DateTime? now}) {
     if (day <= 1) return true;

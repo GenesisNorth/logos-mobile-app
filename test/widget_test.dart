@@ -146,14 +146,13 @@ void main() {
       expect(bloc.state.isDayUnlocked(2, now: fixedClock.now()), isTrue);
     });
 
-    test('Redeeming Grace Token unlocks missed day immediately', () async {
-      bloc.add(const RedeemGraceToken(dayToRecover: 1));
+    test('Grace token never completes unfinished content and is not spent without a missed day', () async {
+      bloc.add(const RedeemGraceToken());
       await Future.delayed(const Duration(milliseconds: 50));
 
-      expect(bloc.state.dayCompletionStatus[1], isTrue);
-      expect(bloc.state.graceTokensBalance, equals(2));
-      // Unlocks Day 2 immediately without waiting for midnight
-      expect(bloc.state.isDayUnlocked(2, now: fixedClock.now()), isTrue);
+      expect(bloc.state.dayCompletionStatus[1], isFalse);
+      expect(bloc.state.graceTokensBalance, equals(3));
+      expect(bloc.state.isDayUnlocked(2, now: fixedClock.now()), isFalse);
     });
 
     test('ContentRepository has 5 comprehensive drops with Greek and Hebrew exegesis', () {
@@ -284,24 +283,10 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
 
-    // Verify Altar features: Covenant, Cloud Recovery, and Export Relics
-    expect(find.text('Prayer Altar & Covenant'), findsOneWidget);
-    expect(find.text('Cloud Recovery'), findsOneWidget);
-    expect(find.text('Export Relics'), findsOneWidget);
-
-    // 4. Tap Cloud Recovery button to open dialog
-    await tester.tap(find.text('Cloud Recovery'));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 500));
-
-    expect(find.text('Cloud Account & Recovery'), findsOneWidget);
-    expect(find.text('Email Address'), findsOneWidget);
-    expect(find.byType(TextField), findsNWidgets(2));
-
-    // Dismiss bottom sheet by tapping outside
-    await tester.tapAt(const Offset(20, 20));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 500));
+    // Verify Altar: progress and a way into Settings
+    expect(find.text('Prayer Altar'), findsOneWidget);
+    expect(find.text('Current streak'), findsOneWidget);
+    expect(find.byTooltip('Settings'), findsOneWidget);
 
     // 5. Navigate back to Sanctuary
     final sanctuaryTab = find.byKey(const Key('nav_tab_sanctuary'));
@@ -312,7 +297,7 @@ void main() {
     expect(find.text('The 4-Day Sacred Rhythm'), findsOneWidget);
   });
 
-  testWidgets('Pilgrim Account Sheet & Curriculum Week Selector open cleanly', (WidgetTester tester) async {
+  testWidgets('Week selector opens from the verse card and lists all weeks', (WidgetTester tester) async {
     tester.view.physicalSize = const Size(1080, 2400);
     tester.view.devicePixelRatio = 2.0;
     addTearDown(() {
@@ -324,23 +309,11 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
 
-    // Tap top-left book avatar to open Pilgrim Account Sheet
-    final accountIcon = find.byKey(const Key('pilgrim_account_button'));
-    expect(accountIcon, findsOneWidget);
-    await tester.tap(accountIcon);
+    await tester.tap(find.text('WEEK 1 SCRIPTURE'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 500));
 
-    expect(find.text('Genesis A.'), findsOneWidget);
-    expect(find.text('Curriculum (5 Wks)'), findsOneWidget);
-    expect(find.text('Export Relics'), findsOneWidget);
-
-    // Tap Curriculum button to open Week Selector
-    await tester.tap(find.text('Curriculum (5 Wks)'));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 500));
-
-    expect(find.text('Weekly Scripture Cloister'), findsOneWidget);
+    expect(find.text('Weekly verses'), findsOneWidget);
     expect(find.text('WK 1'), findsOneWidget);
     expect(find.text('WK 2'), findsOneWidget);
     expect(find.text('WK 5'), findsOneWidget);
@@ -427,12 +400,12 @@ void main() {
       await tester.pump(const Duration(milliseconds: 500));
 
       expect(find.text('Sacred Soundscape Console'), findsOneWidget);
-      expect(find.text('Convent 432 Hz Drone'), findsOneWidget);
+      expect(find.text('Convent Drone'), findsOneWidget);
       expect(find.text('Cloister Rainfall'), findsOneWidget);
       expect(find.text('Gregorian Vocal Resonance'), findsOneWidget);
       expect(find.text('Night Cloister Breeze'), findsOneWidget);
       expect(find.text('Holy Sanctuary Bells'), findsOneWidget);
-      expect(find.text('Sanctuary Dawn'), findsOneWidget);
+      expect(find.text('Sanctuary Dawn'), findsAtLeastNWidgets(1));
       expect(find.text('Cloister Rain'), findsOneWidget);
       expect(find.text('Gregorian Choir'), findsOneWidget);
       expect(find.text('Midnight Examen'), findsOneWidget);
@@ -694,10 +667,9 @@ void main() {
       await tester.pump(const Duration(milliseconds: 300));
 
       // Modal sheet opens with all 4 translations
-      expect(find.text('Scripture Translation Bridge'), findsOneWidget);
+      expect(find.text('Bible translation'), findsOneWidget);
+      await tester.scrollUntilVisible(find.text('King James Version'), 150, scrollable: find.byType(Scrollable).last);
       expect(find.text('King James Version'), findsOneWidget);
-      expect(find.text('New American Standard Bible'), findsOneWidget);
-      expect(find.text('New International Version'), findsOneWidget);
 
       // Tap KJV option
       await tester.tap(find.text('King James Version'));

@@ -1,5 +1,6 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
+import '../../../core/utils/date_format.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../../core/services/audio_service.dart';
@@ -79,7 +80,9 @@ class ExchangeCanvas extends StatefulWidget {
   final String verseText;
   final String reference;
   final int weekNumber;
-  final VoidCallback onExchangeCompleted;
+  /// Called with the burden text once it has been laid down. Only a hash of
+  /// the text is ever stored.
+  final ValueChanged<String> onExchangeCompleted;
 
   const ExchangeCanvas({
     super.key,
@@ -95,9 +98,8 @@ class ExchangeCanvas extends StatefulWidget {
 
 class _ExchangeCanvasState extends State<ExchangeCanvas>
     with SingleTickerProviderStateMixin {
-  final TextEditingController _burdenController = TextEditingController(
-    text: "Carrying chronic anxiety over finances and family burdens...",
-  );
+  final TextEditingController _burdenController = TextEditingController();
+  Size _zoneSize = Size.zero;
 
   bool _isDissolved = false;
   bool _isDraggingOver = false;
@@ -172,6 +174,14 @@ class _ExchangeCanvasState extends State<ExchangeCanvas>
   }
 
   void _triggerExchangeDissolution(Size zoneSize) {
+    if (_dissolveController.isAnimating || _isDissolved) return;
+    if (_burdenController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('First write what you are carrying — a word or two is enough.')),
+      );
+      return;
+    }
+    FocusScope.of(context).unfocus();
     _lastHapticTick = 0;
     AudioService().triggerExchangeHaptic();
     _spawnParticles(zoneSize);
@@ -181,12 +191,12 @@ class _ExchangeCanvasState extends State<ExchangeCanvas>
         _isDissolved = true;
       });
       AudioService().playSanctuaryChime();
-      widget.onExchangeCompleted();
+      widget.onExchangeCompleted(_burdenController.text.trim());
     });
   }
 
   void _shareTearSheet() {
-    final dateStr = '${DateTime.now().day}/${DateTime.now().month}/${DateTime.now().year}';
+    final dateStr = formatLogosDate(DateTime.now());
     final shareText = '''
 ✝ THE EXCHANGE · WEEK ${widget.weekNumber}
 "${widget.verseText}"
@@ -215,6 +225,7 @@ LOGOS IN ME
         elevation: 0,
         centerTitle: true,
         leading: IconButton(
+          tooltip: 'Back',
           icon: const AppIcon(LogosIcons.arrowBack, color: ink),
           onPressed: () => Navigator.of(context).pop(),
         ),
@@ -234,7 +245,7 @@ LOGOS IN ME
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
-                'Lay your heavy burden down. Drag the mastered Scripture over it to dissolve the burden.',
+                'Write what you are carrying. Then drag the verse onto it — or tap “Lay it down” — and leave it at the cross. Only you ever see what you write.',
                 textAlign: TextAlign.center,
                 style: LogosTypography.body(color: ink.withValues(alpha: 0.7)),
               ),
@@ -245,6 +256,7 @@ LOGOS IN ME
                 child: LayoutBuilder(
                   builder: (context, constraints) {
                     final zoneSize = Size(constraints.maxWidth, constraints.maxHeight);
+                    _zoneSize = zoneSize;
 
                     return Stack(
                       children: [
@@ -292,7 +304,7 @@ LOGOS IN ME
                                               ),
                                               const SizedBox(width: 8),
                                               Text(
-                                                'Your Burden:',
+                                                'What I am carrying',
                                                 style: LogosTypography.label(
                                                   color: LogosColors.coral,
                                                 ),
@@ -310,7 +322,7 @@ LOGOS IN ME
                                               ),
                                               decoration: InputDecoration(
                                                 border: InputBorder.none,
-                                                hintText: 'Type your burden here...',
+                                                hintText: 'Type it here…',
                                                 hintStyle: TextStyle(
                                                   color: ink.withValues(alpha: 0.4),
                                                 ),
@@ -319,7 +331,7 @@ LOGOS IN ME
                                           ),
                                           Center(
                                             child: Text(
-                                              '↓ Drop Scripture Here to Dissolve ↓',
+                                              '↓ Drop the verse here ↓',
                                               style: LogosTypography.caption(
                                                 color: LogosColors.coral,
                                               ),
@@ -383,6 +395,22 @@ LOGOS IN ME
                   child: _buildDraggableCard(surface, ink),
                 )
               else
+                const SizedBox.shrink(),
+              if (!_isDissolved) ...[
+                const SizedBox(height: 10),
+                SizedBox(
+                  height: 50,
+                  child: FilledButton.icon(
+                    style: FilledButton.styleFrom(
+                      backgroundColor: LogosColors.coral,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    ),
+                    icon: const AppIcon(LogosIcons.cross, color: Colors.white, size: 18),
+                    label: const Text('Lay it down', style: TextStyle(fontWeight: FontWeight.bold)),
+                    onPressed: () => _triggerExchangeDissolution(_zoneSize),
+                  ),
+                ),
+              ] else
                 SizedBox(
                   height: 52,
                   child: ElevatedButton.icon(
@@ -393,7 +421,7 @@ LOGOS IN ME
                     ),
                     icon: const AppIcon(LogosIcons.share),
                     label: const Text(
-                      'Share Tear Sheet & Return to Sanctuary',
+                      'Share & return',
                       style: TextStyle(fontWeight: FontWeight.bold),
                     ),
                     onPressed: () {
@@ -434,7 +462,7 @@ LOGOS IN ME
             children: [
               Expanded(
                 child: Text(
-                  'Mastered Scripture (Drag Upward)',
+                  'Your verse — drag it upward',
                   style: LogosTypography.label(color: LogosColors.coral),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,

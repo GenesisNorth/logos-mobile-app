@@ -61,13 +61,10 @@ class CompleteExchange extends JourneyEvent {
   List<Object?> get props => [burdenSummary, tearSheetImagePath];
 }
 
+/// Spends a grace token to bridge exactly one missed calendar day so the
+/// streak continues. It never marks unfinished content as complete.
 class RedeemGraceToken extends JourneyEvent {
-  final int dayToRecover;
-
-  const RedeemGraceToken({required this.dayToRecover});
-
-  @override
-  List<Object?> get props => [dayToRecover];
+  const RedeemGraceToken();
 }
 
 class AdvanceToNextWeek extends JourneyEvent {
@@ -90,3 +87,11 @@ class SelectTranslation extends JourneyEvent {
   List<Object?> get props => [translationKey];
 }
 
+
+class UpdateDisplayName extends JourneyEvent {
+  final String name;
+  const UpdateDisplayName(this.name);
+
+  @override
+  List<Object?> get props => [name];
+}

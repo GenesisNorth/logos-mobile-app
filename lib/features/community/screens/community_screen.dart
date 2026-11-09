@@ -9,9 +9,35 @@ import 'the_well_screen.dart';
 import 'valley_screen.dart';
 import 'voice_comfort_screen.dart';
 import '../../../core/theme/logos_icons.dart';
+import '../../../core/config/app_flags.dart';
+
+class _Room {
+  final String flag;
+  final String title;
+  final String description;
+  final Color color;
+  final LogosIconData icon;
+  final WidgetBuilder builder;
+  const _Room(this.flag, this.title, this.description, this.color, this.icon, this.builder);
+}
 
 class CommunityScreen extends StatelessWidget {
   const CommunityScreen({super.key});
+
+  static final List<_Room> _rooms = [
+    _Room(AppFlags.roomPrayerCircles, 'Prayer Circles', 'Record a short spoken prayer. Voice prayers fade after 7 days.',
+        LogosColors.prayerCircles, LogosIcons.recordVoiceOver, (_) => const PrayerCirclesScreen()),
+    _Room(AppFlags.roomTheWell, 'The Well', 'Bring a private prayer request to our pastoral team.',
+        LogosColors.theWell, LogosIcons.waterDrop, (_) => const TheWellScreen()),
+    _Room(AppFlags.roomValley, 'In the Valley', 'Quiet rooms for grief, work stress and weariness, anchored in the Psalms.',
+        LogosColors.valleyRooms, LogosIcons.terrain, (_) => const ValleyScreen()),
+    _Room(AppFlags.roomStudyPods, 'Study Pods', 'Walk through the week’s verse with a small group.',
+        LogosColors.studyPods, LogosIcons.menuBook, (_) => const StudyPodsScreen()),
+    _Room(AppFlags.roomVoiceComfort, 'Voice Comfort', 'Hear Scripture read aloud by others.',
+        LogosColors.voiceComfort, LogosIcons.hearing, (_) => const VoiceComfortScreen()),
+    _Room(AppFlags.roomMilestones, 'Milestones', 'Celebrate spiritual birthdays and finished weeks.',
+        const Color(0xFF6E6457), LogosIcons.cake, (_) => const MilestonesScreen()),
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -19,170 +45,39 @@ class CommunityScreen extends StatelessWidget {
     final ink = isDark ? LogosColors.examenInk : LogosColors.ink;
     final surface = isDark ? LogosColors.examenSurface : LogosColors.surface;
 
-    return Scaffold(
-      backgroundColor: isDark ? LogosColors.examenBg : LogosColors.sand,
-      body: SafeArea(
-        child: CustomScrollView(
-          slivers: [
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Community',
-                          style: LogosTypography.headline(color: ink).copyWith(fontSize: 28),
-                        ),
-                        IconButton(
-                          icon: AppIcon(LogosIcons.notificationsNone, color: ink),
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (_) => const MilestonesScreen()),
-                            );
-                          },
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-
-                    // Search & Ping bar
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (_) => const MilestonesScreen()),
-                        );
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                        decoration: BoxDecoration(
-                          color: surface,
-                          borderRadius: BorderRadius.circular(24),
-                          border: Border.all(color: LogosColors.taupe),
-                        ),
-                        child: Row(
-                          children: [
-                            AppIcon(LogosIcons.search, size: 20, color: ink.withValues(alpha: 0.5)),
-                            const SizedBox(width: 8),
-                            Text(
-                              'Search friends & ping...',
-                              style: LogosTypography.body(color: ink.withValues(alpha: 0.5)),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(height: 20),
-
-                    // Streak Family section
-                    Text(
-                      'Streak Family',
-                      style: LogosTypography.label(color: ink),
-                    ),
-                    const SizedBox(height: 10),
-                    _buildStreakFamilyRow(context, surface, ink),
-
-                    const SizedBox(height: 24),
-
-                    Text(
-                      'Sacred Spaces',
-                      style: LogosTypography.label(color: ink),
-                    ),
-                    const SizedBox(height: 12),
-                  ],
+    return ListenableBuilder(
+      listenable: AppFlags.instance,
+      builder: (context, _) {
+        final flags = AppFlags.instance;
+        final rooms = _rooms.where((r) => flags.isOn(r.flag)).toList();
+        return Scaffold(
+          backgroundColor: isDark ? LogosColors.examenBg : LogosColors.sand,
+          body: SafeArea(
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 110),
+              children: [
+                Text('Community', style: LogosTypography.headline(color: ink).copyWith(fontSize: 28)),
+                const SizedBox(height: 4),
+                Text(
+                  'Pray with others and be prayed for.',
+                  style: GoogleFonts.inter(fontSize: 14, color: ink.withValues(alpha: 0.65)),
                 ),
-              ),
-            ),
-
-            // 2-Column Grid of Modules
-            SliverPadding(
-              padding: const EdgeInsets.symmetric(horizontal: 20.0),
-              sliver: SliverGrid.count(
-                crossAxisCount: 2,
-                crossAxisSpacing: 12,
-                mainAxisSpacing: 12,
-                childAspectRatio: 0.88,
-                children: [
-                  _buildModuleCard(
-                    context,
-                    title: 'Study Pods',
-                    subtitle: '4 members · Thu 8pm\nFocused peer exegesis',
-                    color: LogosColors.studyPods,
-                    icon: LogosIcons.menuBook,
-                    onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const StudyPodsScreen()),
-                    ),
-                  ),
-                  _buildModuleCard(
-                    context,
-                    title: 'Prayer Circles',
-                    subtitle: '3 new voice notes\n7-day ephemeral prayers',
-                    color: LogosColors.prayerCircles,
-                    icon: LogosIcons.recordVoiceOver,
-                    onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const PrayerCirclesScreen()),
-                    ),
-                  ),
-                  _buildModuleCard(
-                    context,
-                    title: 'In the Valley',
-                    subtitle: 'Grief · Workplace · Digital\nThemed quiet sanctuaries',
-                    color: LogosColors.valleyRooms,
-                    icon: LogosIcons.terrain,
-                    onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const ValleyScreen()),
-                    ),
-                  ),
-                  _buildModuleCard(
-                    context,
-                    title: 'Voice Comfort',
-                    subtitle: 'Hear the Word read\nBeloved voices worldwide',
-                    color: LogosColors.voiceComfort,
-                    icon: LogosIcons.hearing,
-                    onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const VoiceComfortScreen()),
-                    ),
-                  ),
-                  _buildModuleCard(
-                    context,
-                    title: 'The Well',
-                    subtitle: 'Pastoral Care & Prayer\nGuaranteed 4h reply',
-                    color: LogosColors.theWell,
-                    icon: LogosIcons.waterDrop,
-                    onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const TheWellScreen()),
-                    ),
-                  ),
-                  _buildModuleCard(
-                    context,
-                    title: 'Milestones',
-                    subtitle: 'Birthdays & Roots\nLift up your family',
-                    color: const Color(0xFF6E6457),
-                    icon: LogosIcons.cake,
-                    onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const MilestonesScreen()),
-                    ),
-                  ),
+                if (flags.isOn(AppFlags.streakFamily)) ...[
+                  const SizedBox(height: 20),
+                  Text('Streak Family', style: LogosTypography.label(color: ink)),
+                  const SizedBox(height: 10),
+                  _buildStreakFamilyRow(context, surface, ink),
                 ],
-              ),
+                const SizedBox(height: 18),
+                for (final room in rooms) ...[
+                  _RoomCard(room: room, surface: surface, ink: ink),
+                  const SizedBox(height: 12),
+                ],
+              ],
             ),
-
-            const SliverToBoxAdapter(child: SizedBox(height: 100)),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 
@@ -257,83 +152,56 @@ class CommunityScreen extends StatelessWidget {
       ),
     );
   }
+}
 
-  Widget _buildModuleCard(
-    BuildContext context, {
-    required String title,
-    required String subtitle,
-    required Color color,
-    required LogosIconData icon,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Colors.white,
-              const Color(0xFFFAF7FE),
-              color.withValues(alpha: 0.10),
+class _RoomCard extends StatelessWidget {
+  final _Room room;
+  final Color surface;
+  final Color ink;
+  const _RoomCard({required this.room, required this.surface, required this.ink});
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: surface,
+      borderRadius: BorderRadius.circular(20),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(20),
+        onTap: () => Navigator.push(context, MaterialPageRoute(builder: room.builder)),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: LogosColors.taupe),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: room.color.withValues(alpha: 0.14),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                alignment: Alignment.center,
+                child: AppIcon(room.icon, color: room.color, size: 24),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(room.title, style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w700, color: ink)),
+                    const SizedBox(height: 3),
+                    Text(room.description,
+                        style: GoogleFonts.inter(fontSize: 13, height: 1.35, color: ink.withValues(alpha: 0.65))),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              AppIcon(LogosIcons.chevronRight, size: 18, color: ink.withValues(alpha: 0.35)),
             ],
           ),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: color.withValues(alpha: 0.22),
-            width: 1,
-          ),
-          boxShadow: LogosColors.softShadow,
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Container(
-                  width: 38,
-                  height: 38,
-                  decoration: BoxDecoration(
-                    color: color.withValues(alpha: 0.12),
-                    shape: BoxShape.circle,
-                  ),
-                  child: AppIcon(icon, color: color, size: 20),
-                ),
-                AppIcon(
-                  LogosIcons.arrowForwardIos,
-                  color: LogosColors.inkSecondary.withValues(alpha: 0.4),
-                  size: 12,
-                ),
-              ],
-            ),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: GoogleFonts.inter(
-                    color: LogosColors.ink,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 15,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  subtitle,
-                  style: GoogleFonts.inter(
-                    color: LogosColors.inkSecondary,
-                    fontSize: 11,
-                    height: 1.35,
-                  ),
-                ),
-              ],
-            ),
-          ],
         ),
       ),
     );

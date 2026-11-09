@@ -73,6 +73,7 @@ class _MilestonesScreenState extends State<MilestonesScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
+          tooltip: 'Back',
           icon: AppIcon(LogosIcons.arrowBack, color: ink),
           onPressed: () => Navigator.pop(context),
         ),

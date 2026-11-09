@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import '../../../core/utils/pilgrim_name.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../core/services/audio_service.dart';
-import '../../../core/services/supabase_service.dart';
 import '../../../core/theme/logos_theme.dart';
 import '../../../core/theme/logos_typography.dart';
 import '../../../core/theme/logos_icons.dart';
 import '../data/community_repository.dart';
 import '../models/community_prayer.dart';
+import '../widgets/crisis_notice.dart';
 
 class TheWellScreen extends StatefulWidget {
   const TheWellScreen({super.key});
@@ -48,7 +48,7 @@ class _TheWellScreenState extends State<TheWellScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             backgroundColor: Color(0xFF10B981),
-            content: Text('Prayer request submitted to the Sanctuary watch. 4-hour SLA active.'),
+            content: Text('Your request has been received. Our pastoral team will pray for you.'),
           ),
         );
       }
@@ -73,7 +73,6 @@ class _TheWellScreenState extends State<TheWellScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final ink = isDark ? LogosColors.examenInk : LogosColors.ink;
     final surface = isDark ? LogosColors.examenSurface : LogosColors.surface;
-    final isCloudActive = SupabaseService.instance.isConfigured;
 
     return Scaffold(
       backgroundColor: isDark ? LogosColors.examenBg : LogosColors.sand,
@@ -81,15 +80,16 @@ class _TheWellScreenState extends State<TheWellScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
+          tooltip: 'Back',
           icon: AppIcon(LogosIcons.arrowBack, color: ink),
           onPressed: () => Navigator.pop(context),
         ),
         title: Column(
           children: [
-            Row(
+            const Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Text(
+                Text(
                   'The Well',
                   style: TextStyle(
                     color: LogosColors.theWell,
@@ -97,29 +97,10 @@ class _TheWellScreenState extends State<TheWellScreen> {
                     fontSize: 16,
                   ),
                 ),
-                const SizedBox(width: 6),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: isCloudActive
-                        ? const Color(0xFF10B981).withValues(alpha: 0.15)
-                        : Colors.orange.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Text(
-                    isCloudActive ? 'LIVE CLOUD' : 'OFFLINE SANCTUARY',
-                    style: TextStyle(
-                      fontSize: 8.5,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 0.8,
-                      color: isCloudActive ? const Color(0xFF0F5132) : Colors.orange.shade800,
-                    ),
-                  ),
-                ),
               ],
             ),
             Text(
-              'Pastoral Care & Prayer Watch',
+              'Private prayer requests',
               style: LogosTypography.caption(color: ink.withValues(alpha: 0.6)),
             ),
           ],
@@ -148,10 +129,10 @@ class _TheWellScreenState extends State<TheWellScreen> {
                     children: [
                       Row(
                         children: [
-                          const AppIcon(LogosIcons.timerOutlined, color: Colors.white, size: 20),
+                          const AppIcon(LogosIcons.lockOutlineRounded, color: Colors.white, size: 20),
                           const SizedBox(width: 8),
                           Text(
-                            '4-HOUR PASTORAL CARE SLA',
+                            'PRIVATE · SEEN ONLY BY OUR PASTORAL TEAM',
                             style: LogosTypography.caption(color: Colors.white.withValues(alpha: 0.85)).copyWith(
                               letterSpacing: 1.5,
                               fontWeight: FontWeight.bold,
@@ -161,19 +142,21 @@ class _TheWellScreenState extends State<TheWellScreen> {
                       ),
                       const SizedBox(height: 10),
                       const Text(
-                        'No prayer request goes unheard.',
+                        'Bring what you carry.',
                         style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 6),
                       Text(
-                        'Ordained pastoral shepherds are on watch. Every petition receives a personalized biblical response and intercession within 4 hours.',
+                        'Share a burden, a question or a sorrow. Our pastoral team reads every request and prays for you. When someone replies, it will appear below.',
                         style: TextStyle(color: Colors.white.withValues(alpha: 0.9), fontSize: 13, height: 1.4),
                       ),
                     ],
                   ),
                 ),
 
-                const SizedBox(height: 20),
+                const SizedBox(height: 14),
+                const CrisisNotice(),
+                const SizedBox(height: 14),
 
                 // Submit Prayer Request Form
                 Container(
@@ -191,7 +174,7 @@ class _TheWellScreenState extends State<TheWellScreen> {
                         children: [
                           const AppIcon(LogosIcons.editNote, size: 18, color: LogosColors.theWell),
                           const SizedBox(width: 8),
-                          Text('Submit a Pastoral Petition', style: LogosTypography.label(color: ink)),
+                          Text('Your prayer request', style: LogosTypography.label(color: ink)),
                         ],
                       ),
                       const SizedBox(height: 10),
@@ -200,7 +183,7 @@ class _TheWellScreenState extends State<TheWellScreen> {
                         maxLines: 4,
                         style: LogosTypography.body(color: ink),
                         decoration: InputDecoration(
-                          hintText: 'Share whatever burden, theological doubt, or sorrow is weighing on you...',
+                          hintText: 'What would you like us to pray about?',
                           hintStyle: TextStyle(color: ink.withValues(alpha: 0.4), fontSize: 13),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
@@ -228,7 +211,7 @@ class _TheWellScreenState extends State<TheWellScreen> {
                                 )
                               : const AppIcon(LogosIcons.waterDrop, color: Colors.white),
                           label: Text(
-                            _isSubmitting ? 'Submitting to Sanctuary...' : 'Bring to The Well',
+                            _isSubmitting ? 'Sending…' : 'Send request',
                             style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
                           ),
                           onPressed: _isSubmitting ? null : _submitRequest,
@@ -240,44 +223,7 @@ class _TheWellScreenState extends State<TheWellScreen> {
 
                 const SizedBox(height: 24),
 
-                // Pastoral Consultations
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: surface,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: LogosColors.taupe),
-                    boxShadow: LogosColors.softShadow,
-                  ),
-                  child: Row(
-                    children: [
-                      const AppIcon(LogosIcons.videoCallOutlined, color: LogosColors.theWell, size: 28),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text('1-on-1 Pastoral Consultation', style: LogosTypography.label(color: ink)),
-                            Text('Book a 30-min confidential video call', style: LogosTypography.caption(color: ink.withValues(alpha: 0.6))),
-                          ],
-                        ),
-                      ),
-                      TextButton(
-                        onPressed: () {
-                          AudioService().selectionTick();
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Cal.com integration: Pastor schedule loaded.')),
-                          );
-                        },
-                        child: const Text('Book'),
-                      ),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(height: 24),
-
-                Text('Your Pastoral Watch History', style: LogosTypography.label(color: ink)),
+                Text('Your requests', style: LogosTypography.label(color: ink)),
                 const SizedBox(height: 10),
 
                 if (prayers.isEmpty)
@@ -285,7 +231,7 @@ class _TheWellScreenState extends State<TheWellScreen> {
                     child: Padding(
                       padding: const EdgeInsets.symmetric(vertical: 30),
                       child: Text(
-                        'No petitions in queue. You are surrounded by peace.',
+                        'Requests you send will appear here.',
                         style: LogosTypography.body(color: ink.withValues(alpha: 0.6)),
                       ),
                     ),
@@ -311,7 +257,7 @@ class _TheWellScreenState extends State<TheWellScreen> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text(
-                                'PETITION · ${_formatTimeAgo(prayer.createdAt)}',
+                                'REQUEST · ${_formatTimeAgo(prayer.createdAt)}',
                                 style: LogosTypography.caption(color: LogosColors.theWell),
                               ),
                               Container(
@@ -323,7 +269,7 @@ class _TheWellScreenState extends State<TheWellScreen> {
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Text(
-                                  isAnswered ? 'Answered' : 'In Watch (Queue)',
+                                  isAnswered ? 'Replied' : 'Being prayed for',
                                   style: TextStyle(
                                     color: isAnswered ? const Color(0xFF0F5132) : Colors.orange.shade800,
                                     fontSize: 10,
