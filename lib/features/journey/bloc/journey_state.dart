@@ -14,6 +14,12 @@ class JourneyState extends Equatable {
 
   /// Last calendar day the pilgrim completed any practice (drives the daily streak).
   final DateTime? lastPracticeDate;
+
+  /// Calendar days (yyyy-mm-dd) with practice — powers the Altar's week row.
+  final List<String> practiceDays;
+
+  /// Best recitation accuracy this week (0–1), shown on the week recap.
+  final double weekBestScore;
   final int rootsPlanted;
   final int graceTokensBalance;
   final bool isExchangeCompleted;
@@ -30,6 +36,8 @@ class JourneyState extends Equatable {
     required this.dayRecitationScores,
     required this.currentStreak,
     this.lastPracticeDate,
+    this.practiceDays = const [],
+    this.weekBestScore = 0,
     required this.rootsPlanted,
     required this.graceTokensBalance,
     required this.isExchangeCompleted,
@@ -65,6 +73,8 @@ class JourneyState extends Equatable {
     Map<int, List<double>>? dayRecitationScores,
     int? currentStreak,
     DateTime? lastPracticeDate,
+    List<String>? practiceDays,
+    double? weekBestScore,
     int? rootsPlanted,
     int? graceTokensBalance,
     bool? isExchangeCompleted,
@@ -81,6 +91,8 @@ class JourneyState extends Equatable {
       dayRecitationScores: dayRecitationScores ?? this.dayRecitationScores,
       currentStreak: currentStreak ?? this.currentStreak,
       lastPracticeDate: lastPracticeDate ?? this.lastPracticeDate,
+      practiceDays: practiceDays ?? this.practiceDays,
+      weekBestScore: weekBestScore ?? this.weekBestScore,
       rootsPlanted: rootsPlanted ?? this.rootsPlanted,
       graceTokensBalance: graceTokensBalance ?? this.graceTokensBalance,
       isExchangeCompleted: isExchangeCompleted ?? this.isExchangeCompleted,
@@ -104,6 +116,19 @@ class JourneyState extends Equatable {
     if (last == null || currentStreak == 0) return false;
     return (now ?? DateTime.now()).calendarDaysSince(last) == 2;
   }
+
+  /// First day not yet completed this week (5 when the week is done).
+  int get todayDay {
+    for (var d = 1; d <= 4; d++) {
+      if (dayCompletionStatus[d] != true) return d;
+    }
+    return 5;
+  }
+
+  bool practisedOn(DateTime day) => practiceDays.contains(dayKey(day));
+
+  static String dayKey(DateTime d) =>
+      '${d.year.toString().padLeft(4, '0')}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
 
   /// The verse can only change before this week's rhythm has started or
   /// after it is finished, so progress never mixes between verses.
@@ -159,6 +184,8 @@ class JourneyState extends Equatable {
         dayRecitationScores,
         currentStreak,
         lastPracticeDate,
+        practiceDays,
+        weekBestScore,
         rootsPlanted,
         graceTokensBalance,
         isExchangeCompleted,

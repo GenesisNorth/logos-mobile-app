@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import '../../../core/design/components.dart';
+import '../../../core/design/organic.dart';
 import '../../../core/services/audio_service.dart';
-import '../../../core/theme/logos_theme.dart';
-import '../../../core/theme/logos_icons.dart';
-import '../../../core/theme/logos_typography.dart';
 import '../data/scripture_pack_repository.dart';
 import '../models/scripture_pack.dart';
 
@@ -22,6 +20,7 @@ class ScripturePacksSheet extends StatefulWidget {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
+      barrierColor: OC.n900.withValues(alpha: 0.45),
       builder: (_) => ScripturePacksSheet(
         repository: repository ?? ScripturePackRepository(),
       ),
@@ -70,10 +69,7 @@ class _ScripturePacksSheetState extends State<ScripturePacksSheet> {
         _loadPacks();
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          backgroundColor: const Color(0xFF10B981),
-          content: Text('${pack.title} downloaded for offline contemplation!'),
-        ),
+        SnackBar(content: Text('${pack.title} is ready offline.')),
       );
     }
   }
@@ -91,243 +87,101 @@ class _ScripturePacksSheetState extends State<ScripturePacksSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final surface = isDark ? LogosColors.examenSurface : Colors.white;
-    final ink = isDark ? LogosColors.examenInk : LogosColors.ink;
-
     return Container(
-      padding: EdgeInsets.fromLTRB(24, 18, 24, MediaQuery.of(context).viewInsets.bottom + 34),
-      decoration: BoxDecoration(
-        color: surface,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-        border: Border.all(color: LogosColors.taupe),
-        boxShadow: LogosColors.softShadow,
+      constraints: BoxConstraints(maxHeight: MediaQuery.sizeOf(context).height * 0.88),
+      padding: EdgeInsets.fromLTRB(22, 12, 22, MediaQuery.of(context).viewInsets.bottom + 30),
+      decoration: const BoxDecoration(
+        color: OC.bg,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(40)),
       ),
       child: FutureBuilder<List<ScripturePack>>(
         future: _packsFuture,
         builder: (context, snapshot) {
           final packs = snapshot.data ?? [];
-          final totalStorageMb = packs
-              .where((p) => p.isDownloaded)
-              .fold<double>(0.0, (acc, p) => acc + p.sizeMb);
-
+          final storage = packs.where((p) => p.isDownloaded).fold<double>(0, (a, p) => a + p.sizeMb);
           return Column(
             mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Center(
                 child: Container(
-                  width: 36,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: ink.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(2),
-                  ),
+                  width: 44,
+                  height: 5,
+                  margin: const EdgeInsets.only(bottom: 18),
+                  decoration: BoxDecoration(color: OC.n400, borderRadius: BorderRadius.circular(3)),
                 ),
               ),
-              const SizedBox(height: 18),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            color: LogosColors.coral.withValues(alpha: 0.12),
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                          child: const AppIcon(LogosIcons.autoStories, color: LogosColors.coral, size: 22),
-                        ),
-                        const SizedBox(width: 14),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Offline Scripture Packs',
-                                style: LogosTypography.headline(color: ink).copyWith(fontSize: 16),
-                              ),
-                              Text(
-                                'Full 52-Week Lexicons & Contemplative Stems',
-                                style: LogosTypography.caption(color: ink.withValues(alpha: 0.6)),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
+              Text('Offline Scripture Packs', style: OT.h3()),
+              const SizedBox(height: 4),
+              Text('Seasons of weeks, ready without signal · ${storage.toStringAsFixed(1)} MB on this phone', style: OT.small()),
+              const SizedBox(height: 16),
+              if (snapshot.connectionState != ConnectionState.done)
+                const Padding(
+                  padding: EdgeInsets.all(24),
+                  child: Center(child: CircularProgressIndicator(color: OC.accent)),
+                )
+              else
+                Flexible(
+                  child: ListView.separated(
+                    shrinkWrap: true,
+                    itemCount: packs.length,
+                    separatorBuilder: (_, __) => const SizedBox(height: 10),
+                    itemBuilder: (_, i) => _packCard(packs[i]),
                   ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF10B981).withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: const Color(0xFF10B981).withValues(alpha: 0.3)),
-                    ),
-                    child: Text(
-                      '${totalStorageMb.toStringAsFixed(1)} MB',
-                      style: GoogleFonts.inter(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        color: const Color(0xFF0F5132),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 18),
-              Flexible(
-                child: ListView.separated(
-                  shrinkWrap: true,
-                  physics: const BouncingScrollPhysics(),
-                  itemCount: packs.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 10),
-                  itemBuilder: (ctx, index) {
-                    final pack = packs[index];
-                    final isDownloading = _downloadingProgress.containsKey(pack.id);
-                    final progress = _downloadingProgress[pack.id] ?? 0.0;
-
-                    return Container(
-                      padding: const EdgeInsets.all(14),
-                      decoration: BoxDecoration(
-                        color: ink.withValues(alpha: 0.03),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: pack.isDownloaded
-                              ? const Color(0xFF10B981).withValues(alpha: 0.3)
-                              : LogosColors.taupe,
-                        ),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                                decoration: BoxDecoration(
-                                  color: LogosColors.coral.withValues(alpha: 0.15),
-                                  borderRadius: BorderRadius.circular(6),
-                                ),
-                                child: Text(
-                                  'WEEKS ${pack.weekStart}–${pack.weekEnd}',
-                                  style: GoogleFonts.inter(
-                                    fontSize: 9.5,
-                                    fontWeight: FontWeight.w800,
-                                    color: LogosColors.coral,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Text(
-                                  '${pack.sizeMb} MB · ${pack.season}',
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: GoogleFonts.inter(
-                                    fontSize: 10.5,
-                                    color: ink.withValues(alpha: 0.6),
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              if (pack.isBuiltIn)
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFF10B981).withValues(alpha: 0.12),
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: Text(
-                                    'Built-In Core ✓',
-                                    style: GoogleFonts.inter(
-                                      fontSize: 10.5,
-                                      fontWeight: FontWeight.w700,
-                                      color: const Color(0xFF0F5132),
-                                    ),
-                                  ),
-                                )
-                              else if (pack.isDownloaded)
-                                Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    const AppIcon(LogosIcons.checkCircleRounded, color: Color(0xFF10B981), size: 18),
-                                    IconButton(
-                                      icon: const AppIcon(LogosIcons.autoDeleteOutlined, size: 16, color: Colors.grey),
-                                      tooltip: 'Delete to free storage',
-                                      padding: EdgeInsets.zero,
-                                      constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
-                                      onPressed: () => _handleDelete(pack),
-                                    ),
-                                  ],
-                                )
-                              else if (isDownloading)
-                                SizedBox(
-                                  width: 18,
-                                  height: 18,
-                                  child: CircularProgressIndicator(
-                                    value: progress,
-                                    strokeWidth: 2.2,
-                                    color: LogosColors.coral,
-                                  ),
-                                )
-                              else
-                                ElevatedButton.icon(
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: LogosColors.coral,
-                                    foregroundColor: Colors.white,
-                                    elevation: 0,
-                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                                  ),
-                                  icon: const AppIcon(LogosIcons.arrowDown, size: 12),
-                                  label: Text(
-                                    'Download',
-                                    style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w700),
-                                  ),
-                                  onPressed: () => _handleDownload(pack),
-                                ),
-                            ],
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            pack.title,
-                            style: GoogleFonts.inter(
-                              fontSize: 13.5,
-                              fontWeight: FontWeight.w700,
-                              color: ink,
-                            ),
-                          ),
-                          Text(
-                            pack.subtitle,
-                            style: GoogleFonts.inter(
-                              fontSize: 11,
-                              color: ink.withValues(alpha: 0.65),
-                            ),
-                          ),
-                          if (isDownloading) ...[
-                            const SizedBox(height: 8),
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(4),
-                              child: LinearProgressIndicator(
-                                value: progress,
-                                minHeight: 4,
-                                backgroundColor: LogosColors.taupe,
-                                valueColor: const AlwaysStoppedAnimation(LogosColors.coral),
-                              ),
-                            ),
-                          ],
-                        ],
-                      ),
-                    );
-                  },
                 ),
-              ),
             ],
           );
         },
+      ),
+    );
+  }
+
+  Widget _packCard(ScripturePack pack) {
+    final progress = _downloadingProgress[pack.id];
+    final Widget action;
+    if (pack.isBuiltIn) {
+      action = const OTag('Built-In Core ✓', bg: OC.s200, fg: OC.s900);
+    } else if (progress != null) {
+      action = SizedBox(
+        width: 88,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(3),
+          child: LinearProgressIndicator(value: progress, minHeight: 6, color: OC.accent, backgroundColor: OC.a200),
+        ),
+      );
+    } else if (pack.isDownloaded) {
+      action = OButton('Remove', style: OButtonStyle.outline, expand: false, height: 38, onPressed: () => _handleDelete(pack));
+    } else {
+      action = OButton('Download', expand: false, height: 38, onPressed: () => _handleDownload(pack));
+    }
+    return OCard(
+      radius: 24,
+      padding: const EdgeInsets.all(16),
+      child: Row(
+        children: [
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(color: pack.isDownloaded ? OC.s500 : OC.a200, shape: BoxShape.circle),
+            child: Center(
+              child: Text('${pack.weekStart}', style: OT.display(18, color: pack.isDownloaded ? OC.n100 : OC.a800)),
+            ),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(pack.title, style: OT.display(18)),
+                const SizedBox(height: 2),
+                Text('Weeks ${pack.weekStart}–${pack.weekEnd} · ${pack.season} · ${pack.sizeMb.toStringAsFixed(1)} MB',
+                    style: OT.small(alpha: 0.7)),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          action,
+        ],
       ),
     );
   }

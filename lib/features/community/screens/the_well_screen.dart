@@ -1,14 +1,20 @@
 import 'package:flutter/material.dart';
-import '../../../core/utils/pilgrim_name.dart';
-import 'package:google_fonts/google_fonts.dart';
+import '../../../core/design/components.dart';
+import '../../../core/design/organic.dart';
 import '../../../core/services/audio_service.dart';
-import '../../../core/theme/logos_theme.dart';
-import '../../../core/theme/logos_typography.dart';
-import '../../../core/theme/logos_icons.dart';
+import '../../../core/utils/date_format.dart';
+import '../../../core/utils/pilgrim_name.dart';
 import '../data/community_repository.dart';
 import '../models/community_prayer.dart';
 import '../widgets/crisis_notice.dart';
+import '../widgets/room_header.dart';
 
+const _room = 'the_well';
+const _followUpPrefix = 'Follow-up · ';
+
+bool _isFollowUp(CommunityPrayer p) => p.title.startsWith(_followUpPrefix);
+
+/// The Well — private prayer requests read by the pastoral team.
 class TheWellScreen extends StatefulWidget {
   const TheWellScreen({super.key});
 
@@ -17,357 +23,293 @@ class TheWellScreen extends StatefulWidget {
 }
 
 class _TheWellScreenState extends State<TheWellScreen> {
-  final TextEditingController _requestController = TextEditingController();
-  final CommunityRepository _repository = CommunityRepository();
-  bool _isSubmitting = false;
+  final _request = TextEditingController();
+  final _repo = CommunityRepository();
+  bool _sending = false;
 
   @override
   void dispose() {
-    _requestController.dispose();
+    _request.dispose();
     super.dispose();
   }
 
-  Future<void> _submitRequest() async {
-    final text = _requestController.text.trim();
-    if (text.isEmpty || _isSubmitting) return;
-
-    setState(() => _isSubmitting = true);
-
+  Future<void> _send() async {
+    final text = _request.text.trim();
+    if (text.isEmpty || _sending) return;
+    setState(() => _sending = true);
     try {
-      await _repository.submitPrayer(
-        room: 'the_well',
-        title: 'Pastoral Petition',
-        content: text,
-        authorName: pilgrimName(context),
-      );
-
-      _requestController.clear();
+      await _repo.submitPrayer(room: _room, title: 'Prayer request', content: text, authorName: pilgrimName(context));
+      _request.clear();
       AudioService().playAmenChime();
-
       if (mounted) {
+        FocusScope.of(context).unfocus();
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            backgroundColor: Color(0xFF10B981),
-            content: Text('Your request has been received. Our pastoral team will pray for you.'),
-          ),
+          const SnackBar(content: Text('Received. Our pastoral team will pray for you.')),
         );
       }
     } finally {
-      if (mounted) setState(() => _isSubmitting = false);
-    }
-  }
-
-  String _formatTimeAgo(DateTime dt) {
-    final diff = DateTime.now().difference(dt);
-    if (diff.inMinutes < 60) {
-      return diff.inMinutes <= 1 ? 'Just now' : '${diff.inMinutes}m ago';
-    } else if (diff.inHours < 24) {
-      return '${diff.inHours}h ago';
-    } else {
-      return '${diff.inDays}d ago';
+      if (mounted) setState(() => _sending = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final ink = isDark ? LogosColors.examenInk : LogosColors.ink;
-    final surface = isDark ? LogosColors.examenSurface : LogosColors.surface;
-
-    return Scaffold(
-      backgroundColor: isDark ? LogosColors.examenBg : LogosColors.sand,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          tooltip: 'Back',
-          icon: AppIcon(LogosIcons.arrowBack, color: ink),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Column(
-          children: [
-            const Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  'The Well',
-                  style: TextStyle(
-                    color: LogosColors.theWell,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
-                ),
-              ],
-            ),
-            Text(
-              'Private prayer requests',
-              style: LogosTypography.caption(color: ink.withValues(alpha: 0.6)),
-            ),
-          ],
-        ),
-        centerTitle: true,
-      ),
-      body: SafeArea(
-        child: StreamBuilder<List<CommunityPrayer>>(
-          stream: _repository.watchPrayers(room: 'the_well'),
-          builder: (context, snapshot) {
-            final prayers = snapshot.data ?? [];
-
-            return ListView(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-              children: [
-                // 4-Hour SLA Card
-                Container(
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: LogosColors.theWell,
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: LogosColors.softShadow,
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
+    const atm = Atmosphere.sage;
+    return OScreen(
+      atmosphere: atm,
+      child: StreamBuilder<List<CommunityPrayer>>(
+        stream: _repo.watchPrayers(room: _room),
+        builder: (context, snap) {
+          final all = snap.data ?? const <CommunityPrayer>[];
+          final requests = all.where((p) => !_isFollowUp(p)).toList();
+          return ListView(
+            padding: const EdgeInsets.only(bottom: 40),
+            children: [
+              const RoomHeader(
+                atmosphere: atm,
+                kicker: 'Pastoral care',
+                title: 'The Well',
+                subtitle: 'Bring what you carry. Our pastoral team reads every request and prays for you.',
+                kickerColor: OC.s800,
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(22, 20, 22, 0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    OCard(
+                      radius: 28,
+                      shadow: OShadow.sm,
+                      padding: const EdgeInsets.fromLTRB(20, 18, 20, 16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          const AppIcon(LogosIcons.lockOutlineRounded, color: Colors.white, size: 20),
-                          const SizedBox(width: 8),
-                          Text(
-                            'PRIVATE · SEEN ONLY BY OUR PASTORAL TEAM',
-                            style: LogosTypography.caption(color: Colors.white.withValues(alpha: 0.85)).copyWith(
-                              letterSpacing: 1.5,
-                              fontWeight: FontWeight.bold,
+                          Text('PRAYER REQUEST', style: OT.kicker(color: OC.s700)),
+                          TextField(
+                            controller: _request,
+                            minLines: 4,
+                            maxLines: 8,
+                            textCapitalization: TextCapitalization.sentences,
+                            style: OT.body(size: 16),
+                            cursorColor: OC.s700,
+                            decoration: InputDecoration(
+                              hintText: 'Share whatever burden, doubt, or sorrow is weighing on you…',
+                              hintStyle: OT.body(size: 16, color: OC.text.withValues(alpha: 0.4)),
+                              border: InputBorder.none,
                             ),
                           ),
+                          Row(
+                            children: [
+                              Expanded(child: Text('Seen only by our pastoral team', style: OT.small(alpha: 0.65))),
+                              OButton(_sending ? 'Sending…' : 'Bring to The Well',
+                                  style: OButtonStyle.sage, expand: false, height: 46, onPressed: _sending ? null : _send),
+                            ],
+                          ),
                         ],
-                      ),
-                      const SizedBox(height: 10),
-                      const Text(
-                        'Bring what you carry.',
-                        style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        'Share a burden, a question or a sorrow. Our pastoral team reads every request and prays for you. When someone replies, it will appear below.',
-                        style: TextStyle(color: Colors.white.withValues(alpha: 0.9), fontSize: 13, height: 1.4),
-                      ),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(height: 14),
-                const CrisisNotice(),
-                const SizedBox(height: 14),
-
-                // Submit Prayer Request Form
-                Container(
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: surface,
-                    borderRadius: BorderRadius.circular(18),
-                    border: Border.all(color: LogosColors.taupe),
-                    boxShadow: LogosColors.softShadow,
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          const AppIcon(LogosIcons.editNote, size: 18, color: LogosColors.theWell),
-                          const SizedBox(width: 8),
-                          Text('Your prayer request', style: LogosTypography.label(color: ink)),
-                        ],
-                      ),
-                      const SizedBox(height: 10),
-                      TextField(
-                        controller: _requestController,
-                        maxLines: 4,
-                        style: LogosTypography.body(color: ink),
-                        decoration: InputDecoration(
-                          hintText: 'What would you like us to pray about?',
-                          hintStyle: TextStyle(color: ink.withValues(alpha: 0.4), fontSize: 13),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(color: LogosColors.taupe),
-                          ),
-                          filled: true,
-                          fillColor: isDark ? const Color(0xFF1E1E2C) : Colors.white,
-                        ),
-                      ),
-                      const SizedBox(height: 14),
-                      SizedBox(
-                        width: double.infinity,
-                        height: 48,
-                        child: ElevatedButton.icon(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: LogosColors.theWell,
-                            elevation: 0,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                          ),
-                          icon: _isSubmitting
-                              ? const SizedBox(
-                                  width: 16,
-                                  height: 16,
-                                  child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
-                                )
-                              : const AppIcon(LogosIcons.waterDrop, color: Colors.white),
-                          label: Text(
-                            _isSubmitting ? 'Sending…' : 'Send request',
-                            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-                          ),
-                          onPressed: _isSubmitting ? null : _submitRequest,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(height: 24),
-
-                Text('Your requests', style: LogosTypography.label(color: ink)),
-                const SizedBox(height: 10),
-
-                if (prayers.isEmpty)
-                  Center(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 30),
-                      child: Text(
-                        'Requests you send will appear here.',
-                        style: LogosTypography.body(color: ink.withValues(alpha: 0.6)),
                       ),
                     ),
-                  )
-                else
-                  ...prayers.map((prayer) {
-                    final isAnswered = prayer.isAnswered;
-                    return Container(
-                      margin: const EdgeInsets.only(bottom: 14),
-                      padding: const EdgeInsets.all(18),
-                      decoration: BoxDecoration(
-                        color: surface,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: isAnswered ? const Color(0xFF10B981).withValues(alpha: 0.5) : LogosColors.taupe,
-                        ),
-                        boxShadow: LogosColors.softShadow,
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                'REQUEST · ${_formatTimeAgo(prayer.createdAt)}',
-                                style: LogosTypography.caption(color: LogosColors.theWell),
-                              ),
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                                decoration: BoxDecoration(
-                                  color: isAnswered
-                                      ? const Color(0xFF10B981).withValues(alpha: 0.15)
-                                      : Colors.orange.withValues(alpha: 0.15),
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Text(
-                                  isAnswered ? 'Replied' : 'Being prayed for',
-                                  style: TextStyle(
-                                    color: isAnswered ? const Color(0xFF0F5132) : Colors.orange.shade800,
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 10),
-                          Text(
-                            '“${prayer.content}”',
-                            style: LogosTypography.body(color: ink.withValues(alpha: 0.8)).copyWith(fontStyle: FontStyle.italic),
-                          ),
-                          const SizedBox(height: 14),
-                          Divider(color: LogosColors.taupe.withValues(alpha: 0.5)),
-                          const SizedBox(height: 10),
-                          Row(
-                            children: [
-                              const AppIcon(LogosIcons.personPin, size: 16, color: LogosColors.theWell),
-                              const SizedBox(width: 6),
-                              Text(
-                                prayer.pastorName ?? 'Pastoral Shepherds',
-                                style: LogosTypography.label(color: LogosColors.theWell),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            prayer.pastorResponse ??
-                                'An ordained pastor is praying over your petition and preparing a biblical written response.',
-                            style: LogosTypography.body(color: ink).copyWith(height: 1.4),
-                          ),
-                          const SizedBox(height: 14),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              InkWell(
-                                borderRadius: BorderRadius.circular(16),
-                                onTap: () {
-                                  AudioService().selectionTick();
-                                  _repository.prayFor(room: 'the_well', prayerId: prayer.id);
-                                },
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFF10B981).withValues(alpha: 0.1),
-                                    borderRadius: BorderRadius.circular(16),
-                                  ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      const AppIcon(LogosIcons.volunteerActivism, size: 14, color: Color(0xFF10B981)),
-                                      const SizedBox(width: 6),
-                                      Text(
-                                        '${prayer.prayedCount} praying',
-                                        style: GoogleFonts.inter(
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.w600,
-                                          color: const Color(0xFF0F5132),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                              if (prayer.voiceNoteUrl != null)
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                  decoration: BoxDecoration(
-                                    color: LogosColors.theWell.withValues(alpha: 0.1),
-                                    borderRadius: BorderRadius.circular(16),
-                                  ),
-                                  child: const Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      AppIcon(LogosIcons.playCircleFill, color: LogosColors.theWell, size: 16),
-                                      SizedBox(width: 4),
-                                      Text(
-                                        'Voice Prayer',
-                                        style: TextStyle(
-                                          color: LogosColors.theWell,
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    );
-                  }),
+                    const SizedBox(height: 14),
+                    const CrisisNotice(),
+                    const SizedBox(height: 26),
+                    Text('Your requests', style: OT.display(25, color: OC.s900)),
+                    const SizedBox(height: 12),
+                    if (requests.isEmpty)
+                      Text('Requests you bring will rest here, with any reply from your pastor.', style: OT.small(color: OC.s900))
+                    else
+                      for (final p in requests) ...[
+                        _RequestCard(prayer: p, onTap: () => _openThread(p)),
+                        const SizedBox(height: 12),
+                      ],
+                  ],
+                ),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  void _openThread(CommunityPrayer p) =>
+      Navigator.of(context).push(MaterialPageRoute(builder: (_) => WellThreadScreen(request: p)));
+}
+
+class _RequestCard extends StatelessWidget {
+  final CommunityPrayer prayer;
+  final VoidCallback onTap;
+  const _RequestCard({required this.prayer, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final replied = prayer.pastorResponse != null && prayer.pastorResponse!.isNotEmpty;
+    return OCard(
+      radius: 28,
+      onTap: onTap,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              OTag(replied ? 'Replied' : 'Being prayed for', bg: replied ? OC.s200 : OC.n200, fg: replied ? OC.s900 : OC.n800),
+              const Spacer(),
+              Text(formatLogosDate(prayer.createdAt), style: OT.small(alpha: 0.6)),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Text(prayer.content, style: OT.body(size: 16)),
+          if (replied) ...[
+            const SizedBox(height: 12),
+            OCard(
+              color: OC.s100,
+              radius: 20,
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('${prayer.pastorName ?? 'Your pastor'} replied', style: OT.label(size: 13, color: OC.s800)),
+                  const SizedBox(height: 6),
+                  Text(prayer.pastorResponse!, style: OT.display(18, color: OC.s900, height: 1.3)),
+                ],
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+/// A request and its replies, as a quiet conversation.
+class WellThreadScreen extends StatefulWidget {
+  final CommunityPrayer request;
+  const WellThreadScreen({super.key, required this.request});
+
+  @override
+  State<WellThreadScreen> createState() => _WellThreadScreenState();
+}
+
+class _WellThreadScreenState extends State<WellThreadScreen> {
+  final _draft = TextEditingController();
+  final _repo = CommunityRepository();
+
+  @override
+  void dispose() {
+    _draft.dispose();
+    super.dispose();
+  }
+
+  Future<void> _send() async {
+    final text = _draft.text.trim();
+    if (text.isEmpty) return;
+    _draft.clear();
+    await _repo.submitPrayer(
+      room: _room,
+      title: '$_followUpPrefix${widget.request.id}',
+      content: text,
+      authorName: pilgrimName(context),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    const atm = Atmosphere.sage;
+    final r = widget.request;
+    final pastor = r.pastorName ?? 'Pastoral team';
+    return OScreen(
+      atmosphere: atm,
+      bottom: Row(
+        children: [
+          Expanded(
+            child: OInput(controller: _draft, hint: 'Write to your pastor…', radius: 999, maxLines: 4),
+          ),
+          const SizedBox(width: 10),
+          OCircleButton(icon: OI.send, tooltip: 'Send', background: OC.s700, foreground: OC.s100, size: 52, onTap: _send),
+        ],
+      ),
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(22, 10, 22, 6),
+            child: Row(
+              children: [
+                OCircleButton(
+                  icon: OI.back,
+                  tooltip: 'Back',
+                  background: OC.s200,
+                  foreground: OC.s900,
+                  onTap: () => Navigator.of(context).maybePop(),
+                ),
+                Expanded(
+                  child: Column(
+                    children: [
+                      Text(pastor, style: OT.display(21, color: OC.s900)),
+                      Text('The Well · replies appear here', style: OT.small(color: OC.s900)),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 44),
               ],
-            );
-          },
+            ),
+          ),
+          Expanded(
+            child: StreamBuilder<List<CommunityPrayer>>(
+              stream: _repo.watchPrayers(room: _room),
+              builder: (context, snap) {
+                final followUps = (snap.data ?? const <CommunityPrayer>[])
+                    .where((p) => p.title == '$_followUpPrefix${r.id}')
+                    .toList()
+                  ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
+                return ListView(
+                  padding: const EdgeInsets.fromLTRB(22, 10, 22, 20),
+                  children: [
+                    const CrisisNotice(compact: true),
+                    const SizedBox(height: 16),
+                    _Bubble(text: r.content, mine: true),
+                    if (r.pastorResponse?.isNotEmpty == true) _Bubble(text: r.pastorResponse!, mine: false, author: pastor),
+                    for (final f in followUps) _Bubble(text: f.content, mine: true),
+                    if (r.pastorResponse?.isNotEmpty != true)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 10),
+                        child: Text('Your pastor’s reply will appear here.', textAlign: TextAlign.center, style: OT.small(color: OC.s900)),
+                      ),
+                  ],
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _Bubble extends StatelessWidget {
+  final String text;
+  final bool mine;
+  final String? author;
+  const _Bubble({required this.text, required this.mine, this.author});
+
+  @override
+  Widget build(BuildContext context) {
+    return Align(
+      alignment: mine ? Alignment.centerRight : Alignment.centerLeft,
+      child: Container(
+        constraints: BoxConstraints(maxWidth: MediaQuery.sizeOf(context).width * 0.75),
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+        decoration: BoxDecoration(
+          color: mine ? OC.s700 : OC.n100,
+          borderRadius: BorderRadius.circular(22),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (author != null) ...[
+              Text(author!, style: OT.label(size: 13, color: OC.s800)),
+              const SizedBox(height: 4),
+            ],
+            Text(text, style: OT.body(size: 16, color: mine ? OC.s100 : OC.text)),
+          ],
         ),
       ),
     );

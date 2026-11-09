@@ -8,11 +8,9 @@ import glob, os, re, urllib.request
 
 PKG = sorted(glob.glob(os.path.expanduser('~/.pub-cache/hosted/pub.dev/google_fonts-6*')))[-1]
 OUT = os.path.join(os.path.dirname(__file__), '..', 'assets', 'google_fonts')
-WANT = {  # dart method -> (asset family prefix, [(weight, italic)])
-    'inter': ('Inter', [(400, False), (500, False), (600, False), (700, False), (800, False)]),
-    'sourceSerif4': ('SourceSerif4', [(400, False), (500, False), (600, False), (700, False), (400, True)]),
-    'newsreader': ('Newsreader', [(400, True)]),
-    'caveat': ('Caveat', [(400, False), (700, False)]),
+WANT = {  # dart method -> (asset family prefix, [(weight, italic)])  — "Organic" design system
+    'caprasimo': ('Caprasimo', [(400, False)]),
+    'figtree': ('Figtree', [(400, False), (500, False), (600, False), (700, False), (800, False), (400, True)]),
 }
 NAMES = {400: 'Regular', 500: 'Medium', 600: 'SemiBold', 700: 'Bold', 800: 'ExtraBold'}
 

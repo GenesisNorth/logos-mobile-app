@@ -1,208 +1,221 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import '../../../core/theme/logos_theme.dart';
-import '../../../core/theme/logos_typography.dart';
+import '../../../core/config/app_flags.dart';
+import '../../../core/design/components.dart';
+import '../../../core/design/organic.dart';
+import '../../today/today_sheets.dart';
 import 'milestones_screen.dart';
 import 'prayer_circles_screen.dart';
 import 'study_pods_screen.dart';
 import 'the_well_screen.dart';
 import 'valley_screen.dart';
 import 'voice_comfort_screen.dart';
-import '../../../core/theme/logos_icons.dart';
-import '../../../core/config/app_flags.dart';
 
-class _Room {
+class _Space {
   final String flag;
   final String title;
-  final String description;
-  final Color color;
-  final LogosIconData icon;
+  final String subtitle;
+  final List<List<dynamic>> icon;
+  final Color bg;
+  final Color ink;
+  final Color iconBg;
+  final Color iconFg;
   final WidgetBuilder builder;
-  const _Room(this.flag, this.title, this.description, this.color, this.icon, this.builder);
+  const _Space(this.flag, this.title, this.subtitle, this.icon, this.bg, this.ink, this.iconBg, this.iconFg, this.builder);
 }
 
+/// Community — sacred spaces for praying with others.
 class CommunityScreen extends StatelessWidget {
   const CommunityScreen({super.key});
 
-  static final List<_Room> _rooms = [
-    _Room(AppFlags.roomPrayerCircles, 'Prayer Circles', 'Record a short spoken prayer. Voice prayers fade after 7 days.',
-        LogosColors.prayerCircles, LogosIcons.recordVoiceOver, (_) => const PrayerCirclesScreen()),
-    _Room(AppFlags.roomTheWell, 'The Well', 'Bring a private prayer request to our pastoral team.',
-        LogosColors.theWell, LogosIcons.waterDrop, (_) => const TheWellScreen()),
-    _Room(AppFlags.roomValley, 'In the Valley', 'Quiet rooms for grief, work stress and weariness, anchored in the Psalms.',
-        LogosColors.valleyRooms, LogosIcons.terrain, (_) => const ValleyScreen()),
-    _Room(AppFlags.roomStudyPods, 'Study Pods', 'Walk through the week’s verse with a small group.',
-        LogosColors.studyPods, LogosIcons.menuBook, (_) => const StudyPodsScreen()),
-    _Room(AppFlags.roomVoiceComfort, 'Voice Comfort', 'Hear Scripture read aloud by others.',
-        LogosColors.voiceComfort, LogosIcons.hearing, (_) => const VoiceComfortScreen()),
-    _Room(AppFlags.roomMilestones, 'Milestones', 'Celebrate spiritual birthdays and finished weeks.',
-        const Color(0xFF6E6457), LogosIcons.cake, (_) => const MilestonesScreen()),
+  static final _well = _Space(AppFlags.roomTheWell, 'The Well', 'Private prayer requests · pastoral care', OI.droplet,
+      OC.s700, OC.s100, OC.s200, OC.s800, (_) => const TheWellScreen());
+
+  static final _tiles = <_Space>[
+    _Space(AppFlags.roomPrayerCircles, 'Prayer Circles', 'Voice prayers · fade in 7 days', OI.mic, OC.a200, OC.a900,
+        OC.accent, OC.n100, (_) => const PrayerCirclesScreen()),
+    _Space(AppFlags.roomStudyPods, 'Study Pods', 'Four pilgrims · one verse', OI.book, OC.n100, OC.text, OC.surface,
+        OC.text, (_) => const StudyPodsScreen()),
+    _Space(AppFlags.roomValley, 'In the Valley', 'Grief · Workplace · Weariness', OI.mountain, OC.n800, OC.n100, OC.n700,
+        OC.n100, (_) => const ValleyScreen()),
+    _Space(AppFlags.roomVoiceComfort, 'Voice Comfort', 'Hear the Word read', OI.wave, OC.s200, OC.s900, OC.s600, OC.n100,
+        (_) => const VoiceComfortScreen()),
   ];
+
+  static final _milestones = _Space(AppFlags.roomMilestones, 'Milestones', 'Spiritual birthdays — lift up your family',
+      OI.bell, OC.surface, OC.text, OC.n100, OC.text, (_) => const MilestonesScreen());
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final ink = isDark ? LogosColors.examenInk : LogosColors.ink;
-    final surface = isDark ? LogosColors.examenSurface : LogosColors.surface;
-
     return ListenableBuilder(
       listenable: AppFlags.instance,
       builder: (context, _) {
         final flags = AppFlags.instance;
-        final rooms = _rooms.where((r) => flags.isOn(r.flag)).toList();
-        return Scaffold(
-          backgroundColor: isDark ? LogosColors.examenBg : LogosColors.sand,
-          body: SafeArea(
-            child: ListView(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 110),
-              children: [
-                Text('Community', style: LogosTypography.headline(color: ink).copyWith(fontSize: 28)),
-                const SizedBox(height: 4),
-                Text(
-                  'Pray with others and be prayed for.',
-                  style: GoogleFonts.inter(fontSize: 14, color: ink.withValues(alpha: 0.65)),
-                ),
-                if (flags.isOn(AppFlags.streakFamily)) ...[
-                  const SizedBox(height: 20),
-                  Text('Streak Family', style: LogosTypography.label(color: ink)),
-                  const SizedBox(height: 10),
-                  _buildStreakFamilyRow(context, surface, ink),
+        final tiles = _tiles.where((t) => flags.isOn(t.flag)).toList();
+        final rows = <Widget>[];
+        for (var i = 0; i < tiles.length; i += 2) {
+          final pair = tiles.sublist(i, (i + 2).clamp(0, tiles.length));
+          rows.add(Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: pair.length == 2
+                ? IntrinsicHeight(
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Expanded(child: _Tile(space: pair[0])),
+                        const SizedBox(width: 12),
+                        Expanded(child: _Tile(space: pair[1])),
+                      ],
+                    ),
+                  )
+                : _Tile(space: pair[0], wide: true),
+          ));
+        }
+
+        return OScreen(
+          atmosphere: Atmosphere.parchment,
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(22, 20, 22, 120),
+            children: [
+              Row(
+                children: [
+                  Expanded(child: Text('Community', style: OT.h1())),
+                  OCircleButton(icon: OI.bell, tooltip: 'Liturgical hours', size: 48, onTap: () => showHoursSheet(context)),
                 ],
-                const SizedBox(height: 18),
-                for (final room in rooms) ...[
-                  _RoomCard(room: room, surface: surface, ink: ink),
-                  const SizedBox(height: 12),
-                ],
-              ],
-            ),
+              ),
+              Text('Never pray alone.', style: OT.body(color: OC.text.withValues(alpha: 0.7))),
+              const SizedBox(height: 22),
+              Text('Sacred spaces', style: OT.label(size: 15)),
+              const SizedBox(height: 12),
+              if (flags.isOn(_well.flag)) ...[_WellCard(space: _well), const SizedBox(height: 12)],
+              ...rows,
+              if (flags.isOn(_milestones.flag)) _WideRow(space: _milestones),
+            ],
           ),
         );
       },
     );
   }
+}
 
-  Widget _buildStreakFamilyRow(BuildContext context, Color surface, Color ink) {
-    final friends = [
-      {'name': 'Sarah K.', 'streak': 12, 'initial': 'S'},
-      {'name': 'David M.', 'streak': 28, 'initial': 'D'},
-      {'name': 'Hannah L.', 'streak': 7, 'initial': 'H'},
-      {'name': 'Grace E.', 'streak': 15, 'initial': 'G'},
-      {'name': 'Elijah P.', 'streak': 4, 'initial': 'E'},
-    ];
+void _open(BuildContext context, _Space s) => Navigator.of(context).push(MaterialPageRoute(builder: s.builder));
 
-    return SizedBox(
-      height: 72,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        itemCount: friends.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 14),
-        itemBuilder: (context, i) {
-          final f = friends[i];
-          return GestureDetector(
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const MilestonesScreen()),
-              );
-            },
-            child: Column(
+class _IconDisc extends StatelessWidget {
+  final _Space space;
+  final double size;
+  const _IconDisc({required this.space, this.size = 48});
+
+  @override
+  Widget build(BuildContext context) => Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(color: space.iconBg, shape: BoxShape.circle),
+        child: Center(child: OIcon(space.icon, size: size * 0.42, color: space.iconFg)),
+      );
+}
+
+class _WellCard extends StatelessWidget {
+  final _Space space;
+  const _WellCard({required this.space});
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      label: '${space.title}. ${space.subtitle}',
+      excludeSemantics: true,
+      child: GestureDetector(
+        onTap: () => _open(context, space),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(32),
+          child: Container(
+            height: 168,
+            color: space.bg,
+            child: Stack(
               children: [
-                Stack(
-                  clipBehavior: Clip.none,
-                  children: [
-                    CircleAvatar(
-                      radius: 22,
-                      backgroundColor: LogosColors.coral.withValues(alpha: 0.35),
-                      child: Text(
-                        f['initial'] as String,
-                        style: TextStyle(fontWeight: FontWeight.bold, color: ink),
-                      ),
-                    ),
-                    Positioned(
-                      bottom: -2,
-                      right: -4,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
-                        decoration: BoxDecoration(
-                          color: LogosColors.coral,
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Row(
-                          children: [
-                            const AppIcon(LogosIcons.localFireDepartment, size: 10, color: Colors.white),
-                            Text(
-                              '${f['streak']}',
-                              style: const TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
+                const Positioned.fill(
+                  child: ODecor(big: OC.s600, small: Colors.transparent, bigSize: 200, bigOffset: Offset(-60, -40), smallSize: 0),
                 ),
-                const SizedBox(height: 6),
-                Text(
-                  f['name'] as String,
-                  style: TextStyle(fontSize: 11, color: ink.withValues(alpha: 0.8)),
+                Padding(
+                  padding: const EdgeInsets.all(22),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _IconDisc(space: space),
+                      const Spacer(),
+                      Text(space.title, style: OT.display(30, color: space.ink)),
+                      Text(space.subtitle, style: OT.small(color: space.ink, alpha: 0.85)),
+                    ],
+                  ),
                 ),
               ],
             ),
-          );
-        },
+          ),
+        ),
       ),
     );
   }
 }
 
-class _RoomCard extends StatelessWidget {
-  final _Room room;
-  final Color surface;
-  final Color ink;
-  const _RoomCard({required this.room, required this.surface, required this.ink});
+class _Tile extends StatelessWidget {
+  final _Space space;
+  final bool wide;
+  const _Tile({required this.space, this.wide = false});
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: surface,
-      borderRadius: BorderRadius.circular(20),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(20),
-        onTap: () => Navigator.push(context, MaterialPageRoute(builder: room.builder)),
-        child: Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: LogosColors.taupe),
-          ),
-          child: Row(
+    return Semantics(
+      button: true,
+      label: '${space.title}. ${space.subtitle}',
+      excludeSemantics: true,
+      child: OCard(
+        color: space.bg,
+        radius: 28,
+        padding: const EdgeInsets.all(18),
+        onTap: () => _open(context, space),
+        child: ConstrainedBox(
+          constraints: BoxConstraints(minHeight: wide ? 0 : 150),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: room.color.withValues(alpha: 0.14),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                alignment: Alignment.center,
-                child: AppIcon(room.icon, color: room.color, size: 24),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(room.title, style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w700, color: ink)),
-                    const SizedBox(height: 3),
-                    Text(room.description,
-                        style: GoogleFonts.inter(fontSize: 13, height: 1.35, color: ink.withValues(alpha: 0.65))),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 8),
-              AppIcon(LogosIcons.chevronRight, size: 18, color: ink.withValues(alpha: 0.35)),
+              _IconDisc(space: space, size: 44),
+              SizedBox(height: wide ? 18 : 26),
+              Text(space.title, style: OT.display(21, color: space.ink, height: 1.1)),
+              const SizedBox(height: 4),
+              Text(space.subtitle, style: OT.small(color: space.ink, alpha: 0.8)),
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _WideRow extends StatelessWidget {
+  final _Space space;
+  const _WideRow({required this.space});
+
+  @override
+  Widget build(BuildContext context) {
+    return OCard(
+      color: space.bg,
+      radius: 28,
+      padding: const EdgeInsets.all(16),
+      onTap: () => _open(context, space),
+      child: Row(
+        children: [
+          _IconDisc(space: space, size: 44),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(space.title, style: OT.display(21, color: space.ink)),
+                Text(space.subtitle, style: OT.small(color: space.ink, alpha: 0.8)),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

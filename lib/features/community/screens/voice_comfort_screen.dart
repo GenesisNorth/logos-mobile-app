@@ -1,9 +1,21 @@
 import 'package:flutter/material.dart';
-import '../../../core/services/audio_service.dart';
-import '../../../core/theme/logos_theme.dart';
-import '../../../core/theme/logos_typography.dart';
-import '../../../core/theme/logos_icons.dart';
+import '../../../core/design/components.dart';
+import '../../../core/design/organic.dart';
+import '../../../core/services/verse_reader.dart';
+import '../widgets/room_header.dart';
 
+const _seasons = ['All', 'Anxiety', 'Grief', 'Gratitude', 'Sleeplessness'];
+
+const _readings = [
+  ('John 15:5', 'I am the vine; you are the branches. Whoever abides in me and I in him…', 'Beloved Sister in Lagos', 'Anxiety', '0:38'),
+  ('Philippians 4:6–7', 'Do not be anxious about anything, but in everything by prayer and supplication…', 'Pilgrim in Edinburgh', 'Sleeplessness', '0:52'),
+  ('Psalm 23:1–3', 'The Lord is my shepherd; I shall not want. He makes me lie down in green pastures…', 'Brother in Seoul', 'Grief', '0:44'),
+  ('Colossians 3:1–3', 'Set your minds on things that are above, not on things that are on earth…', 'Sister in São Paulo', 'Gratitude', '0:41'),
+];
+
+/// Voice Comfort — Scripture read aloud by others.
+/// (Behind the `room_voice_comfort` flag until recordings are uploaded via admin;
+/// meanwhile the device voice reads the passage.)
 class VoiceComfortScreen extends StatefulWidget {
   const VoiceComfortScreen({super.key});
 
@@ -12,239 +24,113 @@ class VoiceComfortScreen extends StatefulWidget {
 }
 
 class _VoiceComfortScreenState extends State<VoiceComfortScreen> {
-  String _selectedSeason = 'All';
-  int? _playingIndex;
+  int _season = 0;
 
-  final List<String> _seasons = ['All', 'Anxiety', 'Grief', 'Gratitude', 'Sleeplessness'];
-
-  final List<Map<String, dynamic>> _recordings = [
-    {
-      'reference': 'John 15:5',
-      'verse': 'I am the vine; you are the branches. Whoever abides in me and I in him...',
-      'reader': 'Beloved Sister in Lagos',
-      'season': 'Anxiety',
-      'duration': '0:35',
-    },
-    {
-      'reference': 'Philippians 4:6-7',
-      'verse': 'Do not be anxious about anything, but in everything by prayer and supplication...',
-      'reader': 'Pilgrim in Edinburgh',
-      'season': 'Sleeplessness',
-      'duration': '0:48',
-    },
-    {
-      'reference': 'Psalm 23:1-3',
-      'verse': 'The Lord is my shepherd; I shall not want. He makes me lie down in green pastures...',
-      'reader': 'Anonymous Brother in Seoul',
-      'season': 'Grief',
-      'duration': '0:52',
-    },
-    {
-      'reference': 'Romans 8:38-39',
-      'verse': 'For I am sure that neither death nor life, nor angels nor rulers... will be able to separate us from the love of God.',
-      'reader': 'Sister in Atlanta',
-      'season': 'Gratitude',
-      'duration': '0:40',
-    },
-  ];
-
-  void _togglePlay(int index) {
-    AudioService().selectionTick();
-    setState(() {
-      _playingIndex = (_playingIndex == index) ? null : index;
-    });
+  @override
+  void dispose() {
+    VerseReader.instance.stop();
+    super.dispose();
   }
 
-  void _showContributeDialog() {
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
-      builder: (ctx) => Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+  @override
+  Widget build(BuildContext context) {
+    const atm = Atmosphere.sage;
+    final list = _readings.where((r) => _season == 0 || r.$4 == _seasons[_season]).toList();
+    return OScreen(
+      atmosphere: atm,
+      child: ListenableBuilder(
+        listenable: VerseReader.instance,
+        builder: (context, _) => ListView(
+          padding: const EdgeInsets.only(bottom: 30),
           children: [
-            Text('Contribute Your Voice', style: LogosTypography.headline(color: LogosColors.ink)),
-            const SizedBox(height: 8),
-            Text(
-              'Record your recitation of John 15:5. After pastoral review, your voice will comfort brothers and sisters across the globe who are struggling to sleep or breathe through anxiety.',
-              style: LogosTypography.body(color: LogosColors.ink.withValues(alpha: 0.8)),
+            const RoomHeader(
+              atmosphere: atm,
+              kicker: 'Community',
+              title: 'Voice Comfort',
+              subtitle: 'Scripture read aloud by pilgrims around the world.',
+              kickerColor: OC.s800,
             ),
-            const SizedBox(height: 20),
-            ElevatedButton.icon(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: LogosColors.voiceComfort,
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            const SizedBox(height: 16),
+            SizedBox(
+              height: 44,
+              child: ListView.separated(
+                padding: const EdgeInsets.symmetric(horizontal: 22),
+                scrollDirection: Axis.horizontal,
+                itemCount: _seasons.length,
+                separatorBuilder: (_, __) => const SizedBox(width: 8),
+                itemBuilder: (_, i) => OPill(_seasons[i], selected: i == _season, onTap: () => setState(() => _season = i)),
               ),
-              icon: const AppIcon(LogosIcons.mic, color: Colors.white),
-              label: const Text('Record Comfort Recitation', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-              onPressed: () {
-                Navigator.pop(ctx);
-                AudioService().playAmenChime();
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Recitation submitted for gentle pastoral moderation.')),
-                );
-              },
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(22, 16, 22, 0),
+              child: Column(
+                children: [
+                  for (final r in list) ...[
+                    _ReadingCard(reading: r),
+                    const SizedBox(height: 12),
+                  ],
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(28),
+                    child: Container(
+                      color: OC.s700,
+                      padding: const EdgeInsets.all(22),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Contribute your voice', style: OT.display(23, color: OC.s100)),
+                          const SizedBox(height: 6),
+                          Text('Read this week’s verse for someone who needs to hear it. Readings are reviewed before they’re shared.',
+                              style: OT.small(color: OC.s100, alpha: 0.85)),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ],
         ),
       ),
     );
   }
+}
+
+class _ReadingCard extends StatelessWidget {
+  final (String, String, String, String, String) reading;
+  const _ReadingCard({required this.reading});
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final ink = isDark ? LogosColors.examenInk : LogosColors.ink;
-    final surface = isDark ? LogosColors.examenSurface : LogosColors.surface;
-
-    final filtered = _selectedSeason == 'All'
-        ? _recordings
-        : _recordings.where((r) => r['season'] == _selectedSeason).toList();
-
-    return Scaffold(
-      backgroundColor: isDark ? LogosColors.examenBg : LogosColors.sand,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          tooltip: 'Back',
-          icon: AppIcon(LogosIcons.arrowBack, color: ink),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Column(
-          children: [
-            const Text('Voice Comfort', style: TextStyle(color: LogosColors.voiceComfort, fontWeight: FontWeight.bold, fontSize: 16)),
-            Text('Scripture Spoken By Others', style: LogosTypography.caption(color: ink.withValues(alpha: 0.6))),
-          ],
-        ),
-        centerTitle: true,
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        backgroundColor: LogosColors.voiceComfort,
-        foregroundColor: Colors.white,
-        icon: const AppIcon(LogosIcons.mic),
-        label: const Text('Contribute Voice'),
-        onPressed: _showContributeDialog,
-      ),
-      body: SafeArea(
-        child: Column(
-          children: [
-            // Season filter chips
-            SizedBox(
-              height: 44,
-              child: ListView.separated(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                scrollDirection: Axis.horizontal,
-                itemCount: _seasons.length,
-                separatorBuilder: (_, __) => const SizedBox(width: 8),
-                itemBuilder: (context, i) {
-                  final s = _seasons[i];
-                  final isSelected = s == _selectedSeason;
-                  return ChoiceChip(
-                    label: Text(s, style: TextStyle(fontSize: 12, color: isSelected ? Colors.white : ink)),
-                    selected: isSelected,
-                    selectedColor: LogosColors.voiceComfort,
-                    backgroundColor: surface,
-                    side: BorderSide(color: isSelected ? LogosColors.voiceComfort : LogosColors.taupe),
-                    onSelected: (val) {
-                      if (val) setState(() => _selectedSeason = s);
-                    },
-                  );
-                },
-              ),
+    final reader = VerseReader.instance;
+    final playing = reader.isReading(reading.$2);
+    return OCard(
+      radius: 28,
+      padding: const EdgeInsets.all(18),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          OCircleButton(
+            icon: playing ? OI.pause : OI.play,
+            tooltip: playing ? 'Pause' : 'Play',
+            background: OC.s700,
+            foreground: OC.n100,
+            size: 52,
+            onTap: () => playing ? reader.stop() : reader.speak(reading.$2.replaceAll('…', '.'), reference: reading.$1),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('${reading.$1} · ${reading.$5}'.toUpperCase(), style: OT.kicker(color: OC.s700, size: 11)),
+                const SizedBox(height: 6),
+                Text(reading.$2, style: OT.display(18, height: 1.25)),
+                const SizedBox(height: 8),
+                Text('Read by ${reading.$3}', style: OT.small(alpha: 0.65)),
+              ],
             ),
-
-            const SizedBox(height: 12),
-
-            Expanded(
-              child: ListView.builder(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                itemCount: filtered.length,
-                itemBuilder: (context, idx) {
-                  final rec = filtered[idx];
-                  final isPlaying = _playingIndex == idx;
-
-                  return Container(
-                    margin: const EdgeInsets.only(bottom: 14),
-                    padding: const EdgeInsets.all(18),
-                    decoration: BoxDecoration(
-                      color: surface,
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                        color: isPlaying ? LogosColors.voiceComfort : LogosColors.taupe,
-                        width: isPlaying ? 1.5 : 1,
-                      ),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(rec['reference'] as String, style: LogosTypography.label(color: LogosColors.coral)),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                              decoration: BoxDecoration(
-                                color: LogosColors.voiceComfort.withValues(alpha: 0.15),
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: Text(
-                                rec['season'] as String,
-                                style: const TextStyle(
-                                  color: LogosColors.voiceComfort,
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          '"${rec['verse']}"',
-                          style: LogosTypography.scriptureBody(color: ink).copyWith(fontSize: 14),
-                        ),
-                        const SizedBox(height: 12),
-                        Row(
-                          children: [
-                            IconButton(
-                              tooltip: 'Play or pause prayer',
-                              icon: AppIcon(
-                                isPlaying ? LogosIcons.pauseCircleFilled : LogosIcons.playCircleFilled,
-                                color: LogosColors.voiceComfort,
-                                size: 36,
-                              ),
-                              onPressed: () => _togglePlay(idx),
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    rec['reader'] as String,
-                                    style: LogosTypography.label(color: ink).copyWith(fontSize: 12),
-                                  ),
-                                  Text(
-                                    isPlaying ? 'Playing recitation · ${rec['duration']}' : rec['duration'] as String,
-                                    style: LogosTypography.caption(color: ink.withValues(alpha: 0.5)),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

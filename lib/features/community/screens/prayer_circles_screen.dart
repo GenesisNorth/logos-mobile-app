@@ -1,19 +1,40 @@
 import 'dart:async';
 import 'dart:io';
-
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:record/record.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:uuid/uuid.dart';
-
-import '../../../core/utils/pilgrim_name.dart';
+import '../../../core/design/components.dart';
+import '../../../core/design/organic.dart';
 import '../../../core/services/audio_service.dart';
-import '../../../core/theme/logos_theme.dart';
-import '../../../core/theme/logos_typography.dart';
-import '../../../core/theme/logos_icons.dart';
+import '../../../core/utils/pilgrim_name.dart';
 import '../data/community_repository.dart';
 import '../data/voice_note_store.dart';
+import '../widgets/room_header.dart';
 
+const _stances = ['Praying with you', 'Standing in agreement', 'Lifting you before the Father', 'The peace of Christ guard you'];
+
+class _Note {
+  final String id;
+  final String phrase;
+  final String author;
+  final int seconds;
+  final String expires;
+  final String? path;
+  final bool sample;
+  const _Note(this.id, this.phrase, this.author, this.seconds, this.expires, {this.path, this.sample = false});
+}
+
+/// Example prayers shown until circles sync with the cloud (no audio).
+const _samples = [
+  _Note('sample-1', 'Praying with you', 'Sarah K.', 24, 'Expires in 4 days', sample: true),
+  _Note('sample-2', 'The peace of Christ guard you', 'David M.', 41, 'Expires in 5 days', sample: true),
+  _Note('sample-3', 'Standing in agreement', 'Hannah L.', 18, 'Expires in 6 days', sample: true),
+];
+
+/// Prayer Circles — spoken prayers that fade after seven days.
 class PrayerCirclesScreen extends StatefulWidget {
   const PrayerCirclesScreen({super.key});
 
@@ -22,648 +43,360 @@ class PrayerCirclesScreen extends StatefulWidget {
 }
 
 class _PrayerCirclesScreenState extends State<PrayerCirclesScreen> {
-  static const _maxRecordSeconds = 120;
-
-  bool _isRecording = false;
-  bool _busy = false;
-  int _recordSeconds = 0;
-  Timer? _recordTimer;
-  String? _recordingPath;
-  String _selectedFixedPhrase = 'Praying with you';
-
-  // Created lazily so merely opening the screen never touches audio plugins.
+  static const _maxSeconds = 120;
+  final _store = VoiceNoteStore();
   AudioRecorder? _recorder;
   AudioPlayer? _player;
-  StreamSubscription<void>? _playerDoneSub;
-  final VoiceNoteStore _store = VoiceNoteStore();
+  StreamSubscription<void>? _done;
+  StreamSubscription<Duration>? _pos;
+  Timer? _timer;
 
-  final List<String> _fixedPhrases = [
-    'Praying with you',
-    'Standing in agreement',
-    'Lifting you before the Father',
-    'The peace of Christ guard you',
-    'Amen',
-  ];
-
-  /// Example circle prayers shown until Prayer Circles sync with the cloud.
-  /// They carry no audio, so they are labelled and cannot be played.
-  static final List<Map<String, dynamic>> _samplePrayers = [
-    {
-      'id': 'sample-1',
-      'author': 'Sarah K.',
-      'phrase': 'Praying with you',
-      'duration': '0:42',
-      'expiresIn': 'Expires in 4 days',
-      'isSample': true,
-    },
-    {
-      'id': 'sample-2',
-      'author': 'David M.',
-      'phrase': 'The peace of Christ guard you',
-      'duration': '1:15',
-      'expiresIn': 'Expires in 5 days',
-      'isSample': true,
-    },
-    {
-      'id': 'sample-3',
-      'author': 'Hannah L.',
-      'phrase': 'Standing in agreement',
-      'duration': '0:28',
-      'expiresIn': 'Expires in 6 days',
-      'isSample': true,
-    },
-  ];
-
-  List<LocalVoiceNote> _myNotes = [];
-  String? _playingId;
-
-  List<Map<String, dynamic>> get _voiceNotes => [
-    ..._myNotes.map((n) {
-      final left =
-          VoiceNoteStore.lifetime - DateTime.now().difference(n.createdAt);
-      final days = (left.inMinutes / (24 * 60))
-          .ceil(); // a fresh note reads "7 days"
-      return {
-        'id': n.id,
-        'author': '${n.authorName} (You)',
-        'phrase': n.phrase,
-        'duration': _fmt(n.durationSeconds),
-        'expiresIn': days >= 1
-            ? 'Expires in $days day${days == 1 ? '' : 's'}'
-            : 'Expires today',
-        'path': n.path,
-        'isSample': false,
-      };
-    }),
-    ..._samplePrayers,
-  ];
-
-  static String _fmt(int secs) =>
-      '${secs ~/ 60}:${(secs % 60).toString().padLeft(2, '0')}';
+  int _stance = 0;
+  bool _recording = false;
+  bool _starting = false;
+  int _seconds = 0;
+  String? _path;
+  List<LocalVoiceNote> _mine = [];
+  String? _playing;
+  double _progress = 0;
 
   @override
   void initState() {
     super.initState();
-    _loadMyNotes();
-  }
-
-  Future<void> _loadMyNotes() async {
-    try {
-      final notes = await _store.load();
-      if (mounted) setState(() => _myNotes = notes);
-    } catch (e) {
-      debugPrint('[PrayerCircles] could not load voice notes: $e');
-    }
+    _store.load().then((n) {
+      if (mounted) setState(() => _mine = n);
+    }).catchError((_) {});
   }
 
   @override
   void dispose() {
-    _recordTimer?.cancel();
-    _playerDoneSub?.cancel();
+    _timer?.cancel();
+    _done?.cancel();
+    _pos?.cancel();
     _recorder?.dispose();
     _player?.dispose();
     super.dispose();
   }
 
-  void _toast(String msg) {
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
-  }
+  void _toast(String m) => ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(m)));
 
-  Future<void> _toggleRecording() async {
-    if (_busy) return;
-    _busy = true;
-    try {
-      if (_isRecording) {
-        await _stopRecording();
-      } else {
-        await _startRecording();
-      }
-    } finally {
-      _busy = false;
-    }
+  List<_Note> get _notes => [
+        for (final n in _mine)
+          _Note(n.id, n.phrase, '${n.authorName} (you)', n.durationSeconds, _expiry(n.createdAt), path: n.path),
+        ..._samples,
+      ];
+
+  String _expiry(DateTime created) {
+    final days = ((VoiceNoteStore.lifetime - DateTime.now().difference(created)).inMinutes / 1440).ceil();
+    return days >= 1 ? 'Expires in $days day${days == 1 ? '' : 's'}' : 'Expires today';
   }
 
   Future<void> _startRecording() async {
+    if (_recording || _starting) return;
+    _starting = true;
     await _stopPlayback();
-    final recorder = _recorder ??= AudioRecorder();
+    final rec = _recorder ??= AudioRecorder();
     try {
-      if (!await recorder.hasPermission()) {
-        _toast('Microphone access is needed to record a voice prayer.');
+      if (!await rec.hasPermission()) {
+        _toast('Microphone access is needed to record a prayer.');
         return;
       }
       final path = await _store.newRecordingPath();
-      await recorder.start(
-        const RecordConfig(encoder: AudioEncoder.aacLc, bitRate: 96000),
-        path: path,
-      );
-      _recordingPath = path;
-    } catch (e) {
-      debugPrint('[PrayerCircles] start recording failed: $e');
+      await rec.start(const RecordConfig(encoder: AudioEncoder.aacLc, bitRate: 96000), path: path);
+      _path = path;
+      HapticFeedback.mediumImpact();
+      setState(() {
+        _recording = true;
+        _seconds = 0;
+      });
+      _timer = Timer.periodic(const Duration(seconds: 1), (_) {
+        if (!mounted) return;
+        setState(() => _seconds++);
+        if (_seconds >= _maxSeconds) _stopRecording();
+      });
+    } catch (_) {
       _toast('Could not start recording. Please try again.');
-      return;
+    } finally {
+      _starting = false;
     }
-
-    AudioService().selectionTick();
-    setState(() {
-      _isRecording = true;
-      _recordSeconds = 0;
-    });
-    _recordTimer = Timer.periodic(const Duration(seconds: 1), (t) {
-      if (!mounted) return;
-      setState(() => _recordSeconds++);
-      if (_recordSeconds >= _maxRecordSeconds) _toggleRecording();
-    });
   }
 
   Future<void> _stopRecording() async {
-    _recordTimer?.cancel();
-    final seconds = _recordSeconds;
+    if (!_recording) return;
+    _timer?.cancel();
+    final seconds = _seconds;
     String? path;
     try {
       path = await _recorder?.stop();
-    } catch (e) {
-      debugPrint('[PrayerCircles] stop recording failed: $e');
-    }
-    path ??= _recordingPath;
-    _recordingPath = null;
-    if (!mounted) return;
+    } catch (_) {}
+    path ??= _path;
     setState(() {
-      _isRecording = false;
-      _recordSeconds = 0;
+      _recording = false;
+      _seconds = 0;
     });
-
     if (path == null || seconds < 1 || !File(path).existsSync()) {
       if (path != null && File(path).existsSync()) File(path).deleteSync();
-      _toast('Prayer too short — hold for at least a second.');
+      _toast('Hold the mic a little longer to record.');
       return;
     }
-
+    if (!mounted) return;
     final author = pilgrimName(context);
     final note = LocalVoiceNote(
       id: const Uuid().v4(),
       path: path,
-      phrase: _selectedFixedPhrase,
+      phrase: _stances[_stance],
       authorName: author,
       durationSeconds: seconds,
       createdAt: DateTime.now(),
     );
     await _store.add(note);
     if (!mounted) return;
-    setState(() => _myNotes = [note, ..._myNotes]);
-
+    setState(() => _mine = [note, ..._mine]);
     CommunityRepository().submitPrayer(
       room: 'prayer_circles',
-      title: _selectedFixedPhrase,
-      content: 'Voice note prayer: "$_selectedFixedPhrase"',
+      title: _stances[_stance],
+      content: 'Voice prayer: “${_stances[_stance]}”',
       authorName: author,
     );
     AudioService().playAmenChime();
-    _toast('Voice prayer saved (purges in 7 days)');
+    _toast('Your prayer is with the circle for 7 days.');
   }
 
   Future<void> _stopPlayback() async {
-    if (_playingId == null) return;
     await _player?.stop();
-    if (mounted) setState(() => _playingId = null);
+    if (mounted) {
+      setState(() {
+        _playing = null;
+        _progress = 0;
+      });
+    }
   }
 
-  Future<void> _togglePlay(int index) async {
-    final note = _voiceNotes[index];
-    AudioService().selectionTick();
-
-    if (note['isSample'] == true) {
-      _toast(
-        'Example prayer — circle voices will play once Prayer Circles go live.',
-      );
+  Future<void> _play(_Note n) async {
+    if (n.sample) {
+      _toast('Example prayer — circle voices will play once Prayer Circles go live.');
       return;
     }
-    if (_isRecording) return;
-
-    final id = note['id'] as String;
-    if (_playingId == id) {
-      await _stopPlayback();
-      return;
-    }
-
-    final player = _player ??= AudioPlayer();
-    _playerDoneSub ??= player.onPlayerComplete.listen((_) {
-      if (mounted) setState(() => _playingId = null);
+    if (_playing == n.id) return _stopPlayback();
+    final p = _player ??= AudioPlayer();
+    _done ??= p.onPlayerComplete.listen((_) {
+      if (mounted) {
+        setState(() {
+          _playing = null;
+          _progress = 0;
+        });
+      }
+    });
+    _pos ??= p.onPositionChanged.listen((d) {
+      final n = _notes.where((x) => x.id == _playing).firstOrNull;
+      if (n != null && mounted) setState(() => _progress = (d.inMilliseconds / (n.seconds * 1000)).clamp(0, 1));
     });
     try {
-      await player.stop();
-      await player.play(DeviceFileSource(note['path'] as String));
-      if (mounted) setState(() => _playingId = id);
-    } catch (e) {
-      debugPrint('[PrayerCircles] playback failed: $e');
+      await p.stop();
+      await p.play(DeviceFileSource(n.path!));
+      setState(() => _playing = n.id);
+    } catch (_) {
       _toast('Could not play this prayer.');
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final ink = isDark ? LogosColors.examenInk : LogosColors.ink;
-    final surface = isDark ? LogosColors.examenSurface : LogosColors.surface;
-
-    return Scaffold(
-      backgroundColor: isDark ? LogosColors.examenBg : LogosColors.sand,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          tooltip: 'Back',
-          icon: AppIcon(LogosIcons.arrowBack, color: ink),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Column(
-          children: [
-            const Text(
-              'Prayer Circles',
-              style: TextStyle(
-                color: LogosColors.prayerCircles,
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
-              ),
-            ),
-            Text(
-              '7-Day Ephemeral Prayers',
-              style: LogosTypography.caption(color: ink.withValues(alpha: 0.6)),
-            ),
-          ],
-        ),
-        centerTitle: true,
-      ),
-      body: SafeArea(
-        child: Column(
-          children: [
-            Expanded(
-              child: ListView(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20.0,
-                  vertical: 12.0,
+    const atm = Atmosphere.blush;
+    return OScreen(
+      atmosphere: atm,
+      child: ListView(
+        padding: const EdgeInsets.only(bottom: 40),
+        children: [
+          const RoomHeader(
+            atmosphere: atm,
+            kicker: 'Community',
+            title: 'Prayer Circles',
+            subtitle: 'Voice prayers that fade after 7 days.',
+            kickerColor: OC.a700,
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(22, 20, 22, 0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _CircleCard(onInvite: () => SharePlus.instance.share(ShareParams(
+                      text: 'Pray with me on LOGOS IN ME — one verse a week, and a circle that prays together.',
+                    ))),
+                const SizedBox(height: 22),
+                Text('Encouragement stance', style: OT.label(size: 15, color: OC.a900)),
+                const SizedBox(height: 10),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    for (var i = 0; i < _stances.length; i++)
+                      OPill(_stances[i],
+                          selected: i == _stance, bg: OC.n100, fg: OC.text, fontSize: 13, onTap: () => setState(() => _stance = i)),
+                  ],
                 ),
+                const SizedBox(height: 26),
+                Center(child: _HoldMic(recording: _recording, onStart: _startRecording, onStop: _stopRecording)),
+                const SizedBox(height: 12),
+                Text(
+                  _recording ? 'Recording… ${_seconds}s — release to share' : 'Hold to speak a prayer',
+                  textAlign: TextAlign.center,
+                  style: OT.label(size: 15, color: _recording ? OC.a600 : OC.a800),
+                ),
+                const SizedBox(height: 28),
+                Text('Circle voice prayers', style: OT.display(25, color: OC.a900)),
+                const SizedBox(height: 12),
+                for (final n in _notes) ...[
+                  _NoteRow(note: n, playing: _playing == n.id, progress: _playing == n.id ? _progress : 0, onPlay: () => _play(n)),
+                  const SizedBox(height: 10),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CircleCard extends StatelessWidget {
+  final VoidCallback onInvite;
+  const _CircleCard({required this.onInvite});
+
+  @override
+  Widget build(BuildContext context) {
+    const members = ['Sarah K.', 'David M.', 'Hannah L.', 'Grace E.'];
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(30),
+      child: Container(
+        color: OC.a700,
+        child: Stack(
+          children: [
+            const Positioned.fill(
+              child: ODecor(big: OC.a600, small: Colors.transparent, bigSize: 190, bigOffset: Offset(-50, -50), smallSize: 0),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(22, 22, 22, 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Circle Manifesto Card
-                  Container(
-                    padding: const EdgeInsets.all(18),
-                    decoration: BoxDecoration(
-                      color: LogosColors.prayerCircles,
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
+                  Text('YOUR CIRCLE', style: OT.kicker(color: OC.a200)),
+                  const SizedBox(height: 8),
+                  Text('The Jerusalem Circle', style: OT.display(26, color: OC.n100)),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      SizedBox(
+                        width: 34.0 + 24 * (members.length - 1),
+                        height: 36,
+                        child: Stack(
                           children: [
-                            const AppIcon(
-                              LogosIcons.autoDeleteOutlined,
-                              color: Colors.white,
-                              size: 18,
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              '7-DAY SACRED EPHEMERALITY',
-                              style:
-                                  LogosTypography.caption(
-                                    color: Colors.white.withValues(alpha: 0.85),
-                                  ).copyWith(
-                                    letterSpacing: 1.5,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                            ),
+                            for (var i = 0; i < members.length; i++)
+                              Positioned(
+                                left: i * 24.0,
+                                child: Container(
+                                  decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: OC.a700, width: 2)),
+                                  child: OAvatar.auto(members[i], size: 34),
+                                ),
+                              ),
                           ],
                         ),
-                        const SizedBox(height: 8),
-                        const Text(
-                          'The Jerusalem Circle',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'Voice prayers are automatically purged after 7 days to keep hearts focused on present intercession, free from digital hoarding.',
-                          style: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.85),
-                            fontSize: 13,
-                            height: 1.4,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  const SizedBox(height: 24),
-
-                  // Fixed Phrase Quick Selector
-                  Text(
-                    'Encouragement Stance',
-                    style: LogosTypography.label(color: ink),
-                  ),
-                  const SizedBox(height: 8),
-                  SizedBox(
-                    height: 38,
-                    child: ListView.separated(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: _fixedPhrases.length,
-                      separatorBuilder: (_, __) => const SizedBox(width: 8),
-                      itemBuilder: (context, i) {
-                        final phrase = _fixedPhrases[i];
-                        final isSelected = phrase == _selectedFixedPhrase;
-                        return ChoiceChip(
-                          label: Text(
-                            phrase,
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: isSelected ? Colors.white : ink,
-                            ),
-                          ),
-                          selected: isSelected,
-                          selectedColor: LogosColors.prayerCircles,
-                          backgroundColor: surface,
-                          side: BorderSide(
-                            color: isSelected
-                                ? LogosColors.prayerCircles
-                                : LogosColors.taupe,
-                          ),
-                          onSelected: (val) {
-                            if (val) {
-                              setState(() => _selectedFixedPhrase = phrase);
-                            }
-                          },
-                        );
-                      },
-                    ),
-                  ),
-
-                  const SizedBox(height: 24),
-
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Circle Voice Prayers',
-                        style: LogosTypography.label(color: ink),
                       ),
-                      Text(
-                        '${_voiceNotes.length} active',
-                        style: LogosTypography.caption(
-                          color: ink.withValues(alpha: 0.5),
-                        ),
-                      ),
+                      const SizedBox(width: 10),
+                      Expanded(child: Text('Example circle', style: OT.small(color: OC.n100, alpha: 0.85))),
+                      OButton('Invite', style: OButtonStyle.light, expand: false, height: 40, onPressed: onInvite),
                     ],
                   ),
-                  const SizedBox(height: 12),
-
-                  ...List.generate(_voiceNotes.length, (index) {
-                    final note = _voiceNotes[index];
-                    final isPlaying = note['id'] == _playingId;
-                    final isSample = note['isSample'] == true;
-
-                    return Container(
-                      margin: const EdgeInsets.only(bottom: 12),
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: surface,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: isPlaying
-                              ? LogosColors.prayerCircles
-                              : LogosColors.taupe,
-                          width: isPlaying ? 1.5 : 1,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.03),
-                            blurRadius: 6,
-                            offset: const Offset(0, 3),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Row(
-                                children: [
-                                  CircleAvatar(
-                                    radius: 14,
-                                    backgroundColor: LogosColors.prayerCircles
-                                        .withValues(alpha: 0.2),
-                                    child: Text(
-                                      (note['author'] as String)[0],
-                                      style: TextStyle(
-                                        color: ink,
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    note['author'] as String,
-                                    style: LogosTypography.label(color: ink),
-                                  ),
-                                  if (isSample) ...[
-                                    const SizedBox(width: 6),
-                                    Text(
-                                      'Example',
-                                      style: LogosTypography.caption(
-                                        color: ink.withValues(alpha: 0.45),
-                                      ),
-                                    ),
-                                  ],
-                                ],
-                              ),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                  vertical: 3,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: Colors.orange.withValues(alpha: 0.12),
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                child: Text(
-                                  note['expiresIn'] as String,
-                                  style: TextStyle(
-                                    color: Colors.orange.shade800,
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            '"${note['phrase']}"',
-                            style: LogosTypography.scriptureCitation(
-                              color: LogosColors.prayerCircles,
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-
-                          // Audio player bar
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 8,
-                            ),
-                            decoration: BoxDecoration(
-                              color: ink.withValues(alpha: 0.03),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Row(
-                              children: [
-                                IconButton(
-                                  tooltip: 'Play or pause prayer',
-                                  icon: AppIcon(
-                                    isPlaying
-                                        ? LogosIcons.pauseCircleFilled
-                                        : LogosIcons.playCircleFilled,
-                                    color: isSample
-                                        ? LogosColors.prayerCircles.withValues(
-                                            alpha: 0.35,
-                                          )
-                                        : LogosColors.prayerCircles,
-                                    size: 32,
-                                  ),
-                                  onPressed: () => _togglePlay(index),
-                                ),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      // Decorative waveform
-                                      Row(
-                                        children: List.generate(24, (barIndex) {
-                                          final height = isPlaying
-                                              ? (10 + (barIndex % 5) * 4)
-                                                    .toDouble()
-                                              : (6 + (barIndex % 3) * 3)
-                                                    .toDouble();
-                                          return Container(
-                                            margin: const EdgeInsets.symmetric(
-                                              horizontal: 1.5,
-                                            ),
-                                            width: 3,
-                                            height: height,
-                                            decoration: BoxDecoration(
-                                              color: isPlaying
-                                                  ? LogosColors.prayerCircles
-                                                  : ink.withValues(alpha: 0.25),
-                                              borderRadius:
-                                                  BorderRadius.circular(2),
-                                            ),
-                                          );
-                                        }),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  note['duration'] as String,
-                                  style: LogosTypography.caption(
-                                    color: ink.withValues(alpha: 0.6),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  }),
-                ],
-              ),
-            ),
-
-            // Bottom Audio Record Bar
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-              decoration: BoxDecoration(
-                color: surface,
-                border: Border(
-                  top: BorderSide(
-                    color: LogosColors.taupe.withValues(alpha: 0.5),
-                  ),
-                ),
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          _isRecording
-                              ? 'Recording Prayer (${_recordSeconds}s / ${_maxRecordSeconds}s max)'
-                              : 'Speak a voice prayer to your circle',
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.bold,
-                            color: _isRecording ? Colors.redAccent : ink,
-                          ),
-                        ),
-                        Text(
-                          'Phrase: $_selectedFixedPhrase',
-                          style: LogosTypography.caption(
-                            color: ink.withValues(alpha: 0.6),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Semantics(
-                    button: true,
-                    label: _isRecording
-                        ? 'Stop recording'
-                        : 'Record a voice prayer',
-                    child: GestureDetector(
-                      onTap: _toggleRecording,
-                      child: Container(
-                        width: 52,
-                        height: 52,
-                        decoration: BoxDecoration(
-                          color: _isRecording
-                              ? Colors.redAccent
-                              : LogosColors.prayerCircles,
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color:
-                                  (_isRecording
-                                          ? Colors.redAccent
-                                          : LogosColors.prayerCircles)
-                                      .withValues(alpha: 0.35),
-                              blurRadius: 10,
-                              spreadRadius: 2,
-                            ),
-                          ],
-                        ),
-                        child: AppIcon(
-                          _isRecording ? LogosIcons.stop : LogosIcons.mic,
-                          color: Colors.white,
-                          size: 26,
-                        ),
-                      ),
-                    ),
-                  ),
                 ],
               ),
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _HoldMic extends StatelessWidget {
+  final bool recording;
+  final VoidCallback onStart;
+  final VoidCallback onStop;
+  const _HoldMic({required this.recording, required this.onStart, required this.onStop});
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      label: recording ? 'Stop and share prayer' : 'Record a voice prayer',
+      hint: 'Press and hold to speak',
+      onTap: recording ? onStop : onStart,
+      excludeSemantics: true,
+      child: GestureDetector(
+        onLongPressStart: (_) => onStart(),
+        onLongPressEnd: (_) => onStop(),
+        onTap: recording ? onStop : null,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 220),
+          width: recording ? 112 : 100,
+          height: recording ? 112 : 100,
+          decoration: BoxDecoration(
+            color: recording ? OC.a600 : OC.accent,
+            shape: BoxShape.circle,
+            boxShadow: recording ? [BoxShadow(color: OC.a300.withValues(alpha: 0.8), spreadRadius: 12)] : OShadow.md,
+          ),
+          child: const Center(child: OIcon(OI.mic, size: 34, color: OC.n100)),
+        ),
+      ),
+    );
+  }
+}
+
+class _NoteRow extends StatelessWidget {
+  final _Note note;
+  final bool playing;
+  final double progress;
+  final VoidCallback onPlay;
+  const _NoteRow({required this.note, required this.playing, required this.progress, required this.onPlay});
+
+  @override
+  Widget build(BuildContext context) {
+    final dur = '${note.seconds ~/ 60}:${(note.seconds % 60).toString().padLeft(2, '0')}';
+    return OCard(
+      radius: 26,
+      padding: const EdgeInsets.fromLTRB(14, 14, 18, 14),
+      child: Row(
+        children: [
+          Semantics(
+            button: true,
+            label: playing ? 'Pause prayer' : 'Play prayer',
+            excludeSemantics: true,
+            child: GestureDetector(
+              onTap: onPlay,
+              child: Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(color: note.sample ? OC.a100 : OC.a200, shape: BoxShape.circle),
+                child: Center(child: OIcon(playing ? OI.pause : OI.play, size: 18, color: note.sample ? OC.a400 : OC.a700)),
+              ),
+            ),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(note.phrase, style: OT.display(18, height: 1.2)),
+                const SizedBox(height: 8),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(3),
+                  child: LinearProgressIndicator(value: progress, minHeight: 4, color: OC.accent, backgroundColor: OC.a200),
+                ),
+                const SizedBox(height: 6),
+                Text('${note.author} · $dur · ${note.expires}${note.sample ? ' · Example' : ''}', style: OT.small(alpha: 0.65)),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

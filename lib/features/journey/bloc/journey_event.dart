@@ -95,3 +95,22 @@ class UpdateDisplayName extends JourneyEvent {
   @override
   List<Object?> get props => [name];
 }
+
+/// Completes a practice day that has no recitation gate (Roots, Stillness).
+class CompleteDay extends JourneyEvent {
+  final int dayNumber;
+  const CompleteDay(this.dayNumber);
+
+  @override
+  List<Object?> get props => [dayNumber];
+}
+
+/// The 30-day "How is it now?" answer for a laid-down burden.
+class RecordTearSheetCheckIn extends JourneyEvent {
+  final String sheetId;
+  final String answer; // 'lighter' | 'carrying'
+  const RecordTearSheetCheckIn(this.sheetId, this.answer);
+
+  @override
+  List<Object?> get props => [sheetId, answer];
+}

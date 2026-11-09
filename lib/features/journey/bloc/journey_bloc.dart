@@ -27,7 +27,9 @@ class JourneyBloc extends Bloc<JourneyEvent, JourneyState> {
     on<SignCovenant>(_onSignCovenant);
     on<SelectDay>(_onSelectDay);
     on<CompleteDayRecitation>(_onCompleteDayRecitation);
-    on<CompleteDayStillness>(_onCompleteDayStillness);
+    on<CompleteDayStillness>((e, emit) => _completeDay(e.dayNumber, emit));
+    on<CompleteDay>((e, emit) => _completeDay(e.dayNumber, emit));
+    on<RecordTearSheetCheckIn>(_onTearSheetCheckIn);
     on<CompleteExchange>(_onCompleteExchange);
     on<RedeemGraceToken>(_onRedeemGraceToken);
     on<AdvanceToNextWeek>(_onAdvanceToNextWeek);
@@ -86,6 +88,8 @@ class JourneyBloc extends Bloc<JourneyEvent, JourneyState> {
     final graceTokens = journeyData['graceTokensBalance'] as int? ?? 3;
     final isExchangeCompleted = journeyData['isExchangeCompleted'] as bool? ?? false;
     final activeDay = journeyData['activeDay'] as int? ?? 1;
+    final practiceDays = (journeyData['practiceDays'] as List?)?.cast<String>() ?? const <String>[];
+    final weekBestScore = (journeyData['weekBestScore'] as num?)?.toDouble() ?? 0;
 
     // Start from a clean state so nothing from a previous (e.g. erased) session leaks in.
     emit(JourneyState.initial(activeDrop).copyWith(
@@ -96,6 +100,8 @@ class JourneyBloc extends Bloc<JourneyEvent, JourneyState> {
       dayRecitationCount: recitationCounts,
       currentStreak: streak,
       lastPracticeDate: lastPracticeDate,
+      practiceDays: practiceDays,
+      weekBestScore: weekBestScore,
       rootsPlanted: roots,
       graceTokensBalance: graceTokens,
       isExchangeCompleted: isExchangeCompleted,
@@ -156,7 +162,9 @@ class JourneyBloc extends Bloc<JourneyEvent, JourneyState> {
     // Days 1 & 2 require 2 passed recitations.
     // Day 3 requires stillness + recitations.
     // Day 4 master recitation requires 1 pass.
-    if ((event.dayNumber <= 2 && newCount >= 2) || (event.dayNumber == 4 && newCount >= 1)) {
+    // Day 1 (Encounter) is complete after one recitation spoken by heart.
+    // Days 2–4 are completed by their own practice (CompleteDay / Exchange).
+    if (event.dayNumber == 1 && newCount >= 1) {
       if (updatedStatus[event.dayNumber] != true) {
         updatedStatus[event.dayNumber] = true;
         updatedCompletedAt[event.dayNumber] = _clock.now();
@@ -164,6 +172,7 @@ class JourneyBloc extends Bloc<JourneyEvent, JourneyState> {
     }
 
     final newState = _withPracticeToday(state.copyWith(
+      weekBestScore: event.score > state.weekBestScore ? event.score : state.weekBestScore,
       dayRecitationCount: updatedCounts,
       dayRecitationScores: updatedScores,
       dayCompletionStatus: updatedStatus,
@@ -174,23 +183,27 @@ class JourneyBloc extends Bloc<JourneyEvent, JourneyState> {
     await _persistJourneyData(newState);
   }
 
-  Future<void> _onCompleteDayStillness(
-    CompleteDayStillness event,
-    Emitter<JourneyState> emit,
-  ) async {
+  /// Marks a practice day (Roots, Stillness) complete and counts it as practice.
+  Future<void> _completeDay(int day, Emitter<JourneyState> emit) async {
     final updatedStatus = Map<int, bool>.from(state.dayCompletionStatus);
     final updatedCompletedAt = Map<int, DateTime?>.from(state.dayCompletedAt);
-
-    updatedStatus[3] = true;
-    updatedCompletedAt[3] = _clock.now();
-
+    if (updatedStatus[day] != true) {
+      updatedStatus[day] = true;
+      updatedCompletedAt[day] = _clock.now();
+    }
     final newState = _withPracticeToday(state.copyWith(
       dayCompletionStatus: updatedStatus,
       dayCompletedAt: updatedCompletedAt,
     ));
-
     emit(newState);
     await _persistJourneyData(newState);
+  }
+
+  Future<void> _onTearSheetCheckIn(RecordTearSheetCheckIn event, Emitter<JourneyState> emit) async {
+    final sheets = state.savedTearSheets.map((s) => s.id == event.sheetId ? s.copyWith(checkIn: event.answer) : s).toList();
+    final updated = sheets.firstWhere((s) => s.id == event.sheetId);
+    await _progressRepo.saveTearSheet(updated);
+    emit(state.copyWith(savedTearSheets: sheets));
   }
 
   Future<void> _onCompleteExchange(
@@ -211,6 +224,7 @@ class JourneyBloc extends Bloc<JourneyEvent, JourneyState> {
       verseText: state.activeDrop.verseText,
       reference: state.activeDrop.reference,
       burdenHash: burdenHash,
+      burdenText: event.burdenSummary,
       tearSheetImagePath: event.tearSheetImagePath,
       completedAt: now,
     );
@@ -269,6 +283,7 @@ class JourneyBloc extends Bloc<JourneyEvent, JourneyState> {
       dayCompletedAt: resetCompletedAt,
       dayRecitationCount: resetCounts,
       isExchangeCompleted: false,
+      weekBestScore: 0,
     );
 
     emit(newState);
@@ -289,6 +304,7 @@ class JourneyBloc extends Bloc<JourneyEvent, JourneyState> {
       dayCompletedAt: const {1: null, 2: null, 3: null, 4: null},
       dayRecitationCount: const {1: 0, 2: 0, 3: 0, 4: 0},
       isExchangeCompleted: false,
+      weekBestScore: 0,
     );
     emit(newState);
     await _persistJourneyData(newState);
@@ -316,7 +332,13 @@ class JourneyBloc extends Bloc<JourneyEvent, JourneyState> {
       final gap = today.calendarDaysSince(last);
       streak = gap <= 0 ? (s.currentStreak == 0 ? 1 : s.currentStreak) : (gap == 1 ? s.currentStreak + 1 : 1);
     }
-    return s.copyWith(currentStreak: streak, lastPracticeDate: today);
+    final key = JourneyState.dayKey(today);
+    final days = s.practiceDays.contains(key) ? s.practiceDays : [...s.practiceDays, key];
+    return s.copyWith(
+      currentStreak: streak,
+      lastPracticeDate: today,
+      practiceDays: days.length > 60 ? days.sublist(days.length - 60) : days,
+    );
   }
 
   Future<void> _onUpdateDisplayName(
@@ -347,6 +369,8 @@ class JourneyBloc extends Bloc<JourneyEvent, JourneyState> {
       'activeDay': state.activeDay,
       'currentStreak': state.currentStreak,
       'lastPracticeDate': state.lastPracticeDate?.toIso8601String(),
+      'practiceDays': state.practiceDays,
+      'weekBestScore': state.weekBestScore,
       'rootsPlanted': state.rootsPlanted,
       'graceTokensBalance': state.graceTokensBalance,
       'isExchangeCompleted': state.isExchangeCompleted,

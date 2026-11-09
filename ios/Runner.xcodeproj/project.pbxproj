@@ -7,17 +7,29 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		0940E59885DAB8197BE15932 /* Caprasimo-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 06D6CCF85E61DDC4B5C7BB53 /* Caprasimo-Regular.ttf */; };
 		0E0DCD5A320505C47AF8BE09 /* Pods_Runner.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 68003D45300292EAC1201505 /* Pods_Runner.framework */; };
+		124E60E4547BCA5B59E8493B /* LogosWidgetsBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7A20E987DC40EFF9914C93C /* LogosWidgetsBundle.swift */; };
 		1498D2341E8E89220040F4C2 /* GeneratedPluginRegistrant.m in Sources */ = {isa = PBXBuildFile; fileRef = 1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */; };
+		1C4A7DA237BCDBFDF66CEE06 /* Figtree-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 3C351268ABF64A58DE72303B /* Figtree-Regular.ttf */; };
 		331C808B294A63AB00263BE5 /* RunnerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 331C807B294A618700263BE5 /* RunnerTests.swift */; };
 		3B3967161E833CAA004F5970 /* AppFrameworkInfo.plist in Resources */ = {isa = PBXBuildFile; fileRef = 3B3967151E833CAA004F5970 /* AppFrameworkInfo.plist */; };
+		3E65C130777E285E9658430F /* LogosWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 190B53666C9B4533B13480C3 /* LogosWidgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		5771BD5B578B9E2046F34C21 /* Pods_RunnerTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D534374D860982CA4909A205 /* Pods_RunnerTests.framework */; };
+		58275632D2445BB484F6A993 /* LogosActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = DBA123F2F4B71197F6E70006 /* LogosActivityAttributes.swift */; };
+		67218CBD82D456858A914590 /* LogosLiveActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F89E05BC699E290365B0790 /* LogosLiveActivity.swift */; };
 		74858FAF1ED2DC5600515810 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74858FAE1ED2DC5600515810 /* AppDelegate.swift */; };
+		76C075E51CA65838C5BB6D4A /* LogosStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = A22DCCBB9EB581D5E9C002C1 /* LogosStyle.swift */; };
 		7884E8682EC3CC0700C636F2 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7884E8672EC3CC0400C636F2 /* SceneDelegate.swift */; };
 		78A318202AECB46A00862997 /* FlutterGeneratedPluginSwiftPackage in Frameworks */ = {isa = PBXBuildFile; productRef = 78A3181F2AECB46A00862997 /* FlutterGeneratedPluginSwiftPackage */; };
 		97C146FC1CF9000F007C117D /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FA1CF9000F007C117D /* Main.storyboard */; };
 		97C146FE1CF9000F007C117D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FD1CF9000F007C117D /* Assets.xcassets */; };
 		97C147011CF9000F007C117D /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FF1CF9000F007C117D /* LaunchScreen.storyboard */; };
+		9BFB0EBF928B1C6B24134038 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 15E4D2FEA62822EC04D11DA9 /* Foundation.framework */; };
+		A6B9ED2005D76915E47D7995 /* Figtree-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = EBF7FDD41743F0D4E6FFA6A7 /* Figtree-Bold.ttf */; };
+		BAA8417BC2E0B8D8384731A7 /* LiveActivityChannel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D07EF42933046CA6614E76D2 /* LiveActivityChannel.swift */; };
+		D4FA9B899BC57917EA9329D7 /* LogosActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = DBA123F2F4B71197F6E70006 /* LogosActivityAttributes.swift */; };
+		DA30B0AB36064CFF6407E6F5 /* LogosWidgets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 096C0EA13BD5707F409A82C2 /* LogosWidgets.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -28,9 +40,27 @@
 			remoteGlobalIDString = 97C146ED1CF9000F007C117D;
 			remoteInfo = Runner;
 		};
+		3BF664C257E64F4F1007F95A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 97C146E61CF9000F007C117D /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 8A336F17433AD952ADB4BFAF;
+			remoteInfo = LogosWidgets;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
+		14DC4A83851E0590B6AEDAF0 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				3E65C130777E285E9658430F /* LogosWidgets.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		9705A1C41CF9048500538489 /* Embed Frameworks */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -45,13 +75,20 @@
 
 /* Begin PBXFileReference section */
 		0370A1C6AB83FDEA889CBAB3 /* Pods-Runner.profile.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.profile.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.profile.xcconfig"; sourceTree = "<group>"; };
+		06D6CCF85E61DDC4B5C7BB53 /* Caprasimo-Regular.ttf */ = {isa = PBXFileReference; includeInIndex = 1; path = "Caprasimo-Regular.ttf"; sourceTree = "<group>"; };
+		096C0EA13BD5707F409A82C2 /* LogosWidgets.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LogosWidgets.swift; sourceTree = "<group>"; };
 		1498D2321E8E86230040F4C2 /* GeneratedPluginRegistrant.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GeneratedPluginRegistrant.h; sourceTree = "<group>"; };
 		1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GeneratedPluginRegistrant.m; sourceTree = "<group>"; };
+		15E4D2FEA62822EC04D11DA9 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
+		190B53666C9B4533B13480C3 /* LogosWidgets.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = LogosWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		19BA65395E438ADB6A1E0B83 /* Runner.entitlements */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.entitlements; path = Runner.entitlements; sourceTree = "<group>"; };
 		331C807B294A618700263BE5 /* RunnerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunnerTests.swift; sourceTree = "<group>"; };
 		331C8081294A63A400263BE5 /* RunnerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RunnerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		3B3967151E833CAA004F5970 /* AppFrameworkInfo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = AppFrameworkInfo.plist; path = Flutter/AppFrameworkInfo.plist; sourceTree = "<group>"; };
+		3C351268ABF64A58DE72303B /* Figtree-Regular.ttf */ = {isa = PBXFileReference; includeInIndex = 1; path = "Figtree-Regular.ttf"; sourceTree = "<group>"; };
 		4011931859460491A214FBCE /* Pods-Runner.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.debug.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.debug.xcconfig"; sourceTree = "<group>"; };
 		68003D45300292EAC1201505 /* Pods_Runner.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Runner.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		6F89E05BC699E290365B0790 /* LogosLiveActivity.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LogosLiveActivity.swift; sourceTree = "<group>"; };
 		70E9A3B65B07027A7FAA426F /* Pods-RunnerTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.release.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.release.xcconfig"; sourceTree = "<group>"; };
 		74858FAD1ED2DC5600515810 /* Runner-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Runner-Bridging-Header.h"; sourceTree = "<group>"; };
 		74858FAE1ED2DC5600515810 /* AppDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -67,11 +104,27 @@
 		97C146FD1CF9000F007C117D /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		97C147001CF9000F007C117D /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		97C147021CF9000F007C117D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		A22DCCBB9EB581D5E9C002C1 /* LogosStyle.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LogosStyle.swift; sourceTree = "<group>"; };
+		C0A7F97FCB01B3930C130DE5 /* LogosWidgets.entitlements */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.entitlements; path = LogosWidgets.entitlements; sourceTree = "<group>"; };
+		C7DBAFD3D28367AE63B676D0 /* WidgetExtension.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = Flutter/WidgetExtension.xcconfig; sourceTree = "<group>"; };
 		CEE069E2B031B55A57191A91 /* Pods-RunnerTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.debug.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.debug.xcconfig"; sourceTree = "<group>"; };
+		D07EF42933046CA6614E76D2 /* LiveActivityChannel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LiveActivityChannel.swift; sourceTree = "<group>"; };
 		D534374D860982CA4909A205 /* Pods_RunnerTests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_RunnerTests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		DBA123F2F4B71197F6E70006 /* LogosActivityAttributes.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LogosActivityAttributes.swift; sourceTree = "<group>"; };
+		E7A20E987DC40EFF9914C93C /* LogosWidgetsBundle.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LogosWidgetsBundle.swift; sourceTree = "<group>"; };
+		EA014E9A44C5AFD131D15880 /* Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		EBF7FDD41743F0D4E6FFA6A7 /* Figtree-Bold.ttf */ = {isa = PBXFileReference; includeInIndex = 1; path = "Figtree-Bold.ttf"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		246BD2085A78529439E5813F /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				9BFB0EBF928B1C6B24134038 /* Foundation.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		97C146EB1CF9000F007C117D /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -92,6 +145,40 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		08E3FCBB34F5CB6982B05FA4 /* Shared */ = {
+			isa = PBXGroup;
+			children = (
+				DBA123F2F4B71197F6E70006 /* LogosActivityAttributes.swift */,
+			);
+			name = Shared;
+			path = Shared;
+			sourceTree = "<group>";
+		};
+		12F714F584B139B89DE26D8E /* iOS */ = {
+			isa = PBXGroup;
+			children = (
+				15E4D2FEA62822EC04D11DA9 /* Foundation.framework */,
+			);
+			name = iOS;
+			sourceTree = "<group>";
+		};
+		2AFE7454FBD4C0823667C624 /* LogosWidgets */ = {
+			isa = PBXGroup;
+			children = (
+				E7A20E987DC40EFF9914C93C /* LogosWidgetsBundle.swift */,
+				096C0EA13BD5707F409A82C2 /* LogosWidgets.swift */,
+				6F89E05BC699E290365B0790 /* LogosLiveActivity.swift */,
+				A22DCCBB9EB581D5E9C002C1 /* LogosStyle.swift */,
+				06D6CCF85E61DDC4B5C7BB53 /* Caprasimo-Regular.ttf */,
+				EBF7FDD41743F0D4E6FFA6A7 /* Figtree-Bold.ttf */,
+				3C351268ABF64A58DE72303B /* Figtree-Regular.ttf */,
+				EA014E9A44C5AFD131D15880 /* Info.plist */,
+				C0A7F97FCB01B3930C130DE5 /* LogosWidgets.entitlements */,
+			);
+			name = LogosWidgets;
+			path = LogosWidgets;
+			sourceTree = "<group>";
+		};
 		331C8082294A63A400263BE5 /* RunnerTests */ = {
 			isa = PBXGroup;
 			children = (
@@ -122,6 +209,7 @@
 				9740EEB21CF90195004384FC /* Debug.xcconfig */,
 				7AFA3C8E1D35360C0083082E /* Release.xcconfig */,
 				9740EEB31CF90195004384FC /* Generated.xcconfig */,
+				C7DBAFD3D28367AE63B676D0 /* WidgetExtension.xcconfig */,
 			);
 			name = Flutter;
 			sourceTree = "<group>";
@@ -135,6 +223,8 @@
 				331C8082294A63A400263BE5 /* RunnerTests */,
 				6093656C1ADA11C3B1406616 /* Pods */,
 				D9E46AFE3474FDC0E4431DE6 /* Frameworks */,
+				2AFE7454FBD4C0823667C624 /* LogosWidgets */,
+				08E3FCBB34F5CB6982B05FA4 /* Shared */,
 			);
 			sourceTree = "<group>";
 		};
@@ -143,6 +233,7 @@
 			children = (
 				97C146EE1CF9000F007C117D /* Runner.app */,
 				331C8081294A63A400263BE5 /* RunnerTests.xctest */,
+				190B53666C9B4533B13480C3 /* LogosWidgets.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -159,6 +250,8 @@
 				74858FAE1ED2DC5600515810 /* AppDelegate.swift */,
 				7884E8672EC3CC0400C636F2 /* SceneDelegate.swift */,
 				74858FAD1ED2DC5600515810 /* Runner-Bridging-Header.h */,
+				D07EF42933046CA6614E76D2 /* LiveActivityChannel.swift */,
+				19BA65395E438ADB6A1E0B83 /* Runner.entitlements */,
 			);
 			path = Runner;
 			sourceTree = "<group>";
@@ -168,6 +261,7 @@
 			children = (
 				68003D45300292EAC1201505 /* Pods_Runner.framework */,
 				D534374D860982CA4909A205 /* Pods_RunnerTests.framework */,
+				12F714F584B139B89DE26D8E /* iOS */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -194,6 +288,23 @@
 			productReference = 331C8081294A63A400263BE5 /* RunnerTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
+		8A336F17433AD952ADB4BFAF /* LogosWidgets */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 335DE7D1DC7C4145EABB7D99 /* Build configuration list for PBXNativeTarget "LogosWidgets" */;
+			buildPhases = (
+				7E2771200CB71FC5300EFFC0 /* Sources */,
+				246BD2085A78529439E5813F /* Frameworks */,
+				2040CFB761E76BA4F19B0874 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = LogosWidgets;
+			productName = LogosWidgets;
+			productReference = 190B53666C9B4533B13480C3 /* LogosWidgets.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 		97C146ED1CF9000F007C117D /* Runner */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 97C147051CF9000F007C117D /* Build configuration list for PBXNativeTarget "Runner" */;
@@ -203,6 +314,7 @@
 				97C146EA1CF9000F007C117D /* Sources */,
 				97C146EB1CF9000F007C117D /* Frameworks */,
 				97C146EC1CF9000F007C117D /* Resources */,
+				14DC4A83851E0590B6AEDAF0 /* Embed Foundation Extensions */,
 				9705A1C41CF9048500538489 /* Embed Frameworks */,
 				3B06AD1E1E4923F5004D2608 /* Thin Binary */,
 				2DE7DE24A4B7A151092E931A /* [CP] Embed Pods Frameworks */,
@@ -210,6 +322,7 @@
 			buildRules = (
 			);
 			dependencies = (
+				DF5AD8F8DF91C67167D2531A /* PBXTargetDependency */,
 			);
 			name = Runner;
 			packageProductDependencies = (
@@ -257,11 +370,22 @@
 			targets = (
 				97C146ED1CF9000F007C117D /* Runner */,
 				331C8080294A63A400263BE5 /* RunnerTests */,
+				8A336F17433AD952ADB4BFAF /* LogosWidgets */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		2040CFB761E76BA4F19B0874 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0940E59885DAB8197BE15932 /* Caprasimo-Regular.ttf in Resources */,
+				A6B9ED2005D76915E47D7995 /* Figtree-Bold.ttf in Resources */,
+				1C4A7DA237BCDBFDF66CEE06 /* Figtree-Regular.ttf in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		331C807F294A63A400263BE5 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -386,6 +510,18 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		7E2771200CB71FC5300EFFC0 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				124E60E4547BCA5B59E8493B /* LogosWidgetsBundle.swift in Sources */,
+				DA30B0AB36064CFF6407E6F5 /* LogosWidgets.swift in Sources */,
+				67218CBD82D456858A914590 /* LogosLiveActivity.swift in Sources */,
+				76C075E51CA65838C5BB6D4A /* LogosStyle.swift in Sources */,
+				58275632D2445BB484F6A993 /* LogosActivityAttributes.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		97C146EA1CF9000F007C117D /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -393,6 +529,8 @@
 				74858FAF1ED2DC5600515810 /* AppDelegate.swift in Sources */,
 				1498D2341E8E89220040F4C2 /* GeneratedPluginRegistrant.m in Sources */,
 				7884E8682EC3CC0700C636F2 /* SceneDelegate.swift in Sources */,
+				D4FA9B899BC57917EA9329D7 /* LogosActivityAttributes.swift in Sources */,
+				BAA8417BC2E0B8D8384731A7 /* LiveActivityChannel.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -403,6 +541,12 @@
 			isa = PBXTargetDependency;
 			target = 97C146ED1CF9000F007C117D /* Runner */;
 			targetProxy = 331C8085294A63A400263BE5 /* PBXContainerItemProxy */;
+		};
+		DF5AD8F8DF91C67167D2531A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = LogosWidgets;
+			target = 8A336F17433AD952ADB4BFAF /* LogosWidgets */;
+			targetProxy = 3BF664C257E64F4F1007F95A /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -426,6 +570,34 @@
 /* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
+		08E5FA532D3E0725516EACEA /* Profile */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = C7DBAFD3D28367AE63B676D0 /* WidgetExtension.xcconfig */;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = "";
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGN_ENTITLEMENTS = LogosWidgets/LogosWidgets.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 27H585J92J;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = LogosWidgets/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.2;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.logosinme.logosMobileApp.LogosWidgets;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Profile;
+		};
 		249021D3217E4FDB00AE95B9 /* Profile */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -485,6 +657,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = Runner/Runner.entitlements;
 				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
 				DEVELOPMENT_TEAM = 27H585J92J;
 				ENABLE_BITCODE = NO;
@@ -500,6 +673,33 @@
 				VERSIONING_SYSTEM = "apple-generic";
 			};
 			name = Profile;
+		};
+		321BF1C1C7D969BDFE6AC5FA /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = C7DBAFD3D28367AE63B676D0 /* WidgetExtension.xcconfig */;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = "";
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGN_ENTITLEMENTS = LogosWidgets/LogosWidgets.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 27H585J92J;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = LogosWidgets/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.2;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.logosinme.logosMobileApp.LogosWidgets;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
 		};
 		331C8088294A63A400263BE5 /* Debug */ = {
 			isa = XCBuildConfiguration;
@@ -550,6 +750,34 @@
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Runner.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Runner";
 			};
 			name = Profile;
+		};
+		3CC835015BA8C4073B19DFE0 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = C7DBAFD3D28367AE63B676D0 /* WidgetExtension.xcconfig */;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = "";
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGN_ENTITLEMENTS = LogosWidgets/LogosWidgets.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 27H585J92J;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = LogosWidgets/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.2;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.logosinme.logosMobileApp.LogosWidgets;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
 		};
 		97C147031CF9000F007C117D /* Debug */ = {
 			isa = XCBuildConfiguration;
@@ -670,6 +898,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = Runner/Runner.entitlements;
 				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
 				DEVELOPMENT_TEAM = 27H585J92J;
 				ENABLE_BITCODE = NO;
@@ -693,6 +922,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = Runner/Runner.entitlements;
 				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
 				DEVELOPMENT_TEAM = 27H585J92J;
 				ENABLE_BITCODE = NO;
@@ -718,6 +948,16 @@
 				331C8088294A63A400263BE5 /* Debug */,
 				331C8089294A63A400263BE5 /* Release */,
 				331C808A294A63A400263BE5 /* Profile */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		335DE7D1DC7C4145EABB7D99 /* Build configuration list for PBXNativeTarget "LogosWidgets" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				3CC835015BA8C4073B19DFE0 /* Release */,
+				321BF1C1C7D969BDFE6AC5FA /* Debug */,
+				08E5FA532D3E0725516EACEA /* Profile */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

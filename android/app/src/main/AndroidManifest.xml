@@ -31,6 +31,19 @@
             android:name="flutterEmbedding"
             android:value="2" />
 
+        <!-- Home-screen widgets (design: verse + this week) -->
+        <receiver android:name=".LogosVerseWidgetProvider" android:exported="true" android:label="Verse">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/logos_verse_widget_info" />
+        </receiver>
+        <receiver android:name=".LogosWeekWidgetProvider" android:exported="true" android:label="This week">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/logos_week_widget_info" />
+        </receiver>
         <receiver android:exported="false" android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationReceiver" />
         <receiver android:exported="false" android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationBootReceiver">
             <intent-filter>

@@ -58,6 +58,43 @@ class ScriptureVerifier {
     return p;
   }
 
+  /// Indices (into `target.split(' ')`) of words that were missed or
+  /// misspoken, via a word-level longest-common-subsequence alignment.
+  static List<int> slipWordIndices(String target, String transcribed) {
+    final display = target.split(' ');
+    final tIdx = <int>[];
+    final t = <String>[];
+    for (var i = 0; i < display.length; i++) {
+      final w = normalize(display[i]);
+      if (w.isEmpty) continue;
+      tIdx.add(i);
+      t.add(w);
+    }
+    final s = normalize(transcribed).split(' ').where((w) => w.isNotEmpty).toList();
+    if (s.isEmpty) return List.of(tIdx);
+    // LCS table on exact word matches.
+    final dp = List.generate(t.length + 1, (_) => List<int>.filled(s.length + 1, 0));
+    for (var i = t.length - 1; i >= 0; i--) {
+      for (var j = s.length - 1; j >= 0; j--) {
+        dp[i][j] = t[i] == s[j] ? dp[i + 1][j + 1] + 1 : max(dp[i + 1][j], dp[i][j + 1]);
+      }
+    }
+    final matched = <int>{};
+    var i = 0, j = 0;
+    while (i < t.length && j < s.length) {
+      if (t[i] == s[j]) {
+        matched.add(i);
+        i++;
+        j++;
+      } else if (dp[i + 1][j] >= dp[i][j + 1]) {
+        i++;
+      } else {
+        j++;
+      }
+    }
+    return [for (var k = 0; k < t.length; k++) if (!matched.contains(k)) tIdx[k]];
+  }
+
   static bool _wordsClose(String a, String b) {
     if (a == b) return true;
     final longer = max(a.length, b.length);

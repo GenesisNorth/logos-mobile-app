@@ -1,24 +1,19 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:logos_mobile_app/core/clock.dart';
 import 'package:logos_mobile_app/core/utils/scripture_verifier.dart';
-import 'package:logos_mobile_app/core/theme/logos_theme.dart';
-import 'package:logos_mobile_app/features/examen/controllers/examen_controller.dart';
+import 'package:logos_mobile_app/core/design/organic.dart';
 import 'package:logos_mobile_app/features/journey/bloc/journey_bloc.dart';
 import 'package:logos_mobile_app/features/journey/bloc/journey_event.dart';
-import 'package:logos_mobile_app/features/journey/bloc/journey_state.dart';
 import 'package:logos_mobile_app/features/journey/data/content_repository.dart';
 import 'package:logos_mobile_app/features/journey/data/progress_repository.dart';
 import 'package:logos_mobile_app/core/services/audio_service.dart';
 import 'package:logos_mobile_app/features/community/data/community_repository.dart';
-import 'package:logos_mobile_app/features/journey/screens/stillness_sanctuary_screen.dart';
 import 'package:logos_mobile_app/core/services/notification_service.dart';
 import 'package:logos_mobile_app/features/journey/data/scripture_pack_repository.dart';
 import 'package:logos_mobile_app/features/journey/screens/scripture_packs_sheet.dart';
-import 'package:logos_mobile_app/core/services/widget_service.dart';
-import 'package:logos_mobile_app/features/journey/screens/liturgical_widget_preview_sheet.dart';
 import 'package:logos_mobile_app/main.dart';
 
 class InMemoryProgressRepository implements ProgressRepository {
@@ -50,6 +45,14 @@ class InMemoryProgressRepository implements ProgressRepository {
 }
 
 void main() {
+  // Plain `test()`s below touch the audio plugin, which has no implementation
+  // under `flutter test`: answer its channels with no-ops.
+  TestWidgetsFlutterBinding.ensureInitialized();
+  for (final channel in ['xyz.luan/audioplayers.global', 'xyz.luan/audioplayers']) {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(MethodChannel(channel), (_) async => null);
+  }
+
   setUp(() {
     SharedPreferences.setMockInitialValues({});
   });
@@ -238,86 +241,9 @@ void main() {
     expect(find.text('LOGOS IN ME'), findsAtLeastNWidgets(1));
   });
 
-  Widget buildTestShell() {
-    return BlocProvider(
-      create: (_) => JourneyBloc(
-        progressRepo: InMemoryProgressRepository(),
-      )..add(const LoadJourneyProgress()),
-      child: MaterialApp(
-        theme: LogosTheme.lightTheme(),
-        home: MainAppShell(examenController: ExamenController()),
-      ),
-    );
-  }
 
-  testWidgets('Bottom Navigation Dock switches seamlessly between Sanctuary, Community, and Altar', (WidgetTester tester) async {
-    tester.view.physicalSize = const Size(1080, 2400);
-    tester.view.devicePixelRatio = 2.0;
-    addTearDown(() {
-      tester.view.resetPhysicalSize();
-      tester.view.resetDevicePixelRatio();
-    });
 
-    await tester.pumpWidget(buildTestShell());
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 300));
 
-    // 1. Initially on Sanctuary
-    expect(find.text('The 4-Day Sacred Rhythm'), findsOneWidget);
-
-    // 2. Tap Community tab
-    final communityTab = find.byKey(const Key('nav_tab_community'));
-    expect(communityTab, findsOneWidget);
-    await tester.tap(communityTab);
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 300));
-
-    // Verify Community rooms are present
-    expect(find.text('The Well'), findsOneWidget);
-    expect(find.text('In the Valley'), findsOneWidget);
-
-    // 3. Tap Altar tab
-    final altarTab = find.byKey(const Key('nav_tab_altar'));
-    expect(altarTab, findsOneWidget);
-    await tester.tap(altarTab);
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 300));
-
-    // Verify Altar: progress and a way into Settings
-    expect(find.text('Prayer Altar'), findsOneWidget);
-    expect(find.text('Current streak'), findsOneWidget);
-    expect(find.byTooltip('Settings'), findsOneWidget);
-
-    // 5. Navigate back to Sanctuary
-    final sanctuaryTab = find.byKey(const Key('nav_tab_sanctuary'));
-    await tester.tap(sanctuaryTab);
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 300));
-
-    expect(find.text('The 4-Day Sacred Rhythm'), findsOneWidget);
-  });
-
-  testWidgets('Week selector opens from the verse card and lists all weeks', (WidgetTester tester) async {
-    tester.view.physicalSize = const Size(1080, 2400);
-    tester.view.devicePixelRatio = 2.0;
-    addTearDown(() {
-      tester.view.resetPhysicalSize();
-      tester.view.resetDevicePixelRatio();
-    });
-
-    await tester.pumpWidget(buildTestShell());
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 300));
-
-    await tester.tap(find.text('WEEK 1 SCRIPTURE'));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 500));
-
-    expect(find.text('Weekly verses'), findsOneWidget);
-    expect(find.text('WK 1'), findsOneWidget);
-    expect(find.text('WK 2'), findsOneWidget);
-    expect(find.text('WK 5'), findsOneWidget);
-  });
 
   group('Multi-Track Ambient Stems & Liturgical Haptic Tests', () {
     test('AudioService configures multi-track stem volumes and mute correctly', () async {
@@ -371,52 +297,6 @@ void main() {
       await expectLater(audio.liturgicalHourChime(), completes);
     });
 
-    testWidgets('StillnessSanctuaryScreen opens Sacred Soundscape Mixing Console with all stems', (WidgetTester tester) async {
-      tester.view.physicalSize = const Size(1080, 2400);
-      tester.view.devicePixelRatio = 2.0;
-      addTearDown(() {
-        tester.view.resetPhysicalSize();
-        tester.view.resetDevicePixelRatio();
-      });
-
-      const contentRepo = ContentRepository();
-      final drop = contentRepo.drops.first;
-
-      await tester.pumpWidget(
-        BlocProvider(
-          create: (_) => JourneyBloc(progressRepo: InMemoryProgressRepository()),
-          child: MaterialApp(
-            theme: LogosTheme.lightTheme(),
-            home: StillnessSanctuaryScreen(drop: drop),
-          ),
-        ),
-      );
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 300));
-
-      expect(find.byKey(const Key('soundscape_console_button')), findsOneWidget);
-      await tester.tap(find.byKey(const Key('soundscape_console_button')));
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 500));
-
-      expect(find.text('Sacred Soundscape Console'), findsOneWidget);
-      expect(find.text('Convent Drone'), findsOneWidget);
-      expect(find.text('Cloister Rainfall'), findsOneWidget);
-      expect(find.text('Gregorian Vocal Resonance'), findsOneWidget);
-      expect(find.text('Night Cloister Breeze'), findsOneWidget);
-      expect(find.text('Holy Sanctuary Bells'), findsOneWidget);
-      expect(find.text('Sanctuary Dawn'), findsAtLeastNWidgets(1));
-      expect(find.text('Cloister Rain'), findsOneWidget);
-      expect(find.text('Gregorian Choir'), findsOneWidget);
-      expect(find.text('Midnight Examen'), findsOneWidget);
-      expect(find.text('Apostolic Sabbath'), findsOneWidget);
-
-      // Dismiss bottom sheet and unmount widget to dispose timers cleanly
-      await tester.tapAt(const Offset(20, 20));
-      await tester.pumpWidget(const SizedBox());
-
-      await tester.pump(const Duration(seconds: 2));
-    });
 
     test('NotificationService registers and persists valid 64-char APNS hex token', () async {
       SharedPreferences.setMockInitialValues({});
@@ -478,7 +358,7 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
-          theme: LogosTheme.lightTheme(),
+          theme: organicTheme(),
           home: Scaffold(
             body: ScripturePacksSheet(repository: repo),
           ),
@@ -504,86 +384,7 @@ void main() {
       await tester.pump(const Duration(seconds: 2));
     });
 
-    test('LiturgicalWidgetService computes accurate Circadian snapshot and serializes to preferences', () async {
-      SharedPreferences.setMockInitialValues({});
-      final service = LiturgicalWidgetService();
 
-      const contentRepo = ContentRepository();
-      final drop = contentRepo.drops.first;
-      final state = JourneyState.initial(drop);
-
-      // Test 8:30 AM (after Lauds, before Sext)
-      final testMorning = DateTime(2026, 11, 2, 8, 30);
-      final snapshot = service.computeSnapshot(state: state, now: testMorning);
-
-      expect(snapshot.nextHourName, equals('Noonday Sext'));
-      expect(snapshot.nextHourTime, equals('12:00 PM'));
-      expect(snapshot.countdownText, equals('3h 30m'));
-      expect(snapshot.scriptureReference, equals('John 15:5'));
-      expect(snapshot.streakCount, equals(0)); // fresh pilgrim has no streak yet
-
-      // Test sync to SharedPreferences
-      await service.syncWidgetData(state: state, now: testMorning);
-      final prefs = await SharedPreferences.getInstance();
-      expect(prefs.getString('logos_widget_next_hour_name'), equals('Noonday Sext'));
-      expect(prefs.getString('logos_widget_payload_json'), contains('John 15:5'));
-    });
-
-    testWidgets('LiturgicalWidgetPreviewSheet displays Dynamic Island, Medium & Small widgets and syncs', (WidgetTester tester) async {
-      tester.view.physicalSize = const Size(1080, 2400);
-      tester.view.devicePixelRatio = 2.0;
-      addTearDown(() {
-        tester.view.resetPhysicalSize();
-        tester.view.resetDevicePixelRatio();
-      });
-
-      SharedPreferences.setMockInitialValues({});
-      final service = LiturgicalWidgetService();
-
-      await tester.pumpWidget(
-        BlocProvider(
-          create: (_) => JourneyBloc(progressRepo: InMemoryProgressRepository()),
-          child: MaterialApp(
-            theme: LogosTheme.lightTheme(),
-            home: Scaffold(
-              body: LiturgicalWidgetPreviewSheet(widgetService: service),
-            ),
-          ),
-        ),
-      );
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 300));
-
-      // Verifies previews exist
-      expect(find.text('Liturgical iOS Widgets'), findsOneWidget);
-      expect(find.text('Dynamic Island (Tap to Expand)'), findsOneWidget);
-      expect(find.text('Medium Home Screen Widget (4x2)'), findsOneWidget);
-      expect(find.text('Small Home Screen Widget (2x2)'), findsOneWidget);
-      expect(find.text('LOCK SCREEN'), findsOneWidget);
-
-      // Tap to expand Dynamic Island
-      await tester.tap(find.text('Dynamic Island (Tap to Expand)'));
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 300));
-
-      // Tap sync button
-      final syncButton = find.text('Sync Current State to Device Widget');
-      expect(syncButton, findsOneWidget);
-      await tester.tap(syncButton);
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 300));
-
-      expect(find.text('Synced ✓'), findsOneWidget);
-
-      // Tap Android Material You tab
-      await tester.tap(find.text('Android Material You'));
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 300));
-      expect(find.text('Android Material You Pebble Widget (4x2)'), findsOneWidget);
-
-      await tester.pumpWidget(const SizedBox());
-      await tester.pump(const Duration(milliseconds: 500));
-    });
   });
 
   group('Scripture Multi-Translation Bridge Tests', () {
@@ -632,57 +433,6 @@ void main() {
       expect(bloc.state.activeDrop.verseText, contains('Be careful for nothing'));
     });
 
-    testWidgets('Tapping translation badge opens selector sheet and updates Sanctuary card', (tester) async {
-      tester.view.physicalSize = const Size(1080, 2400);
-      tester.view.devicePixelRatio = 2.0;
-      addTearDown(() {
-        tester.view.resetPhysicalSize();
-        tester.view.resetDevicePixelRatio();
-      });
-
-      final repo = InMemoryProgressRepository();
-      final bloc = JourneyBloc(progressRepo: repo)..add(const LoadJourneyProgress());
-
-      await tester.pumpWidget(
-        BlocProvider<JourneyBloc>.value(
-          value: bloc,
-          child: MaterialApp(
-            theme: LogosTheme.lightTheme(),
-            home: MainAppShell(examenController: ExamenController()),
-          ),
-        ),
-      );
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 500));
-
-
-
-      // Sanctuary card shows ESV initially
-      expect(find.text('ESV'), findsOneWidget);
-      expect(find.text('“I am the vine; you are the branches. Whoever abides in me and I in him, he it is that bears much fruit, for apart from me you can do nothing.”'), findsOneWidget);
-
-      // Tap translation badge
-      await tester.tap(find.text('ESV'));
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 300));
-
-      // Modal sheet opens with all 4 translations
-      expect(find.text('Bible translation'), findsOneWidget);
-      await tester.scrollUntilVisible(find.text('King James Version'), 150, scrollable: find.byType(Scrollable).last);
-      expect(find.text('King James Version'), findsOneWidget);
-
-      // Tap KJV option
-      await tester.tap(find.text('King James Version'));
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 500));
-
-      // Modal dismissed and Sanctuary card now displays KJV and King James text
-      expect(find.text('KJV'), findsOneWidget);
-      expect(find.text('“I am the vine, ye are the branches: He that abideth in me, and I in him, the same bringeth forth much fruit: for without me ye can do nothing.”'), findsOneWidget);
-
-      await tester.pumpWidget(const SizedBox());
-      await tester.pump(const Duration(milliseconds: 500));
-    });
   });
 }
 

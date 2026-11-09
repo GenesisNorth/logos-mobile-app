@@ -1,0 +1,3 @@
+// Build settings for the LogosWidgets extension: Flutter's version numbers
+// only (no Pods — the extension links no plugins).
+#include "Generated.xcconfig"

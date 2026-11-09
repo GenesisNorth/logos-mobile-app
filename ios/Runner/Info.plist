@@ -26,6 +26,8 @@
 		<string>$(FLUTTER_BUILD_NUMBER)</string>
 		<key>LSRequiresIPhoneOS</key>
 		<true/>
+		<key>NSSupportsLiveActivities</key>
+		<true/>
 		<key>NSMicrophoneUsageDescription</key>
 		<string>LOGOS IN ME uses your microphone to verify oral Scripture recitation.</string>
 		<key>NSSpeechRecognitionUsageDescription</key>

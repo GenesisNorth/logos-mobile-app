@@ -164,7 +164,11 @@ class SupabaseProgressRepository implements ProgressRepository {
           .order('completed_at', ascending: false);
 
       if (rows.isNotEmpty) {
+        // Private burden text and check-ins live only on this device.
+        final localById = {for (final s in localSheets) s.id: s};
         final cloudSheets = rows.map((r) => TearSheetData(
+              burdenText: localById[r['id']]?.burdenText,
+              checkIn: localById[r['id']]?.checkIn,
               id: r['id'] as String,
               dropId: r['drop_id'] as String,
               verseText: r['verse_text'] as String,

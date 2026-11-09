@@ -2,11 +2,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 /// Reasons offered when reporting a community post.
 const reportReasons = [
-  'Harmful or abusive',
-  'Spam or advertising',
-  'False or misleading teaching',
-  'Someone may be in danger',
-  'Something else',
+  'Harmful or unkind',
+  'Not lament / off-topic',
+  'Spam or promotion',
+  'Someone may be at risk',
 ];
 
 /// Remembers posts the pilgrim hid or reported on this device.

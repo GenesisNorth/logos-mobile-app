@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:logos_mobile_app/core/clock.dart';
 import 'package:logos_mobile_app/core/config/app_flags.dart';
+import 'package:logos_mobile_app/core/services/glance_service.dart';
 import 'package:logos_mobile_app/core/services/verse_reader.dart';
 import 'package:logos_mobile_app/features/community/data/moderation_store.dart';
 import 'package:logos_mobile_app/features/journey/bloc/journey_bloc.dart';
@@ -89,6 +90,43 @@ void main() {
     test('ESV Psalm 23:1-3 includes the end of verse 3', () {
       final psalm = const ContentRepository().drops.firstWhere((d) => d.reference == 'Psalm 23:1-3');
       expect(psalm.translations!['ESV'], contains('paths of righteousness'));
+    });
+  });
+
+  group('Glance (widgets & Live Activity)', () {
+    test('today, resting and complete snapshots', () async {
+      final clock = FixedClock(DateTime(2026, 11, 9, 14));
+      final bloc = JourneyBloc(progressRepo: _MemoryRepo(), clock: clock)..add(const LoadJourneyProgress());
+      await _settle();
+      var g = GlanceSnapshot.from(bloc.state, now: clock.now());
+      expect(g.status, 'today');
+      expect(g.headline, 'Day 1 · Today');
+      expect(g.phrase, 'Abide in me.');
+      expect(g.days, ['today', 'locked', 'locked', 'locked']);
+      expect(g.unlockAt, isNull);
+
+      bloc.add(const CompleteDayRecitation(dayNumber: 1, score: 0.9));
+      await _settle();
+      g = GlanceSnapshot.from(bloc.state, now: clock.now());
+      expect(g.status, 'resting');
+      expect(g.headline, 'Roots opens at midnight');
+      expect(g.days, ['done', 'locked', 'locked', 'locked']);
+      expect(g.unlockAt, DateTime(2026, 11, 10));
+      expect(g.toWidgetData()['ref'], 'JOHN 15:5');
+
+      bloc.add(const CompleteDay(2));
+      bloc.add(const CompleteDay(3));
+      bloc.add(const CompleteExchange(burdenSummary: 'x'));
+      await _settle();
+      g = GlanceSnapshot.from(bloc.state, now: clock.now());
+      expect(g.status, 'complete');
+      expect(g.doneCount, 4);
+      await bloc.close();
+    });
+
+    test('short phrase from the stillness line', () {
+      expect(GlanceSnapshot.shortPhrase('“The peace of God will guard your heart.”'), 'The peace of God will guard your heart.');
+      expect(GlanceSnapshot.shortPhrase('“Abide in me, and I in you.”'), 'Abide in me.');
     });
   });
 

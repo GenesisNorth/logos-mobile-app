@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Design 2a / Altar widgets sheet: terracotta verse widget. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/widget_bg_verse"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <TextView
+        android:id="@+id/ref"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:fontFamily="@font/figtree_bold"
+        android:letterSpacing="0.14"
+        android:text="JOHN 15:5"
+        android:textColor="#FFE1D0"
+        android:textSize="11sp" />
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <!-- Fallback text (widget picker preview); replaced by a Caprasimo bitmap at runtime. -->
+        <TextView
+            android:id="@+id/phrase"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:ellipsize="end"
+            android:fontFamily="serif"
+            android:gravity="center_vertical"
+            android:maxLines="3"
+            android:text="Abide in me."
+            android:textColor="#F9F4ED"
+            android:textSize="20sp"
+            android:textStyle="bold" />
+
+        <ImageView
+            android:id="@+id/phrase_image"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:contentDescription="@null"
+            android:scaleType="fitCenter"
+            android:visibility="gone" />
+    </FrameLayout>
+
+    <TextView
+        android:id="@+id/status"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:fontFamily="@font/figtree_bold"
+        android:text="Day 1 · Today"
+        android:textColor="#F9F4ED"
+        android:textSize="12sp" />
+</LinearLayout>

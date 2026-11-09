@@ -58,11 +58,35 @@
 - [x] Header liturgical hour label matches the schedule
 - [x] Accessibility: semantic labels on icon-only buttons; tap alternative to drag in The Exchange
 - [x] Consistent dialogs (app-styled) for grace & manual input
-- [ ] Share verse as an image card
+- [x] Share verse as an image card
 - [ ] Continue splitting `lib/main.dart` (translation picker, settings, reminders, Today card extracted; home screen still ~2,200 lines)
 - [ ] Hidden-keyboard verse shrink in recitation studio
 
 ---
+
+## Redesign — "Organic" (from *Logos Redesign-4* / *Home Directions-2*)
+
+Design system: parchment ground `#F5EAD8`, terracotta accent `#C67139`, sage `#7A8A5E`; Caprasimo display over Figtree text; each practice has its own atmosphere. Tokens live in `lib/core/design/organic.dart`, components in `lib/core/design/components.dart`.
+
+- [x] Design tokens, typography, components (buttons, pills, cards, toggles, sheets, top bar, decor circles)
+- [x] Navigation: one floating pill — Today · Community · Altar; practices open full-screen
+- [x] Covenant → chimes → translation onboarding (covenant sealed at the end)
+- [x] Today: verse hero with key word in terracotta, four seed-circles on a living vine, today/rest/week-complete hero cards, stats
+- [x] Today states: missed day (grace restore), evening Examen card (8 PM–5 AM), 30-day tear-sheet check-in, locked-day sheet
+- [x] Day 1 Encounter at dusk: story lines → recitation (full / first letters / fading / from memory) → result with slips
+- [x] Day 2 Roots in sage: original-word readings pager
+- [x] Day 3 Stillness in night-green: breath pacer, 5 soundscape presets, stem mixer
+- [x] Day 4 Exchange on paper: tear sheet, hold to lay down, receive the verse → week recap
+- [x] Week recap (ember), Evening Examen (dusk, private, 3 questions)
+- [x] Altar: streak + week dots, grace tokens, your vine, tear sheets, settings list & sheets (hours, translation, voice, account & export, about & privacy)
+- [x] Community bento; The Well + pastor thread; Prayer Circles (hold to speak); Valley (candles, report sheet); Pods / Voice Comfort / Milestones (flagged)
+- [x] App icon & launch screen in the Organic palette (terracotta ground, cream Caprasimo “L”, sage seed) — `tool/make_brand_assets.py`
+- [x] Home & lock screen (design 2a/2b): iOS WidgetKit extension `ios/LogosWidgets` (verse + this-week home widgets, lock-screen verse & rhythm ring, Live Activity with Dynamic Island countdown); Android home widgets (verse in Caprasimo, this week); Altar → “Home widget & Dynamic Island” sheet. Data via `GlanceService` / App Group `group.com.logosinme.logosMobileApp`
+- [x] App Store screenshot set (design 3a–3f) — `store/screenshots/6.7in`, regenerate with `tool/make_store_screenshots.py`
+- [x] Legacy theme removed; Scripture packs sheet restyled
+- [x] Share this week as a designed image card
+- [x] **Release-only hang fixed**: R8 renamed Kotlin types used by shared_preferences over JNI (app stuck on the loading spinner in release builds)
+- [ ] On a real iPhone: confirm App Group + Live Activity signing (Xcode → Signing & Capabilities registers the group for team 27H585J92J)
 
 ## Phase B — Backend + Admin
 
@@ -137,4 +161,5 @@ A web console (recommended: Next.js + Supabase Auth, same Postgres with RLS; pri
 
 ## Change log
 - **2026-11-08** — Review completed; decisions recorded; Phase A started.
+- **2026-11-09** — Organic redesign implemented end-to-end; 69 tests passing; Android AAB + iOS release builds verified; walked through every practice on the emulator.
 - **2026-11-09** — Phase A complete except share-image card, further `main.dart` split, keyboard verse shrink. 70 tests passing; Android AAB + iOS release builds verified; walked through on the emulator as a new user.

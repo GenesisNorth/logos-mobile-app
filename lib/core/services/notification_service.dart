@@ -16,14 +16,7 @@ class NotificationService {
   static const _prefKeyEnabled = 'logos_notifications_enabled';
   static const _prefKeyApnsToken = 'logos_apns_device_token';
   static const _prefKeyApnsSynced = 'logos_apns_synced_cloud';
-  static const _prefKeyReminderMinutes = 'logos_reminder_minutes_of_day';
-  static const _prefKeyEvening = 'logos_evening_reflection_enabled';
-
-  /// Default daily reminder: 7:00 AM.
-  static const defaultReminderMinutes = 7 * 60;
-
-  /// Evening reflection reminder time: 9:00 PM.
-  static const eveningMinutes = 21 * 60;
+  static const _prefKeyChimes = 'logos_chimes_enabled';
 
   final FlutterLocalNotificationsPlugin _notificationsPlugin =
       FlutterLocalNotificationsPlugin();
@@ -33,14 +26,18 @@ class NotificationService {
   String? _deviceToken;
   bool _isApnsSynced = false;
 
-  int _reminderMinutes = defaultReminderMinutes;
-  bool _eveningReflection = true;
+  /// Which liturgical hours chime (Lauds and Vespers on by default; the
+  /// midday and midnight bells are opt-in so no one is woken unasked).
+  final Map<LiturgicalHour, bool> _chimes = {
+    for (final h in LiturgicalHour.values) h: h.defaultOn,
+  };
 
   bool get isEnabled => _isEnabled;
 
-  /// Minutes after local midnight for the daily practice reminder.
-  int get reminderMinutes => _reminderMinutes;
-  bool get eveningReflection => _eveningReflection;
+  bool isChimeOn(LiturgicalHour h) => _chimes[h] ?? false;
+
+  /// Lauds is the "Remind me at Lauds · 7 AM" chime used by the locked-day sheet.
+  int get morningMinutes => LiturgicalHour.lauds.minutes;
   String? get deviceToken => _deviceToken;
   bool get isApnsSynced => _isApnsSynced;
 
@@ -90,8 +87,12 @@ class NotificationService {
       _isEnabled = prefs.getBool(_prefKeyEnabled) ?? false;
       _deviceToken = prefs.getString(_prefKeyApnsToken);
       _isApnsSynced = prefs.getBool(_prefKeyApnsSynced) ?? false;
-      _reminderMinutes = prefs.getInt(_prefKeyReminderMinutes) ?? defaultReminderMinutes;
-      _eveningReflection = prefs.getBool(_prefKeyEvening) ?? true;
+      final saved = prefs.getStringList(_prefKeyChimes);
+      if (saved != null) {
+        for (final h in LiturgicalHour.values) {
+          _chimes[h] = saved.contains(h.name);
+        }
+      }
       _isInitialized = true;
       debugPrint('[NotificationService] Initialized (enabled: $_isEnabled, apns: ${_deviceToken != null})');
 
@@ -194,46 +195,29 @@ class NotificationService {
     return digest.toString();
   }
 
-  /// Changes the daily reminder time and reschedules if reminders are on.
-  Future<void> setReminderMinutes(int minutesOfDay) async {
-    _reminderMinutes = minutesOfDay.clamp(0, 24 * 60 - 1);
+  /// Turns one liturgical hour's chime on or off and reschedules.
+  Future<void> setChime(LiturgicalHour hour, bool on) async {
+    _chimes[hour] = on;
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt(_prefKeyReminderMinutes, _reminderMinutes);
+    await prefs.setStringList(_prefKeyChimes, [for (final e in _chimes.entries) if (e.value) e.key.name]);
     if (_isEnabled) await scheduleAllLiturgicalNotifications();
   }
 
-  Future<void> setEveningReflection(bool enabled) async {
-    _eveningReflection = enabled;
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(_prefKeyEvening, enabled);
-    if (_isEnabled) await scheduleAllLiturgicalNotifications();
-  }
-
-  /// Schedules the daily practice reminder and the optional evening reflection.
-  /// (No midnight alert: a new step simply waits for the morning reminder.)
+  /// Schedules a daily notification for every chime that is switched on.
   Future<void> scheduleAllLiturgicalNotifications() async {
     try {
       await cancelAll();
-
-      await _scheduleDailyAtTime(
-        id: 101,
-        hour: _reminderMinutes ~/ 60,
-        minute: _reminderMinutes % 60,
-        title: 'Your verse is waiting',
-        body: 'Take a few unhurried minutes with today’s step.',
-      );
-
-      if (_eveningReflection) {
+      for (final h in LiturgicalHour.values) {
+        if (_chimes[h] != true) continue;
         await _scheduleDailyAtTime(
-          id: 103,
-          hour: eveningMinutes ~/ 60,
-          minute: eveningMinutes % 60,
-          title: 'Evening reflection',
-          body: 'Where did you sense Christ today? Rest in His word before sleep.',
+          id: 100 + h.index,
+          hour: h.minutes ~/ 60,
+          minute: h.minutes % 60,
+          title: h.notificationTitle,
+          body: h.notificationBody,
         );
       }
-
-      debugPrint('[NotificationService] Reminders scheduled (daily ${_reminderMinutes ~/ 60}:${(_reminderMinutes % 60).toString().padLeft(2, '0')}, evening: $_eveningReflection).');
+      debugPrint('[NotificationService] Chimes scheduled: ${[for (final e in _chimes.entries) if (e.value) e.key.name]}');
     } catch (e) {
       debugPrint('[NotificationService] Scheduling warning: $e');
     }
@@ -321,5 +305,33 @@ class NotificationService {
       scheduledDate = scheduledDate.add(const Duration(days: 1));
     }
     return scheduledDate;
+  }
+}
+
+
+/// The old hours of prayer the app can chime at.
+enum LiturgicalHour {
+  lauds('Lauds', 7 * 60, 'Read the verse once, slowly', true,
+      'Lauds · the verse is waiting', 'Read today’s verse once, slowly.'),
+  sext('Sext', 12 * 60, 'Whisper it at midday', false,
+      'Sext · midday', 'Pause and whisper the verse.'),
+  vespers('Vespers', 21 * 60, 'Today’s practice', true,
+      'Vespers · today’s practice', 'A few unhurried minutes with today’s step.'),
+  midnight('Midnight bell', 0, 'The next day opens', false,
+      'The next day has opened', 'A new step of the rhythm is ready when you wake.');
+
+  final String label;
+  final int minutes;
+  final String description;
+  final bool defaultOn;
+  final String notificationTitle;
+  final String notificationBody;
+  const LiturgicalHour(this.label, this.minutes, this.description, this.defaultOn, this.notificationTitle,
+      this.notificationBody);
+
+  String get timeLabel {
+    final h = minutes ~/ 60, m = minutes % 60;
+    final h12 = h % 12 == 0 ? 12 : h % 12;
+    return '$h12:${m.toString().padLeft(2, '0')} ${h < 12 ? 'AM' : 'PM'}';
   }
 }

@@ -53,7 +53,16 @@ class TearSheetData {
   final String? tearSheetImagePath;
   final DateTime completedAt;
 
+  /// What the pilgrim wrote. Kept on this device only — never uploaded
+  /// (the cloud stores [burdenHash]).
+  final String? burdenText;
+
+  /// Answer to the 30-day "How is it now?" check-in: 'lighter' | 'carrying'.
+  final String? checkIn;
+
   const TearSheetData({
+    this.burdenText,
+    this.checkIn,
     required this.id,
     required this.dropId,
     required this.verseText,
@@ -71,7 +80,21 @@ class TearSheetData {
     'burdenHash': burdenHash,
     'tearSheetImagePath': tearSheetImagePath,
     'completedAt': completedAt.toIso8601String(),
+    if (burdenText != null) 'burdenText': burdenText,
+    if (checkIn != null) 'checkIn': checkIn,
   };
+
+  TearSheetData copyWith({String? checkIn, String? burdenText}) => TearSheetData(
+        id: id,
+        dropId: dropId,
+        verseText: verseText,
+        reference: reference,
+        burdenHash: burdenHash,
+        tearSheetImagePath: tearSheetImagePath,
+        completedAt: completedAt,
+        burdenText: burdenText ?? this.burdenText,
+        checkIn: checkIn ?? this.checkIn,
+      );
 
   factory TearSheetData.fromJson(Map<String, dynamic> json) => TearSheetData(
     id: json['id'] as String,
@@ -81,6 +104,8 @@ class TearSheetData {
     burdenHash: json['burdenHash'] as String,
     tearSheetImagePath: json['tearSheetImagePath'] as String?,
     completedAt: DateTime.parse(json['completedAt'] as String),
+    burdenText: json['burdenText'] as String?,
+    checkIn: json['checkIn'] as String?,
   );
 }
 
@@ -162,8 +187,11 @@ class LocalProgressRepository implements ProgressRepository {
   @override
   Future<void> saveTearSheet(TearSheetData sheet) async {
     final prefs = await _getPrefs();
-    final list = prefs.getStringList(_tearSheetsKey) ?? [];
-    list.add(jsonEncode(sheet.toJson()));
+    // Upsert by id so later check-ins update the same sheet.
+    final list = (prefs.getStringList(_tearSheetsKey) ?? [])
+        .where((item) => (jsonDecode(item) as Map<String, dynamic>)['id'] != sheet.id)
+        .toList()
+      ..add(jsonEncode(sheet.toJson()));
     await prefs.setStringList(_tearSheetsKey, list);
   }
 }

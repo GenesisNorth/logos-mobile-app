@@ -34,6 +34,7 @@ dependencies:
   flutter_timezone: ^5.1.1
   url_launcher: ^6.3.3
   package_info_plus: ^10.2.2
+  home_widget: ^0.10.0
 
 dev_dependencies:
   flutter_test:
@@ -57,25 +58,25 @@ dependency_overrides:
   record_platform_interface: 1.1.0
 
 # App icon — run: dart run flutter_launcher_icons
-# (artwork from tool/make_brand_assets.py; replace with final designer files)
+# (artwork from tool/make_brand_assets.py — Organic palette)
 flutter_launcher_icons:
   android: true
   ios: true
   image_path: assets/branding/app_icon.png
   remove_alpha_ios: true
-  adaptive_icon_background: "#7C3AED"
+  adaptive_icon_background: "#8C491A"
   adaptive_icon_foreground: assets/branding/app_icon_foreground.png
 
 # Launch screen — run: dart run flutter_native_splash:create
 flutter_native_splash:
-  color: "#FFFFFF"
+  color: "#F5EAD8"
   image: assets/branding/splash_mark.png
-  color_dark: "#0F0B1C"
+  color_dark: "#2E2B25"
   image_dark: assets/branding/splash_mark.png
   android_12:
-    color: "#FFFFFF"
+    color: "#F5EAD8"
     image: assets/branding/app_icon_foreground.png
-    icon_background_color: "#7C3AED"
-    color_dark: "#0F0B1C"
+    icon_background_color: "#8C491A"
+    color_dark: "#2E2B25"
     image_dark: assets/branding/app_icon_foreground.png
-    icon_background_color_dark: "#7C3AED"
+    icon_background_color_dark: "#8C491A"

@@ -33,3 +33,17 @@
 
 # Flutter engine references Play Core deferred components (unused by this app)
 -dontwarn com.google.android.play.core.**
+
+# shared_preferences_android (and other jnigen plugins) call Kotlin suspend
+# functions through JNI by exact signature, e.g.
+#   getAll(Ljava/lang/String;Ljava/util/List;Lkotlin/coroutines/Continuation;)
+# R8 must not rename the Kotlin types in those signatures, or release builds
+# hang at launch with NoSuchMethodError.
+# JNI looks these up by name (Continuation, Result, …), so keep the Kotlin
+# runtime's names intact.
+-keep class kotlin.** { *; }
+-keep class kotlinx.coroutines.** { *; }
+-keep class com.github.dart_lang.jni.** { *; }
+
+# Home-screen widgets (home_widget)
+-keep class es.antonborri.home_widget.** { *; }
